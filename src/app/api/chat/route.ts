@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getGeminiResponse } from '@/lib/gemini';
-import { db } from '@/lib/db';
+import { getDbClient } from '@/lib/db';
 import { chats, messages } from '@/lib/schema';
-import { eq } from 'drizzle-orm';
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,6 +21,7 @@ export async function POST(request: NextRequest) {
     const userId = 'default-user';
 
     // Create new chat if needed, or use existing
+    const db = getDbClient();
     const [newChat] = await db
       .insert(chats)
       .values({
