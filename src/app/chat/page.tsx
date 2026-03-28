@@ -11,6 +11,7 @@ import {
 import { cn, formatDate } from '@/lib/utils';
 import { useChatStore, usePreferencesStore, Message, Chat } from '@/stores/chatStore';
 import { AI_MODELS, AIModelType } from '@/lib/ai';
+import MarkdownMessage from '@/components/chat/MarkdownMessage';
 
 const MODEL_ICONS: Record<string, React.ReactNode> = {
   'gemini-1.5-flash': <Sparkles className="w-4 h-4" />,
@@ -337,7 +338,7 @@ export default function ChatPage() {
                       <LoadingDots />
                     ) : (
                       <>
-                        <p className="whitespace-pre-wrap">{message.content}</p>
+                        <MarkdownMessage content={message.content} />
                         <div className="flex gap-2 mt-2 pt-2 border-t border-border/30">
                           <button
                             onClick={() => handleCopy(message.content, message.id)}

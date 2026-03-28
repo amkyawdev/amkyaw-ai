@@ -15,6 +15,7 @@ const navItems = [
   { href: '/chat', label: 'Chat', icon: MessageSquare },
   { href: '/history', label: 'History', icon: History },
   { href: '/settings', label: 'Settings', icon: Settings },
+  { href: '/profile', label: 'Profile', icon: User },
 ];
 
 export default function Navbar() {
