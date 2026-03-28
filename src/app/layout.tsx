@@ -3,6 +3,8 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import Navbar from '@/components/layout/Navbar';
+import { ThemeProvider } from '@/components/providers/ThemeProvider';
+import { FontSizeProvider } from '@/components/providers/FontSizeProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -17,10 +19,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
       <body className={cn(inter.className, 'min-h-screen bg-background antialiased')}>
-        <Navbar />
-        <main>{children}</main>
+        <ThemeProvider>
+          <FontSizeProvider>
+            <Navbar />
+            <main>{children}</main>
+          </FontSizeProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
