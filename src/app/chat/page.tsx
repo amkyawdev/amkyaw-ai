@@ -35,7 +35,7 @@ export default function ChatPage() {
   const [input, setInput] = useState('');
   const [showSidebar, setShowSidebar] = useState(true);
   const [showModelSelect, setShowModelSelect] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<AIModelType>('flash');
+  const [selectedModel, setSelectedModel] = useState<AIModelType>('flash8b');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
