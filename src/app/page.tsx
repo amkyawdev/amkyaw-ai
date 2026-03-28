@@ -30,7 +30,7 @@ export default function Home() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
             <Link 
-              href="/dashboard"
+              href="/chat"
               className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-all hover:animate-glow"
             >
               <Zap className="w-5 h-5" />
