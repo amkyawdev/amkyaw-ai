@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { 
   Home, MessageSquare, History, Settings, 
-  Sparkles, User, Menu, X
+  Sparkles, User, Menu, X, BookOpen
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -14,6 +14,7 @@ const navItems = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/chat', label: 'Chat', icon: MessageSquare },
   { href: '/history', label: 'History', icon: History },
+  { href: '/docs', label: 'Docs', icon: BookOpen },
   { href: '/settings', label: 'Settings', icon: Settings },
   { href: '/profile', label: 'Profile', icon: User },
 ];
@@ -66,10 +67,10 @@ export default function Navbar() {
 
           {/* Right Side */}
           <div className="flex items-center gap-3">
-            <button className="hidden md:flex items-center gap-2 px-4 py-2 rounded-lg glass glass-hover text-sm">
+            <Link href="/profile" className="hidden md:flex items-center gap-2 px-4 py-2 rounded-lg glass glass-hover text-sm">
               <User className="w-4 h-4" />
               <span>Sign In</span>
-            </button>
+            </Link>
             
             {/* Mobile Menu Button */}
             <button
