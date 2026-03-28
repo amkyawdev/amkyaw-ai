@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getGeminiResponse } from '@/lib/gemini';
+import { getAIResponse, AI_MODELS, AIModelType } from '@/lib/ai';
 import { getDbClient } from '@/lib/db';
 import { chats, messages } from '@/lib/schema';
 
+export const runtime = 'nodejs';
+
 export async function POST(request: NextRequest) {
   try {
-    const { prompt } = await request.json();
+    const body = await request.json();
+    const { prompt, model = 'flash', temperature, maxTokens, chatId } = body;
 
     if (!prompt || typeof prompt !== 'string') {
       return NextResponse.json(
@@ -14,55 +17,76 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get AI response from Gemini
-    const response = await getGeminiResponse(prompt);
+    const modelKey = model as AIModelType;
+    if (!AI_MODELS[modelKey]) {
+      return NextResponse.json(
+        { error: 'Invalid model selected' },
+        { status: 400 }
+      );
+    }
 
-    // Get user ID (for now using a default - in production this would come from auth)
-    const userId = 'default-user';
+    // Get AI response
+    const response = await getAIResponse({
+      prompt,
+      model: modelKey,
+      temperature,
+      maxTokens,
+      systemInstruction: 'You are a helpful AI assistant. Provide clear, concise, and accurate responses.',
+    });
 
-    // Create new chat if needed, or use existing
-    const db = getDbClient();
-    const [newChat] = await db
-      .insert(chats)
-      .values({
-        userId,
-        title: prompt.slice(0, 50) + (prompt.length > 50 ? '...' : ''),
-      })
-      .returning();
+    // Get database client
+    let db;
+    try {
+      db = getDbClient();
+    } catch (dbError) {
+      console.log('Database not available, skipping save');
+    }
 
-    // Save user message
-    const [userMessage] = await db
-      .insert(messages)
-      .values({
-        chatId: newChat.id,
-        role: 'user',
-        content: prompt,
-      })
-      .returning();
+    let savedChatId = chatId;
 
-    // Save assistant message
-    const [assistantMessage] = await db
-      .insert(messages)
-      .values({
-        chatId: newChat.id,
-        role: 'assistant',
-        content: response,
-      })
-      .returning();
+    // Save to database if available
+    if (db) {
+      const userId = 'demo-user';
+
+      let newChat;
+      try {
+        [newChat] = await db
+          .insert(chats)
+          .values({
+            userId,
+            title: prompt.slice(0, 50) + (prompt.length > 50 ? '...' : ''),
+          })
+          .returning();
+        savedChatId = newChat.id;
+      } catch (insertError) {
+        console.log('Could not create chat:', insertError);
+      }
+
+      if (savedChatId && typeof savedChatId === 'number') {
+        try {
+          await db.insert(messages).values([
+            { chatId: savedChatId, role: 'user', content: prompt },
+            { chatId: savedChatId, role: 'assistant', content: response.response },
+          ]);
+        } catch (msgError) {
+          console.log('Could not save messages:', msgError);
+        }
+      }
+    }
 
     return NextResponse.json({
-      response,
-      chatId: newChat.id,
-      messageId: assistantMessage.id,
+      response: response.response,
+      model: response.model,
+      chatId: savedChatId,
+      usage: response.usage,
     });
   } catch (error) {
     console.error('Chat API Error:', error);
 
-    // Handle specific error types
     if (error instanceof Error) {
       if (error.message.includes('API key')) {
         return NextResponse.json(
-          { error: 'Invalid API configuration' },
+          { error: 'Invalid API configuration. Please check your GEMINI_API_KEY.' },
           { status: 503 }
         );
       }
@@ -72,10 +96,16 @@ export async function POST(request: NextRequest) {
           { status: 429 }
         );
       }
+      if (error.message.includes('not set')) {
+        return NextResponse.json(
+          { error: 'API key not configured. Please set GEMINI_API_KEY environment variable.' },
+          { status: 503 }
+        );
+      }
     }
 
     return NextResponse.json(
-      { error: 'Failed to process your request' },
+      { error: 'Failed to process your request. Please try again.' },
       { status: 500 }
     );
   }
