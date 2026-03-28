@@ -19,13 +19,13 @@ import Link from 'next/link';
 const MODEL_ICONS: Record<string, React.ReactNode> = {
   'gemini-1.5-flash': <Sparkles className="w-5 h-5" />,
   'gemini-1.5-pro': <Brain className="w-5 h-5" />,
-  'gemini-1.5-flash-8b': <Zap className="w-5 h-5" />,
+  'gemini-2.0-flash': <Zap className="w-5 h-5" />,
 };
 
 const MODEL_COLORS: Record<string, string> = {
   'gemini-1.5-flash': 'from-blue-500 to-cyan-500',
   'gemini-1.5-pro': 'from-purple-500 to-pink-500',
-  'gemini-1.5-flash-8b': 'from-green-500 to-emerald-500',
+  'gemini-2.0-flash': 'from-green-500 to-emerald-500',
 };
 
 const TypingIndicator = () => (
@@ -184,7 +184,7 @@ export default function ChatPage() {
   const [input, setInput] = useState('');
   const [showSidebar, setShowSidebar] = useState(true);
   const [showModelSelect, setShowModelSelect] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<AIModelType>('flash8b');
+  const [selectedModel, setSelectedModel] = useState<AIModelType>('flash');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   

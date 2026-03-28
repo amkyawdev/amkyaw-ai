@@ -27,10 +27,10 @@ export const AI_MODELS = {
     description: 'Most capable model for complex tasks',
     maxTokens: 32768,
   },
-  flash8b: {
-    name: 'gemini-1.5-flash-8b',
-    displayName: 'Gemini 1.5 Flash 8B',
-    description: 'Lightweight and fast',
+  flash2: {
+    name: 'gemini-2.0-flash',
+    displayName: 'Gemini 2.0 Flash',
+    description: 'Latest fastest model',
     maxTokens: 8192,
   },
 } as const;

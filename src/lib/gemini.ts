@@ -15,7 +15,7 @@ function getGenAI(): GoogleGenerativeAI {
 
 export async function getGeminiResponse(prompt: string): Promise<string> {
   const ai = getGenAI();
-  const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash-8b' });
+  const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
   
   const result = await model.generateContent(prompt);
   const response = result.response;

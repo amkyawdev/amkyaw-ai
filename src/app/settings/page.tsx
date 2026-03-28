@@ -27,7 +27,7 @@ export default function SettingsPage() {
   const { user, isAuthenticated } = useAuthStore();
   const { theme, setTheme } = useTheme();
   
-  const [defaultModel, setDefaultModel] = useState<AIModelType>('flash8b');
+  const [defaultModel, setDefaultModel] = useState<AIModelType>('flash');
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
