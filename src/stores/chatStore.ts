@@ -31,6 +31,7 @@ interface ChatState {
   addMessage: (chatId: string, message: Message) => void;
   updateMessage: (chatId: string, messageId: string, updates: Partial<Message>) => void;
   deleteChat: (chatId: string) => void;
+  clearChats: () => void;
   clearError: () => void;
   setLoading: (isLoading: boolean) => void;
 }
@@ -120,6 +121,10 @@ export const useChatStore = create<ChatState>()(
             : state.currentChat;
           return { chats, currentChat };
         });
+      },
+
+      clearChats: () => {
+        set({ chats: [], currentChat: null });
       },
 
       clearError: () => set({ error: null }),
