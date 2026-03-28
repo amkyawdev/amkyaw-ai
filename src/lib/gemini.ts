@@ -15,7 +15,12 @@ function getGenAI(): GoogleGenerativeAI {
 
 export async function getGeminiResponse(prompt: string): Promise<string> {
   const ai = getGenAI();
-  const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  // Use v1 API instead of v1beta
+  const model = ai.getGenerativeModel({ 
+    model: 'gemini-1.5-flash-8b',
+  }, {
+    apiVersion: 'v1',
+  });
   
   const result = await model.generateContent(prompt);
   const response = result.response;

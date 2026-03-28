@@ -16,22 +16,25 @@ function getGenAI(): GoogleGenerativeAI {
 // AI Model configurations
 export const AI_MODELS = {
   flash: {
-    name: 'gemini-1.5-flash',
-    displayName: 'Gemini 1.5 Flash',
+    name: 'gemini-1.5-flash-8b',
+    displayName: 'Gemini 1.5 Flash 8B',
     description: 'Fast and efficient for most tasks',
     maxTokens: 8192,
+    apiVersion: 'v1',
   },
   pro: {
-    name: 'gemini-1.5-pro',
+    name: 'gemini-1.5-pro-preview-0506',
     displayName: 'Gemini 1.5 Pro',
     description: 'Most capable model for complex tasks',
     maxTokens: 32768,
+    apiVersion: 'v1',
   },
   flash2: {
-    name: 'gemini-2.0-flash',
+    name: 'gemini-2.0-flash-exp',
     displayName: 'Gemini 2.0 Flash',
-    description: 'Latest fastest model',
+    description: 'Latest experimental model',
     maxTokens: 8192,
+    apiVersion: 'v1',
   },
 } as const;
 
@@ -76,6 +79,8 @@ export async function getAIResponse(request: AIRequest): Promise<AIResponse> {
     model: modelConfig.name,
     generationConfig,
     systemInstruction: request.systemInstruction,
+  }, {
+    apiVersion: modelConfig.apiVersion || 'v1',
   });
 
   const result = await model.generateContent(request.prompt);
