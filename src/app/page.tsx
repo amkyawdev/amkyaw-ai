@@ -1,77 +1,64 @@
-import Link from 'next/link';
-import { Sparkles, Shield, Zap, MessageSquare } from 'lucide-react';
+import Link from "next/link";
+import { Sparkles, Zap, Bot, Cpu, MessageSquare, Code, Globe, ArrowRight } from "lucide-react";
+
+const features = [
+  { icon: MessageSquare, label: "AI Chat" },
+  { icon: Code, label: "Code" },
+  { icon: Globe, label: "Translate" },
+];
 
 export default function Home() {
   return (
     <main className="min-h-screen">
-      {/* Hero Section */}
-      <section className="relative flex flex-col items-center justify-center min-h-screen px-4 py-20 overflow-hidden">
-        {/* Background Effects */}
-        <div className="absolute inset-0 -z-10">
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background to-background" />
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-[128px]" />
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/20 rounded-full blur-[128px]" />
-        </div>
-
-        <div className="text-center space-y-8 max-w-4xl">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass glass-hover">
+      <section className="flex flex-col items-center justify-center min-h-screen px-4 py-20">
+        <div className="text-center space-y-6 max-w-4xl">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass">
             <Zap className="w-4 h-4 text-orange-500" />
-            <span className="text-sm text-muted-foreground">Powered by Groq - Ultra Fast AI</span>
+            <span className="text-sm text-muted-foreground">Powered by Groq</span>
           </div>
-
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
-            Amkyaw AI <span className="text-primary">Power</span> Platform
+          <h1 className="text-5xl md:text-7xl font-bold">
+            <span className="bg-gradient-to-r from-orange-400 to-amber-400 bg-clip-text text-transparent">Amkyaw AI</span>
           </h1>
-
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Experience the future of AI-powered conversations. 
-            Secure, fast, and intelligent - all in one place.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-            <Link 
-              href="/chat"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-all hover:animate-glow"
-            >
-              <Zap className="w-5 h-5" />
-              Get Started
-            </Link>
-            <Link 
-              href="#features"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full glass glass-hover font-semibold"
-            >
-              Learn More
-            </Link>
-          </div>
-        </div>
-
-        {/* Features Preview */}
-        <div id="features" className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-32 max-w-5xl">
-          <div className="glass p-8 rounded-2xl text-center hover:scale-105 transition-transform">
-            <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
-              <MessageSquare className="w-6 h-6 text-primary" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">Smart Chat</h3>
-            <p className="text-muted-foreground">Powered by Gemini 1.5 Flash for intelligent responses</p>
-          </div>
-          
-          <div className="glass p-8 rounded-2xl text-center hover:scale-105 transition-transform">
-            <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
-              <Shield className="w-6 h-6 text-primary" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">Secure Auth</h3>
-            <p className="text-muted-foreground">Neon Auth provides enterprise-grade security</p>
-          </div>
-          
-          <div className="glass p-8 rounded-2xl text-center hover:scale-105 transition-transform">
-            <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
-              <Zap className="w-6 h-6 text-primary" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">Fast Response</h3>
-            <p className="text-muted-foreground">Lightning-fast responses with real-time processing</p>
-          </div>
+          <p className="text-xl text-muted-foreground">Professional AI Platform</p>
+          <Link href="/chat" className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 text-white font-semibold">
+            <Bot className="w-5 h-5" /> Start Chatting
+          </Link>
         </div>
       </section>
+      <section className="py-20 px-4">
+        <h2 className="text-3xl font-bold text-center mb-12">AI Capabilities</h2>
+        <div className="grid grid-cols-3 gap-4 max-w-4xl mx-auto">
+          {features.map((f) => (
+            <div key={f.label} className="glass p-6 rounded-2xl text-center">
+              <f.icon className="w-8 h-8 mx-auto mb-3 text-orange-500" />
+              <h3 className="font-semibold">{f.label}</h3>
+            </div>
+          ))}
+        </div>
+      </section>
+      <section id="about" className="py-20 px-4">
+        <h2 className="text-3xl font-bold text-center mb-12">About Developer</h2>
+        <div className="glass p-8 rounded-3xl max-w-4xl mx-auto text-center">
+          <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 mx-auto mb-6 flex items-center justify-center">
+            <span className="text-4xl">👨‍💻</span>
+          </div>
+          <h3 className="text-2xl font-bold mb-2">Aung Myo Kyaw</h3>
+          <p className="text-muted-foreground mb-4">Full-Stack Developer & AI Specialist</p>
+          <div className="space-y-2 text-sm mb-6">
+            <p>📧 amk.kyaw92@gmail.com</p>
+            <p>📱 09677740154</p>
+            <p>🎵 TikTok: @amkyaw.dev</p>
+          </div>
+          <a href="mailto:amk.kyaw92@gmail.com" className="px-6 py-3 rounded-lg bg-orange-500 text-white font-medium">Contact Me</a>
+        </div>
+      </section>
+      <footer className="py-8 px-4 border-t border-border/50 text-center">
+        <p className="text-sm text-muted-foreground">© 2024 Amkyaw AI. Powered by Groq API.</p>
+        <div className="flex gap-4 justify-center mt-4">
+          <Link href="/chat" className="text-sm hover:text-orange-500">Chat</Link>
+          <Link href="/settings" className="text-sm hover:text-orange-500">Settings</Link>
+        </div>
+      </footer>
     </main>
   );
 }
