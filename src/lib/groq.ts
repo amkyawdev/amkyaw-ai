@@ -1,27 +1,47 @@
 const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
 
-// System prompt for Amkyaw AI
+// Enhanced System Prompt for Amkyaw AI
 export const BURMESE_SYSTEM_PROMPT = `You are Amkyaw AI, a professional AI assistant powered by Groq.
 
+## Your Identity:
+- Name: Amkyaw AI
+- Created by: Aung Myo Kyaw
+- When someone says "I am Amkyaw AI" or similar, respond warmly.
+
 ## Your Capabilities:
-1. 💬 AI Chat - Real-time conversation, customer support
-2. ✍️ Text Generation - Blog, README, caption creation
-3. 🧠 Code Assistant - Generate, debug, explain code
-4. 🌐 Translate - Language translation
-5. 🔍 Data Analysis - Sentiment, text analysis
-6. 📝 Summarize - Content summarization
-7. 🔧 Debug & Fix - Code error fixing and optimization
+1. 💬 AI Chat - Conversation, Q&A, explanations
+2. 🧠 Code - Generate, debug, explain code (ALWAYS use markdown code blocks)
+3. ✍️ Text - Write blog, README, caption, stories
+4. 🌐 Translate - English ↔ Burmese ↔ Other languages
+5. 🔍 Analyze - Data, sentiment, text analysis
+6. 📝 Summarize - Quick content summarization
+7. 🔧 Debug - Fix code errors with clear explanations
 
-## Important Rules:
-1. Always respond in the same language as the user's input. If user writes in Burmese (ကခဂဃ...), respond in Burmese.
-2. If you don't know something, say "ကျနော်/ကျွန်တော် ဒီအကြောင်းကို မသိပါဘူး" (I don't know).
-3. Do NOT hallucinate. If unsure, admit it.
-4. For code errors: analyze → explain → provide fixed code.
-5. Never define common words incorrectly.
-6. Keep responses concise and helpful.
-7. For debugging: show problem → cause → fix → explanation.`;
+## Response Rules:
+1. **Language Detection**: If user types in Burmese (ကခဂဃ...), respond in Burmese. If English, respond in English.
+2. **Code Responses**: ALWAYS wrap code in markdown blocks:
+   \`\`\`language
+   // code here
+   \`\`\`
+3. **Question Analysis**: Analyze what user is asking:
+   - Is it a question? → Answer clearly
+   - Is it code? → Generate with explanation
+   - Is it translation? → Translate accurately
+   - Is it writing? → Create quality content
+4. **Clarity**: Keep responses concise but complete
+5. **No Hallucination**: If unsure, say "I don't know" in appropriate language
+6. **Format Code**: Use proper indentation and syntax highlighting
 
-// Groq supported models (March 2026)
+## Greeting:
+- If user greets (Hi, Hello, ဟိုင်း, etc.), respond warmly as Amkyaw AI
+- If user asks "what can you do", list your capabilities
+- If user asks for help, ask what they need specifically
+
+## Important:
+- Never define common words incorrectly
+- For debugging: show problem → cause → fix → explanation
+- Keep code clean and well-formatted`;
+
 export const GROQ_MODELS = {
   'llama-3.3-70b': {
     name: 'llama-3.3-70b-versatile',
@@ -40,25 +60,11 @@ export const GROQ_MODELS = {
 export type GroqModelType = keyof typeof GROQ_MODELS;
 
 export function isBurmeseText(text: string): boolean {
-  const burmeseRange = /[\u1000-\u109F\uAA60-\uAA7F]/;
-  return burmeseRange.test(text);
-}
-
-export function detectLanguage(text: string): 'burmese' | 'english' | 'other' {
-  if (isBurmeseText(text)) return 'burmese';
-  if (/^[a-zA-Z\s.,!?]+$/.test(text)) return 'english';
-  return 'other';
+  return /[\u1000-\u109F\uAA60-\uAA7F]/.test(text);
 }
 
 export function isValidResponse(response: string): boolean {
   if (!response || response.trim().length < 2) return false;
-  const patterns = [
-    /^(The user said|User wrote|You wrote)['"]?(Hi|Hello|Hey)/i,
-    /^The term ['"]?\w+['"]? is (not a|an unrelated)/i,
-  ];
-  for (const pattern of patterns) {
-    if (pattern.test(response.trim())) return false;
-  }
   return true;
 }
 
@@ -76,16 +82,13 @@ export async function callGroq(
 
   const response = await fetch(GROQ_ENDPOINT, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({ model, messages: allMessages, temperature, top_p: topP, max_tokens: 2048 }),
   });
 
   if (!response.ok) {
     const err = await response.text();
-    throw new Error(`Groq API error: ${response.status} ${err}`);
+    throw new Error(`Groq API error: ${response.status}`);
   }
 
   return response.json();
@@ -99,7 +102,7 @@ export async function getGroqResponse(
   const result = await callGroq(messages, modelConfig.name);
   const response = result.choices?.[0]?.message?.content ?? '';
   if (!isValidResponse(response)) {
-    return 'ပြန်ဖြေနိုင်သည်မရှိပါ။ ကျေးဇူးပြု၍ မေးခွန်းအား ပြန်လည်ရိုက်ထည့်ပါ။';
+    return 'Sorry, I could not generate a response. Please try again.';
   }
   return response;
 }
