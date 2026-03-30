@@ -246,6 +246,9 @@ export default function PublicChatPage() {
                 <Link href="/profile" className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5">
                   <User className="w-5 h-5" /><span className="text-sm">Guest</span>
                 </Link>
+                <Link href="/login" className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-orange-400">
+                  <LogOut className="w-5 h-5" /><span className="text-sm">Login</span>
+                </Link>
                 <Link href="/chat" className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5">
                   <Bot className="w-5 h-5 text-orange-500" /><span className="text-sm">AI Chat</span>
                 </Link>

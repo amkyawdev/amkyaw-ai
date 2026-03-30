@@ -167,6 +167,19 @@ export default function ChatPage() {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
+    // Check for login
+    const storedUser = localStorage.getItem("user");
+    if (!storedUser) {
+      // Guest mode - limit to 3 messages
+      const guestChats = parseInt(sessionStorage.getItem("guest_chats") || "0");
+      if (guestChats >= 3) {
+        alert("၃ ကြိမ်သာခွင့်ပါ။ အကောင့်အရင်ဖွင့်ပါ။");
+        window.location.href = "/login";
+        return;
+      }
+      sessionStorage.setItem("guest_chats", String(guestChats + 1));
+    }
+
     // Detect intent and route to correct API
     const intent = detectIntent(input);
     const aiProvider = routeAI(intent);
