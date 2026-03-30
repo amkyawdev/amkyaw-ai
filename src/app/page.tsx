@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { 
   Bot, MessageSquare, Code, Image, Globe, Sparkles, 
-  ArrowRight, Users, Hash, ChevronRight, Github, Mail, Heart
+  ArrowRight, Users, Hash, ChevronRight, Github, Mail, Heart, User, Settings
 } from "lucide-react";
 
 const features = [

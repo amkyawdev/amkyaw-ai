@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { 
   Bot, User, Send, Hash, Plus, MessageSquare, 
-  Menu, X, Loader2, LogOut
+  Menu, X, Loader2, LogOut, Home, Users, Settings
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -242,17 +242,29 @@ export default function PublicChatPage() {
                 )}
               </div>
 
-              <div className="p-3 border-t border-border/50 space-y-2">
-                <Link href="/profile" className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5">
-                  <User className="w-5 h-5" /><span className="text-sm">Guest</span>
-                </Link>
-                <Link href="/login" className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-orange-400">
-                  <LogOut className="w-5 h-5" /><span className="text-sm">Login</span>
+              <motion.div className="p-3 border-t border-border/50 space-y-2">
+                <Link href="/" className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5">
+                  <Home className="w-5 h-5" /><span className="text-sm">Home</span>
                 </Link>
                 <Link href="/chat" className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5">
                   <Bot className="w-5 h-5 text-orange-500" /><span className="text-sm">AI Chat</span>
                 </Link>
-              </div>
+                <Link href="/about" className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5">
+                  <Users className="w-5 h-5" /><span className="text-sm">About</span>
+                </Link>
+                <Link href="/docs" className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5">
+                  <MessageSquare className="w-5 h-5" /><span className="text-sm">Docs</span>
+                </Link>
+                <Link href="/profile" className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5">
+                  <User className="w-5 h-5" /><span className="text-sm">Profile</span>
+                </Link>
+                <Link href="/settings" className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5">
+                  <Settings className="w-5 h-5" /><span className="text-sm">Settings</span>
+                </Link>
+                <Link href="/login" className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-orange-400">
+                  <LogOut className="w-5 h-5" /><span className="text-sm">Login</span>
+                </Link>
+              </motion.div>
             </motion.aside>
           </>
         )}
