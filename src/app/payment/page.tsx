@@ -117,7 +117,7 @@ export default function PaymentPage() {
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
                   <Phone className="w-4 h-4" /> KBZPay Number
                 </div>
-                <div className="text-xl font-mono">09 123 456 789</div>
+                <div className="text-xl font-mono">09 6777 40154</div>
               </div>
               <div className="bg-muted rounded-lg p-4 mb-4">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
