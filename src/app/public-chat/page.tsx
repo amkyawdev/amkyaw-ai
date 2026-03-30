@@ -5,8 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { 
-  Bot, User, Send, Hash, Users, Plus, MessageSquare, 
-  Menu, X, Loader2, LogOut, Settings
+  Bot, User, Send, Hash, Plus, MessageSquare, 
+  Menu, X, Loader2, LogOut
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -35,6 +35,7 @@ export default function PublicChatPage() {
   const [showSidebar, setShowSidebar] = useState(false);
   const [showNewGroup, setShowNewGroup] = useState(false);
   const [newGroupName, setNewGroupName] = useState("");
+  const [error, setError] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Check auth and load data
@@ -44,35 +45,41 @@ export default function PublicChatPage() {
       router.push("/login");
       return;
     }
-    setUser(JSON.parse(storedUser));
-    loadGroups();
+    const userData = JSON.parse(storedUser);
+    setUser(userData);
+    loadGroups(userData.name);
   }, [router]);
 
   // Load messages when group changes
   useEffect(() => {
     if (currentGroup) {
       loadMessages(currentGroup.id);
-      // Poll for new messages
-      const interval = setInterval(() => loadMessages(currentGroup.id), 3000);
+      const interval = setInterval(() => loadMessages(currentGroup.id), 5000);
       return () => clearInterval(interval);
     }
   }, [currentGroup]);
 
-  // Scroll to bottom on new messages
+  // Scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const loadGroups = async () => {
+  const loadGroups = async (username: string) => {
     try {
-      const res = await fetch("/api/chat-groups");
+      const res = await fetch("/api/chat-groups", {
+        headers: { "x-username": username }
+      });
       if (res.ok) {
         const data = await res.json();
         setGroups(data);
         if (data.length > 0) setCurrentGroup(data[0]);
+      } else {
+        const err = await res.json();
+        setError(err.error || "Failed to load groups");
       }
     } catch (err) {
       console.error("Failed to load groups:", err);
+      setError("Network error");
     } finally {
       setIsLoading(false);
     }
@@ -95,18 +102,27 @@ export default function PublicChatPage() {
     try {
       const res = await fetch("/api/chat-groups", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "x-username": user?.name || "Anonymous"
+        },
         body: JSON.stringify({ name: newGroupName.trim() })
       });
       if (res.ok) {
         const newGroup = await res.json();
-        setGroups([...groups, newGroup]);
+        if (!groups.find(g => g.id === newGroup.id)) {
+          setGroups([...groups, newGroup]);
+        }
         setCurrentGroup(newGroup);
         setNewGroupName("");
         setShowNewGroup(false);
+      } else {
+        const err = await res.json();
+        setError(err.error || "Failed to create group");
       }
     } catch (err) {
       console.error("Failed to create group:", err);
+      setError("Network error");
     }
   };
 
@@ -115,10 +131,14 @@ export default function PublicChatPage() {
     if (!newMessage.trim() || !currentGroup || !user) return;
 
     setIsSending(true);
+    setError("");
     try {
       const res = await fetch("/api/messages", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "x-username": user.name
+        },
         body: JSON.stringify({
           group_id: currentGroup.id,
           content: newMessage.trim()
@@ -127,9 +147,13 @@ export default function PublicChatPage() {
       if (res.ok) {
         setNewMessage("");
         loadMessages(currentGroup.id);
+      } else {
+        const err = await res.json();
+        setError(err.error || "Failed to send");
       }
     } catch (err) {
       console.error("Failed to send message:", err);
+      setError("Network error");
     } finally {
       setIsSending(false);
     }
@@ -150,7 +174,6 @@ export default function PublicChatPage() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      {/* Sidebar */}
       <AnimatePresence>
         {showSidebar && (
           <>
@@ -164,25 +187,25 @@ export default function PublicChatPage() {
                     <Hash className="w-5 h-5 text-orange-500" />
                     <span className="font-bold">Public Chats</span>
                   </div>
-                  <button onClick={() => setShowSidebar(false)} className="md:hidden p-2">
-                    <X className="w-5 h-5" />
-                  </button>
+                  <button onClick={() => setShowSidebar(false)} className="md:hidden p-2"><X className="w-5 h-5" /></button>
                 </div>
               </div>
 
-              {/* Groups List */}
               <div className="flex-1 overflow-y-auto p-3 space-y-2">
-                {groups.map(group => (
-                  <button key={group.id} onClick={() => { setCurrentGroup(group); setShowSidebar(false); }}
-                    className={cn("w-full text-left p-3 rounded-xl flex items-center gap-3 transition-all",
-                      currentGroup?.id === group.id ? "bg-orange-500/15 border border-orange-500/30" : "hover:bg-white/5")}>
-                    <Hash className="w-4 h-4 text-orange-500" />
-                    <span className="truncate">{group.name}</span>
-                  </button>
-                ))}
+                {groups.length === 0 ? (
+                  <p className="text-center text-muted-foreground p-4">No groups yet</p>
+                ) : (
+                  groups.map(group => (
+                    <button key={group.id} onClick={() => { setCurrentGroup(group); setShowSidebar(false); }}
+                      className={cn("w-full text-left p-3 rounded-xl flex items-center gap-3 transition-all",
+                        currentGroup?.id === group.id ? "bg-orange-500/15 border border-orange-500/30" : "hover:bg-white/5")}>
+                      <Hash className="w-4 h-4 text-orange-500" />
+                      <span className="truncate">{group.name}</span>
+                    </button>
+                  ))
+                )}
               </div>
 
-              {/* Create Group */}
               <div className="p-3 border-t border-border/50">
                 {showNewGroup ? (
                   <div className="space-y-2">
@@ -200,7 +223,6 @@ export default function PublicChatPage() {
                 )}
               </div>
 
-              {/* User Menu */}
               <div className="p-3 border-t border-border/50 space-y-2">
                 <Link href="/profile" className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5">
                   <User className="w-5 h-5" /><span className="text-sm">{user?.name}</span>
@@ -217,13 +239,10 @@ export default function PublicChatPage() {
         )}
       </AnimatePresence>
 
-      {/* Main Chat */}
       <main className="flex-1 flex flex-col overflow-hidden">
         <header className="h-14 px-4 flex items-center justify-between border-b border-border/50 bg-background/80">
           <div className="flex items-center gap-3">
-            <button onClick={() => setShowSidebar(true)} className="p-2 rounded-lg hover:bg-white/5">
-              <Menu className="w-5 h-5" />
-            </button>
+            <button onClick={() => setShowSidebar(true)} className="p-2 rounded-lg hover:bg-white/5"><Menu className="w-5 h-5" /></button>
             {currentGroup && (
               <div className="flex items-center gap-2">
                 <Hash className="w-5 h-5 text-orange-500" />
@@ -231,12 +250,13 @@ export default function PublicChatPage() {
               </div>
             )}
           </div>
-          <Link href="/chat" className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm font-medium">
-            AI Chat
-          </Link>
+          <Link href="/chat" className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm font-medium">AI Chat</Link>
         </header>
 
-        {/* Messages */}
+        {error && (
+          <div className="px-4 py-2 bg-red-500/10 text-red-400 text-sm">{error}</div>
+        )}
+
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
@@ -255,9 +275,7 @@ export default function PublicChatPage() {
                   msg.username === user?.name ? "bg-orange-500/20" : "glass")}>
                   <p className="text-xs text-orange-500 mb-1">{msg.username}</p>
                   <p className="text-sm">{msg.content}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {new Date(msg.created_at).toLocaleTimeString()}
-                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">{new Date(msg.created_at).toLocaleTimeString()}</p>
                 </div>
               </motion.div>
             ))
@@ -265,7 +283,6 @@ export default function PublicChatPage() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input */}
         <form onSubmit={sendMessage} className="p-4 border-t border-border/50">
           <div className="flex gap-3 max-w-4xl mx-auto">
             <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)}

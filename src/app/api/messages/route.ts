@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(result);
   } catch (error) {
     console.error('Messages error:', error);
-    return NextResponse.json({ error: 'Failed to fetch messages' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch messages', details: String(error) }, { status: 500 });
   }
 }
 
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
 
     // Get user from header
     const username = request.headers.get('x-username') || 'Anonymous';
-    
+
     // Find or create user
     let userResult = await sql('SELECT id FROM users WHERE username = $1 LIMIT 1', [username]);
     let userId;
@@ -61,7 +61,6 @@ export async function POST(request: NextRequest) {
       [group_id, userId, content]
     );
 
-    // Get username for response
     const msg = result[0];
     return NextResponse.json({
       id: msg.id,
@@ -71,6 +70,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Send message error:', error);
-    return NextResponse.json({ error: 'Failed to send message' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to send message', details: String(error) }, { status: 500 });
   }
 }
