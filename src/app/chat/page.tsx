@@ -84,13 +84,6 @@ const ChatMessage = ({ message, onCopy, isCopied }: { message: Message; onCopy: 
 );
 
 const ChatInput = ({ input, setInput, onSubmit, isLoading, thinkingText, showThinking }: { input: string; setInput: (v: string) => void; onSubmit: (e: React.FormEvent) => void; isLoading: boolean; thinkingText?: string; showThinking?: boolean }) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) setInput(input + `[${file.name}]`);
-  };
-
   return (
     <div className="p-4 border-t border-border/50 bg-background/95 backdrop-blur-xl">
       <div className="max-w-4xl mx-auto">
@@ -114,25 +107,6 @@ const ChatInput = ({ input, setInput, onSubmit, isLoading, thinkingText, showThi
         )}
         
         <form onSubmit={onSubmit} className="max-w-4xl mx-auto flex gap-3 items-end">
-          {/* Upload button */}
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileUpload}
-            className="hidden"
-            accept="image/*,.txt,.pdf,.doc"
-          />
-          <motion.button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-colors border border-border/50"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            disabled={isLoading}
-          >
-            <Upload className="w-5 h-5" />
-          </motion.button>
-          
           <div className="flex-1">
             <textarea value={input} onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onSubmit(e); } }}
