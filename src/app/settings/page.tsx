@@ -19,7 +19,7 @@ export default function SettingsPage() {
   const { preferences, updatePreferences } = usePreferencesStore();
   const { chats, clearChats } = useChatStore();
   
-  const [defaultModel, setDefaultModel] = useState<GroqModelType>('llama-3.1-8b');
+  const [defaultModel, setDefaultModel] = useState<GroqModelType>('llama-3.3-70b');
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
 

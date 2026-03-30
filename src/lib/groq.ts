@@ -1,66 +1,80 @@
 const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
 
-// Enhanced System Prompt for Amkyaw AI
-export const BURMESE_SYSTEM_PROMPT = `You are Amkyaw AI, a professional AI assistant powered by Groq.
+// Enhanced System Prompt for Amkyaw AI with Myanmar support
+export const BURMESE_SYSTEM_PROMPT = `You are Amkyaw AI, a professional AI assistant powered by Groq (Llama 3.3 70B).
 
 ## Your Identity:
 - Name: Amkyaw AI
 - Created by: Aung Myo Kyaw
-- When someone says "I am Amkyaw AI" or similar, respond warmly.
+- Always be helpful, friendly, and professional
 
 ## Your Capabilities:
-1. 💬 AI Chat - Conversation, Q&A, explanations
-2. 🧠 Code - Generate, debug, explain code (ALWAYS use markdown code blocks)
-3. ✍️ Text - Write blog, README, caption, stories
-4. 🌐 Translate - English ↔ Burmese ↔ Other languages
-5. 🔍 Analyze - Data, sentiment, text analysis
-6. 📝 Summarize - Quick content summarization
-7. 🔧 Debug - Fix code errors with clear explanations
+1. 💬 AI Chat - Conversation, Q&A, casual chat, greetings
+2. 💻 Code - Write, debug, explain code (use markdown code blocks)
+3. 🌐 Translate - English ↔ Burmese (Unicode only)
+4. ✍️ Text - Write articles, stories, content
+5. 🔍 Analyze - Data, sentiment analysis
+6. 📝 Summarize - Quick summarization
 
-## Response Rules:
-1. **Language Detection**: If user types in Burmese (ကခဂဃ...), respond in Burmese. If English, respond in English.
-2. **Code Responses**: ALWAYS wrap code in markdown blocks:
-   \`\`\`language
-   // code here
-   \`\`\`
-3. **Question Analysis**: Analyze what user is asking:
-   - Is it a question? → Answer clearly
-   - Is it code? → Generate with explanation
-   - Is it translation? → Translate accurately
-   - Is it writing? → Create quality content
-4. **Clarity**: Keep responses concise but complete
-5. **No Hallucination**: If unsure, say "I don't know" in appropriate language
-6. **Format Code**: Use proper indentation and syntax highlighting
-
-## Greeting:
-- If user greets (Hi, Hello, ဟိုင်း, etc.), respond warmly as Amkyaw AI
-- If user asks "what can you do", list your capabilities
-- If user asks for help, ask what they need specifically
+## Myanmar Text Rules:
+- Respond in the same language as user input
+- If Burmese Unicode (ကခဂဃ...), respond in Burmese
+- Use proper Myanmar Unicode characters (U+1000 to U+109F)
 
 ## Important:
-- Never define common words incorrectly
-- For debugging: show problem → cause → fix → explanation
-- Keep code clean and well-formatted`;
+- Use markdown code blocks for code
+- If unsure, say "I don't know"
+- Keep responses concise but complete`;
 
 export const GROQ_MODELS = {
   'llama-3.3-70b': {
     name: 'llama-3.3-70b-versatile',
     displayName: 'Llama 3.3 70B',
-    description: 'Most capable - Best for complex tasks',
+    description: 'Most capable - Best for all tasks',
     maxTokens: 32768,
-  },
-  'llama-3.1-8b': {
-    name: 'llama-3.1-8b-instant',
-    displayName: 'Llama 3.1 8B',
-    description: 'Fast & efficient - Best for quick responses',
-    maxTokens: 8192,
   },
 } as const;
 
 export type GroqModelType = keyof typeof GROQ_MODELS;
 
+// Detect if text contains Myanmar Unicode
 export function isBurmeseText(text: string): boolean {
   return /[\u1000-\u109F\uAA60-\uAA7F]/.test(text);
+}
+
+// Detect user intent from message
+export function detectIntent(message: string): 'chat' | 'code' | 'translate' | 'default' {
+  const text = message.toLowerCase();
+  
+  // Coding intent
+  const codeKeywords = ['code', 'javascript', 'python', 'html', 'css', 'react', 'node', 'debug', 'fix error', 'write code', 'programming', 'function', 'api', 'sql', 'typescript', 'java', 'php'];
+  if (codeKeywords.some(keyword => text.includes(keyword))) {
+    return 'code';
+  }
+  
+  // Translate intent
+  const translateKeywords = ['translate', 'translation', 'ဘာသာပြန်', 'interpreter'];
+  if (translateKeywords.some(keyword => text.includes(keyword)) || isBurmeseText(message.slice(0, 50))) {
+    return 'translate';
+  }
+  
+  // Chat intent (short messages, greetings)
+  const chatKeywords = ['hi', 'hello', 'hey', 'ဟိုင်း', 'မင်္ဂလာပါ', 'good morning', 'good night', 'bye', 'thanks', 'ကျေးဇူး'];
+  if (chatKeywords.some(keyword => text.includes(keyword)) || message.trim().length < 30) {
+    return 'chat';
+  }
+  
+  return 'default';
+}
+
+// Get thinking text based on intent
+export function getThinkingText(intent: string): string {
+  switch (intent) {
+    case 'chat': return 'Typing...';
+    case 'code': return 'Writing code...';
+    case 'translate': return 'Translating...';
+    default: return 'Thinking...';
+  }
 }
 
 export function isValidResponse(response: string): boolean {

@@ -43,7 +43,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   isLoading: false,
   error: null,
 
-  createChat: (model = 'llama-3.1-8b') => {
+  createChat: (model = 'llama-3.3-70b') => {
     const newChat: Chat = {
       id: `chat_${Date.now()}`,
       title: 'New Chat',

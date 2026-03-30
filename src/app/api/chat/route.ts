@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { 
       prompt, 
-      model = 'llama-3.1-8b', 
+      model = 'llama-3.3-70b', 
       temperature = 0.2, 
       topP = 0.8,
       chatId,
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     const modelKey = model as GroqModelType;
     if (!GROQ_MODELS[modelKey]) {
       return NextResponse.json(
-        { error: 'Invalid model selected. Available: llama-3.3-70b, llama-3.1-8b, gemma2-9b' },
+        { error: 'Invalid model selected. Available: llama-3.3-70b, llama-3.3-70b' },
         { status: 400 }
       );
     }
