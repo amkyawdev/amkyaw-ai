@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { 
   Bot, User, Send, Hash, Plus, MessageSquare, 
   Menu, X, Loader2, LogOut
@@ -24,8 +23,8 @@ interface ChatGroup {
 }
 
 export default function PublicChatPage() {
-  const router = useRouter();
-  const [user, setUser] = useState<{name: string; email: string} | null>(null);
+  
+  const [user, setUser] = useState<{name: string; email: string}>({name: "Guest", email: ""});
   const [groups, setGroups] = useState<ChatGroup[]>([]);
   const [currentGroupId, setCurrentGroupId] = useState<number | null>(null);
   const [currentGroupName, setCurrentGroupName] = useState<string>("general");
@@ -39,16 +38,7 @@ export default function PublicChatPage() {
   const [error, setError] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (!storedUser) {
-      router.push("/login");
-      return;
-    }
-    const userData = JSON.parse(storedUser);
-    setUser(userData);
-    loadGroups(userData.name);
-  }, [router]);
+  
 
   useEffect(() => {
     if (currentGroupId) {
@@ -176,10 +166,7 @@ export default function PublicChatPage() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    router.push("/login");
-  };
+  
 
   if (isLoading) {
     return (
@@ -252,14 +239,11 @@ export default function PublicChatPage() {
 
               <div className="p-3 border-t border-border/50 space-y-2">
                 <Link href="/profile" className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5">
-                  <User className="w-5 h-5" /><span className="text-sm">{user?.name}</span>
+                  <User className="w-5 h-5" /><span className="text-sm">Guest</span>
                 </Link>
                 <Link href="/chat" className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5">
                   <Bot className="w-5 h-5 text-orange-500" /><span className="text-sm">AI Chat</span>
                 </Link>
-                <button onClick={handleLogout} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-red-400">
-                  <LogOut className="w-5 h-5" /><span className="text-sm">Logout</span>
-                </button>
               </div>
             </motion.aside>
           </>
