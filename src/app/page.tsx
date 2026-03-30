@@ -15,8 +15,8 @@ export default function Home() {
 
         <div className="text-center space-y-8 max-w-4xl">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass glass-hover">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm text-muted-foreground">Powered by Gemini 1.5 Flash</span>
+            <Zap className="w-4 h-4 text-orange-500" />
+            <span className="text-sm text-muted-foreground">Powered by Groq - Ultra Fast AI</span>
           </div>
 
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
