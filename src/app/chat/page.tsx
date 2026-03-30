@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Send, Bot, User, Trash2, Plus, MessageSquare, 
-  Settings, Copy, Check, Menu, X, Share2, RefreshCw, Home, Sparkles
+  Settings, Copy, Check, Menu, X, Share2, RefreshCw, Home, Sparkles, Upload
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useChatStore, Message } from "@/stores/chatStore";
@@ -83,23 +83,74 @@ const ChatMessage = ({ message, onCopy, isCopied }: { message: Message; onCopy: 
   </motion.div>
 );
 
-const ChatInput = ({ input, setInput, onSubmit, isLoading }: { input: string; setInput: (v: string) => void; onSubmit: (e: React.FormEvent) => void; isLoading: boolean }) => (
-  <div className="p-4 border-t border-border/50 bg-background/95 backdrop-blur-xl">
-    <form onSubmit={onSubmit} className="max-w-4xl mx-auto flex gap-3">
-      <textarea value={input} onChange={(e) => setInput(e.target.value)}
-        onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onSubmit(e); } }}
-        placeholder="Message Amkyaw AI..."
-        className="flex-1 px-5 py-4 rounded-2xl glass border border-border/50 focus:border-orange-500/50 resize-none min-h-[56px] text-sm bg-black/30"
-        disabled={isLoading} rows={1} />
-      <motion.button type="submit" disabled={!input.trim() || isLoading}
-        className={cn("p-4 rounded-2xl font-medium transition-all flex items-center justify-center",
-          input.trim() && !isLoading ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white" : "bg-muted/50 text-muted-foreground cursor-not-allowed")}
-        whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-        {isLoading ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
-      </motion.button>
-    </form>
-  </div>
-);
+const ChatInput = ({ input, setInput, onSubmit, isLoading, thinkingText, showThinking }: { input: string; setInput: (v: string) => void; onSubmit: (e: React.FormEvent) => void; isLoading: boolean; thinkingText?: string; showThinking?: boolean }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) setInput(input + `[${file.name}]`);
+  };
+
+  return (
+    <div className="p-4 border-t border-border/50 bg-background/95 backdrop-blur-xl">
+      <div className="max-w-4xl mx-auto">
+        {/* Thinking indicator in input area */}
+        {showThinking && isLoading && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }} 
+            animate={{ opacity: 1, height: "auto" }} 
+            exit={{ opacity: 0, height: 0 }}
+            className="mb-3"
+          >
+            <div className="flex items-center gap-2 px-3 py-2 bg-orange-500/10 rounded-lg border border-orange-500/20">
+              <div className="flex gap-1">
+                <span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                <span className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                <span className="w-1.5 h-1.5 bg-orange-300 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+              </div>
+              <span className="text-xs text-orange-400 font-medium">{thinkingText || "Thinking..."}</span>
+            </div>
+          </motion.div>
+        )}
+        
+        <form onSubmit={onSubmit} className="max-w-4xl mx-auto flex gap-3 items-end">
+          {/* Upload button */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileUpload}
+            className="hidden"
+            accept="image/*,.txt,.pdf,.doc"
+          />
+          <motion.button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-colors border border-border/50"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            disabled={isLoading}
+          >
+            <Upload className="w-5 h-5" />
+          </motion.button>
+          
+          <div className="flex-1">
+            <textarea value={input} onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onSubmit(e); } }}
+              placeholder="Message Amkyaw AI..."
+              className="w-full px-5 py-4 rounded-2xl glass border border-border/50 focus:border-orange-500/50 resize-none min-h-[56px] max-h-[200px] text-sm bg-black/30"
+              disabled={isLoading} rows={1} />
+          </div>
+          <motion.button type="submit" disabled={!input.trim() || isLoading}
+            className={cn("p-4 rounded-2xl font-medium transition-all flex items-center justify-center",
+              input.trim() && !isLoading ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white" : "bg-muted/50 text-muted-foreground cursor-not-allowed")}
+            whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            {isLoading ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+          </motion.button>
+        </form>
+      </div>
+    </div>
+  );
+};
 
 export default function ChatPage() {
   const [input, setInput] = useState("");
@@ -258,7 +309,7 @@ export default function ChatPage() {
           <div ref={messagesEndRef} />
         </div>
 
-        <ChatInput input={input} setInput={setInput} onSubmit={handleSubmit} isLoading={isLoading} />
+        <ChatInput input={input} setInput={setInput} onSubmit={handleSubmit} isLoading={isLoading} thinkingText={thinkingText} showThinking={true} />
       </main>
     </div>
   );
