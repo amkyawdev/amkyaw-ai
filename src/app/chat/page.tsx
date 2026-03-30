@@ -4,9 +4,9 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Send, Bot, User, Trash2, Plus, MessageSquare, 
-  Settings, History, ChevronDown, Copy, Check,
+  Settings, ChevronDown, Copy, Check,
   Sparkles, Brain, Zap, Menu, X,
-  Share2, FileText, RefreshCw
+  Share2, FileText, RefreshCw, Home
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useChatStore, Message } from '@/stores/chatStore';
@@ -235,15 +235,13 @@ export default function ChatPage() {
               {/* Footer */}
               <div className="p-3 border-t border-border/50 space-y-2">
                 <div className="flex gap-1.5">
-                  <Link href="/history" className="flex-1 flex items-center justify-center p-2 rounded-lg hover:bg-white/5"><History className="w-4 h-4" /></Link>
                   <Link href="/settings" className="flex-1 flex items-center justify-center p-2 rounded-lg hover:bg-white/5"><Settings className="w-4 h-4" /></Link>
-                  <Link href="/docs" className="flex-1 flex items-center justify-center p-2 rounded-lg hover:bg-white/5"><FileText className="w-4 h-4" /></Link>
                 </div>
-                <Link href="/profile" className="flex items-center gap-2 p-2 rounded-lg hover:bg-white/5">
+                <Link href="/" className="flex items-center gap-2 p-2 rounded-lg hover:bg-white/5">
                   <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center">
                     <User className="w-3.5 h-3.5 text-white" />
                   </div>
-                  <span className="text-xs truncate">{isAuthenticated ? user?.name || 'User' : 'Guest'}</span>
+                  <span className="text-xs truncate">Home</span>
                 </Link>
               </div>
             </motion.aside>

@@ -1,6 +1,18 @@
 const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
 
-// Groq supported models (updated March 2026)
+// System prompt for Burmese language context
+export const BURMESE_SYSTEM_PROMPT = `You are Amkyaw AI, a helpful assistant specialized in Burmese (Myanmar) language and culture.
+
+IMPORTANT RULES:
+1. Always respond in the same language as the user's input. If the user writes in Burmese (Unicode: ကခဂဃစကခ...), respond in Burmese.
+2. If you don't know or understand something, clearly say "ကျနော်/ကျွန်တော် ဒီအကြောင်းကို မသိပါဘူး" (I don't know about this).
+3. Do NOT make up or hallucinate answers. If unsure, admit it.
+4. For code-related questions, respond with proper code examples.
+5. Keep responses concise and helpful.
+6. If the input contains Burmese script (Unicode characters 1000-109F), treat it as Burmese language.
+7. Never define common English words (like "Hi", "Hello") as body parts or unrelated meanings.
+8. For greetings in any language, respond appropriately to the greeting's meaning.`;
+
 export const GROQ_MODELS = {
   'llama-3.3-70b': {
     name: 'llama-3.3-70b-versatile',
@@ -24,10 +36,42 @@ export const GROQ_MODELS = {
 
 export type GroqModelType = keyof typeof GROQ_MODELS;
 
+// Check if text contains Burmese Unicode characters
+export function isBurmeseText(text: string): boolean {
+  const burmeseRange = /[\u1000-\u109F\uAA60-\uAA7F]/;
+  return burmeseRange.test(text);
+}
+
+// Detect language from text
+export function detectLanguage(text: string): 'burmese' | 'english' | 'other' {
+  if (isBurmeseText(text)) return 'burmese';
+  if (/^[a-zA-Z\s.,!?]+$/.test(text)) return 'english';
+  return 'other';
+}
+
+// Check if response is valid (not hallucinated/empty)
+export function isValidResponse(response: string): boolean {
+  if (!response || response.trim().length < 2) return false;
+  
+  // Check for common hallucination patterns
+  const hallucinationPatterns = [
+    /^(The user said|User wrote|You wrote)['"]?(Hi|Hello|Hey)/i,
+    /^The term ['"]?\w+['"]? is (not a|an unrelated)/i,
+    /This is (not related|a body part|an anatomical)/i,
+  ];
+  
+  for (const pattern of hallucinationPatterns) {
+    if (pattern.test(response.trim())) return false;
+  }
+  
+  return true;
+}
+
 export async function callGroq(
   messages: { role: string; content: string }[],
   model: string = 'llama-3.3-70b-versatile',
-  temperature: number = 0.7
+  temperature: number = 0.2,
+  topP: number = 0.8
 ) {
   const apiKey = process.env.GROQ_API_KEY;
   
@@ -35,10 +79,16 @@ export async function callGroq(
     throw new Error('GROQ_API_KEY is not defined in environment variables.');
   }
 
+  // Build messages with system prompt
+  const systemMessage = { role: 'system', content: BURMESE_SYSTEM_PROMPT };
+  const allMessages = [systemMessage, ...messages];
+
   const payload = {
     model,
-    messages,
-    temperature,
+    messages: allMessages,
+    temperature, // Low temperature to reduce hallucinations
+    top_p: topP,
+    max_tokens: 2048,
   };
 
   const response = await fetch(GROQ_ENDPOINT, {
@@ -65,5 +115,12 @@ export async function getGroqResponse(
 ): Promise<string> {
   const modelConfig = GROQ_MODELS[model];
   const result = await callGroq(messages, modelConfig.name);
-  return result.choices?.[0]?.message?.content ?? '';
+  const response = result.choices?.[0]?.message?.content ?? '';
+  
+  // Validate response
+  if (!isValidResponse(response)) {
+    return 'ပြန်ဖြေနိုင်သည်မရှိပါ။ ကျေးဇူးပြု၍ မေးခွန်းအား ပြန်လည်ရိုက်ထည့်ပါ။ (Unable to respond. Please re-enter your question.)';
+  }
+  
+  return response;
 }

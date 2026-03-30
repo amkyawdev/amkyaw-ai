@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { callGroq, GROQ_MODELS, GroqModelType } from '@/lib/groq';
+import { callGroq, GROQ_MODELS, GroqModelType, BURMESE_SYSTEM_PROMPT, isValidResponse } from '@/lib/groq';
 
 export const runtime = 'nodejs';
 
@@ -8,8 +8,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { 
       prompt, 
-      model = 'mixtral-8x7b', 
-      temperature = 0.7, 
+      model = 'llama-3.1-8b', 
+      temperature = 0.2, 
+      topP = 0.8,
       chatId,
       messages: chatMessages 
     } = body;
@@ -24,22 +25,29 @@ export async function POST(request: NextRequest) {
     const modelKey = model as GroqModelType;
     if (!GROQ_MODELS[modelKey]) {
       return NextResponse.json(
-        { error: 'Invalid model selected. Available: mixtral-8x7b, llama-3.1-8b, gemma2-9b' },
+        { error: 'Invalid model selected. Available: llama-3.3-70b, llama-3.1-8b, gemma2-9b' },
         { status: 400 }
       );
     }
 
     const modelConfig = GROQ_MODELS[modelKey];
     
-    // Build messages array
-    const messages = chatMessages || [
-      { role: 'system', content: 'You are a helpful AI assistant. Provide clear, concise, and accurate responses.' },
-      { role: 'user', content: prompt }
-    ];
+    // Build messages array with system prompt for Burmese context
+    const systemMessage = { role: 'system', content: BURMESE_SYSTEM_PROMPT };
+    const userMessage = { role: 'user', content: prompt };
+    
+    const messages = chatMessages 
+      ? [systemMessage, ...chatMessages]
+      : [systemMessage, userMessage];
 
-    // Call Groq API
-    const result = await callGroq(messages, modelConfig.name, temperature);
-    const response = result.choices?.[0]?.message?.content ?? '';
+    // Call Groq API with optimized parameters
+    const result = await callGroq(messages, modelConfig.name, temperature, topP);
+    let response = result.choices?.[0]?.message?.content ?? '';
+
+    // Validate response - check for hallucinations
+    if (!isValidResponse(response)) {
+      response = 'ပြန်ဖြေနိုင်သည်မရှိပါ။ ကျေးဇူးပြု၍ မေးခွန်းအား ပြန်လည်ရိုက်ထည့်ပါ။';
+    }
 
     return NextResponse.json({
       response,

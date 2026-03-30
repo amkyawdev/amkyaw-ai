@@ -14,10 +14,7 @@ import { useAuthStore } from '@/stores/authStore';
 const navItems = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/chat', label: 'Chat', icon: MessageSquare },
-  { href: '/history', label: 'History', icon: History },
-  { href: '/docs', label: 'Docs', icon: BookOpen },
   { href: '/settings', label: 'Settings', icon: Settings },
-  { href: '/profile', label: 'Profile', icon: User },
 ];
 
 export default function Navbar() {
