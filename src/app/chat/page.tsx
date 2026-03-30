@@ -291,15 +291,6 @@ export default function ChatPage() {
             </AnimatePresence>
           )}
           
-          {isLoading && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-3 max-w-4xl mx-auto">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center">
-                <Bot className="w-5 h-5 text-white" />
-              </div>
-              <div className="glass rounded-2xl px-4 py-3"><ThinkingLoader text={thinkingText} /></div>
-            </motion.div>
-          )}
-
           {error && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-4xl mx-auto p-4 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20">
               <p>{error}</p>
