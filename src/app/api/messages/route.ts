@@ -1,10 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { neon } from '@neondatabase/serverless';
 
-const sql = neon(process.env.NEON_DATABASE_URL!);
+let sql: any;
+
+async function getDb() {
+  if (!sql) {
+    const { neon } = await import('@neondatabase/serverless');
+    const dbUrl = process.env.NEON_DATABASE_URL;
+    if (!dbUrl) {
+      throw new Error('NEON_DATABASE_URL not configured');
+    }
+    sql = neon(dbUrl);
+  }
+  return sql;
+}
 
 export async function GET(request: NextRequest) {
   try {
+    const db = await getDb();
     const { searchParams } = new URL(request.url);
     const groupId = searchParams.get('group_id');
     
@@ -12,7 +24,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Group ID required' }, { status: 400 });
     }
 
-    const result = await sql(
+    const result = await db(
       `SELECT m.id, m.content, m.created_at, u.username 
        FROM messages m 
        LEFT JOIN users u ON m.user_id = u.id 
@@ -31,6 +43,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const db = await getDb();
     const body = await request.json();
     const { group_id, content } = body;
     
@@ -38,15 +51,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Group ID and content required' }, { status: 400 });
     }
 
-    // Get user from header
     const username = request.headers.get('x-username') || 'Anonymous';
 
-    // Find or create user
-    let userResult = await sql('SELECT id FROM users WHERE username = $1 LIMIT 1', [username]);
+    let userResult = await db('SELECT id FROM users WHERE username = $1 LIMIT 1', [username]);
     let userId;
     
     if (userResult.length === 0) {
-      const newUser = await sql(
+      const newUser = await db(
         'INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id',
         [username, `${username}@demo.com`, 'demo']
       );
@@ -55,8 +66,7 @@ export async function POST(request: NextRequest) {
       userId = userResult[0].id;
     }
 
-    // Insert message
-    const result = await sql(
+    const result = await db(
       'INSERT INTO messages (group_id, user_id, content) VALUES ($1, $2, $3) RETURNING id, content, created_at',
       [group_id, userId, content]
     );

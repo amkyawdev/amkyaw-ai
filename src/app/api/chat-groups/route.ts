@@ -1,11 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { neon } from '@neondatabase/serverless';
 
-const sql = neon(process.env.NEON_DATABASE_URL!);
+// Lazy database connection
+let sql: any;
+
+async function getDb() {
+  if (!sql) {
+    const { neon } = await import('@neondatabase/serverless');
+    const dbUrl = process.env.NEON_DATABASE_URL;
+    if (!dbUrl) {
+      throw new Error('NEON_DATABASE_URL not configured');
+    }
+    sql = neon(dbUrl);
+  }
+  return sql;
+}
 
 export async function GET() {
   try {
-    const result = await sql('SELECT id, name, description FROM chat_groups ORDER BY created_at DESC');
+    const db = await getDb();
+    const result = await db('SELECT id, name, description FROM chat_groups ORDER BY created_at DESC');
     return NextResponse.json(result);
   } catch (error) {
     console.error('Chat groups error:', error);
@@ -15,6 +28,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const db = await getDb();
     const body = await request.json();
     const { name, description = '' } = body;
 
@@ -22,15 +36,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Name required' }, { status: 400 });
     }
 
-    // Get user from header
     const username = request.headers.get('x-username') || 'Anonymous';
 
-    // Find or create user
-    let userResult = await sql('SELECT id FROM users WHERE username = $1 LIMIT 1', [username]);
+    let userResult = await db('SELECT id FROM users WHERE username = $1 LIMIT 1', [username]);
     let userId;
     
     if (userResult.length === 0) {
-      const newUser = await sql(
+      const newUser = await db(
         'INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id',
         [username, `${username}@demo.com`, 'demo']
       );
@@ -39,14 +51,12 @@ export async function POST(request: NextRequest) {
       userId = userResult[0].id;
     }
 
-    // Create group - check if exists first
-    const existing = await sql('SELECT id, name, description FROM chat_groups WHERE name = $1 LIMIT 1', [name]);
+    const existing = await db('SELECT id, name, description FROM chat_groups WHERE name = $1 LIMIT 1', [name]);
     if (existing.length > 0) {
       return NextResponse.json(existing[0]);
     }
 
-    // Insert new group
-    const result = await sql(
+    const result = await db(
       'INSERT INTO chat_groups (name, description, created_by) VALUES ($1, $2, $3) RETURNING id, name, description',
       [name, description, userId]
     );
