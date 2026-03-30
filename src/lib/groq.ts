@@ -1,23 +1,23 @@
 const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
 
-// Groq supported models
+// Groq supported models (updated March 2026)
 export const GROQ_MODELS = {
-  'mixtral-8x7b': {
-    name: 'mixtral-8x7b-32768',
-    displayName: 'Mixtral 8x7B',
-    description: 'Fast and capable mixture of experts',
+  'llama-3.3-70b': {
+    name: 'llama-3.3-70b-versatile',
+    displayName: 'Llama 3.3 70B',
+    description: 'Most capable - Best for complex tasks',
     maxTokens: 32768,
   },
   'llama-3.1-8b': {
     name: 'llama-3.1-8b-instant',
     displayName: 'Llama 3.1 8B',
-    description: 'Fast and efficient Llama model',
+    description: 'Fast & efficient - Best for quick responses',
     maxTokens: 8192,
   },
   'gemma2-9b': {
     name: 'gemma2-9b-it',
     displayName: 'Gemma 2 9B',
-    description: 'Google Gemma instruction tuned',
+    description: 'Google Gemma - Instruction tuned',
     maxTokens: 8192,
   },
 } as const;
@@ -26,7 +26,7 @@ export type GroqModelType = keyof typeof GROQ_MODELS;
 
 export async function callGroq(
   messages: { role: string; content: string }[],
-  model: string = 'mixtral-8x7b-32768',
+  model: string = 'llama-3.3-70b-versatile',
   temperature: number = 0.7
 ) {
   const apiKey = process.env.GROQ_API_KEY;
@@ -61,7 +61,7 @@ export async function callGroq(
 
 export async function getGroqResponse(
   messages: { role: string; content: string }[],
-  model: GroqModelType = 'mixtral-8x7b'
+  model: GroqModelType = 'llama-3.3-70b'
 ): Promise<string> {
   const modelConfig = GROQ_MODELS[model];
   const result = await callGroq(messages, modelConfig.name);

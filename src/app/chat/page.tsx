@@ -15,23 +15,23 @@ import MarkdownMessage from '@/components/chat/MarkdownMessage';
 import Link from 'next/link';
 
 const GROQ_MODELS = {
-  'mixtral-8x7b': { name: 'mixtral-8x7b-32768', displayName: 'Mixtral 8x7B', desc: 'Fast mixture of experts' },
-  'llama-3.1-8b': { name: 'llama-3.1-8b-instant', displayName: 'Llama 3.1 8B', desc: 'Efficient Llama model' },
+  'llama-3.3-70b': { name: 'llama-3.3-70b-versatile', displayName: 'Llama 3.3 70B', desc: 'Most capable model' },
+  'llama-3.1-8b': { name: 'llama-3.1-8b-instant', displayName: 'Llama 3.1 8B', desc: 'Fast & efficient' },
   'gemma2-9b': { name: 'gemma2-9b-it', displayName: 'Gemma 2 9B', desc: 'Google Gemma' },
 };
 
 type GroqModelType = keyof typeof GROQ_MODELS;
 
 const MODEL_ICONS: Record<string, React.ReactNode> = {
-  'mixtral-8x7b-32768': <Cpu className="w-5 h-5" />,
-  'llama-3.1-8b-instant': <Brain className="w-5 h-5" />,
-  'gemma2-9b-it': <Sparkles className="w-5 h-5" />,
+  'llama-3.3-70b-versatile': <Brain className="w-5 h-5" />,
+  'llama-3.1-8b-instant': <Sparkles className="w-5 h-5" />,
+  'gemma2-9b-it': <Zap className="w-5 h-5" />,
 };
 
 const MODEL_COLORS: Record<string, string> = {
-  'mixtral-8x7b-32768': 'from-orange-500 to-amber-500',
+  'llama-3.3-70b-versatile': 'from-purple-500 to-indigo-500',
   'llama-3.1-8b-instant': 'from-blue-500 to-cyan-500',
-  'gemma2-9b-it': 'from-purple-500 to-pink-500',
+  'gemma2-9b-it': 'from-orange-500 to-amber-500',
 };
 
 const TypingIndicator = () => (
@@ -122,7 +122,7 @@ export default function ChatPage() {
   const [input, setInput] = useState('');
   const [showSidebar, setShowSidebar] = useState(true);
   const [showModelSelect, setShowModelSelect] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<GroqModelType>('mixtral-8x7b');
+  const [selectedModel, setSelectedModel] = useState<GroqModelType>('llama-3.1-8b');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   

@@ -29,7 +29,7 @@ export default function SettingsPage() {
   const { user, isAuthenticated } = useAuthStore();
   const { theme, setTheme } = useTheme();
   
-  const [defaultModel, setDefaultModel] = useState<GroqModelType>('mixtral-8x7b');
+  const [defaultModel, setDefaultModel] = useState<GroqModelType>('llama-3.1-8b');
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
