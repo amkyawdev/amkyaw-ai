@@ -5,13 +5,17 @@ const HF_API_URL = 'https://api-inference.huggingface.co/models/black-forest-lab
 export interface HuggingFaceResponse {
   imageUrl?: string;
   error?: string;
+  errorMy?: string; // Myanmar error message
 }
 
 export async function generateImage(prompt: string): Promise<HuggingFaceResponse> {
   const apiKey = process.env.HUGGINGFACE_API_KEY;
   
   if (!apiKey) {
-    return { error: 'HUGGINGFACE_API_KEY not configured' };
+    return { 
+      error: 'HUGGINGFACE_API_KEY not configured', 
+      errorMy: 'AI ပါ်မှာ ပုံထုပ်ဖို့ ခွင့်မရှိပါ။ Admin ကို ဆက်သွယ်ပါ။' 
+    };
   }
 
   try {
@@ -28,20 +32,42 @@ export async function generateImage(prompt: string): Promise<HuggingFaceResponse
 
     // Handle different status codes
     if (response.status === 410) {
-      // Model deprecated, try fallback model
-      return generateWithFallback(prompt, apiKey);
+      return { 
+        error: 'Model deprecated - trying fallback', 
+        errorMy: 'စိတ်မရှိပါနဲ့၊ Update တွင်းပါမယ်။ နောက်ထပ် ကြိုးစားပါ။' 
+      };
+    }
+    
+    if (response.status === 429) {
+      return { 
+        error: 'Rate limit exceeded', 
+        errorMy: 'Limited ပြည့်ပါပြီ။ နောက်ရက်မှ ပြန်ကြိုးစားပါ။' 
+      };
+    }
+
+    if (response.status === 503) {
+      return { 
+        error: 'Service unavailable', 
+        errorMy: 'ဝန်ဆောည်က မရှိပါ။ နောက်မှ ပြန်ကြိုးစားပါ။' 
+      };
     }
     
     if (!response.ok) {
       const errorText = await response.text();
-      return { error: `HF API Error: ${response.status} - ${errorText}` };
+      return { 
+        error: `HF API Error: ${response.status}`, 
+        errorMy: 'ပုံထုပ်ရာတွင် အမှားဖြစ်ပါ။ နောက်မှ ပြန်ကြိုးစားပါ။' 
+      };
     }
 
     // Check content type
     const contentType = response.headers.get('content-type') || '';
     if (!contentType.includes('image')) {
       const errorText = await response.text();
-      return { error: `Expected image but got: ${errorText.slice(0, 100)}` };
+      return { 
+        error: `Expected image but got: ${errorText.slice(0, 100)}`, 
+        errorMy: 'ပုံပါ်လာတာ မဟုတ်ပါ။ နောက်မှ ပြန်ကြိုးစားပါ။' 
+      };
     }
 
     // Convert response to base64 and return as data URL
@@ -51,7 +77,10 @@ export async function generateImage(prompt: string): Promise<HuggingFaceResponse
 
     return { imageUrl };
   } catch (error) {
-    return { error: error instanceof Error ? error.message : 'Unknown error' };
+    return { 
+      error: error instanceof Error ? error.message : 'Unknown error', 
+      errorMy: 'ပုံထုပ်ရာတွင် အမှားဖြစ်ပါ။ နောက်မှ ပြန်ကြိုးစားပါ။' 
+    };
   }
 }
 
@@ -91,7 +120,10 @@ async function generateWithFallback(prompt: string, apiKey: string): Promise<Hug
     }
   }
   
-  return { error: 'All image models unavailable. Please try again later.' };
+  return { 
+    error: 'All image models unavailable', 
+    errorMy: 'ပုံထုပ်ဖို့ ဆာဗာ မရှိပါ။ နောက်ရက်မှ ပြန်ကြိုးစားပါ။' 
+  };
 }
 
 // Check if HF API is configured
