@@ -5,36 +5,42 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Send, Bot, User, Trash2, Plus, MessageSquare, 
   Settings, ChevronDown, Copy, Check,
-  Sparkles, Brain, Zap, Menu, X,
-  Share2, FileText, RefreshCw, Home
+  Sparkles, Brain, Menu, X,
+  Share2, RefreshCw, Home, Code, Languages,
+  BarChart3, FileText, PenTool
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useChatStore, Message } from '@/stores/chatStore';
-import { useAuthStore } from '@/stores/authStore';
 import MarkdownMessage from '@/components/chat/MarkdownMessage';
 import Link from 'next/link';
 
 const GROQ_MODELS = {
   'llama-3.3-70b': { name: 'llama-3.3-70b-versatile', displayName: 'Llama 3.3 70B', desc: 'Most capable' },
   'llama-3.1-8b': { name: 'llama-3.1-8b-instant', displayName: 'Llama 3.1 8B', desc: 'Fast & efficient' },
-  'gemma2-9b': { name: 'gemma2-9b-it', displayName: 'Gemma 2 9B', desc: 'Google Gemma' },
 };
 
 type GroqModelType = keyof typeof GROQ_MODELS;
 
+// AI Capabilities
+const AI_CAPABILITIES = [
+  { id: 'chat', label: '💬 Chat', icon: MessageSquare, desc: 'Real-time chatbot' },
+  { id: 'code', label: '🧠 Code', icon: Code, desc: 'Generate & debug' },
+  { id: 'text', label: '✍️ Text', icon: PenTool, desc: 'Write & create' },
+  { id: 'translate', label: '🌐 Translate', icon: Languages, desc: 'Translate text' },
+  { id: 'analyze', label: '🔍 Analyze', icon: BarChart3, desc: 'Data analysis' },
+  { id: 'summarize', label: '📝 Summarize', icon: FileText, desc: 'Summarize content' },
+];
+
 const MODEL_ICONS: Record<string, React.ReactNode> = {
   'llama-3.3-70b-versatile': <Brain className="w-4 h-4" />,
   'llama-3.1-8b-instant': <Sparkles className="w-4 h-4" />,
-  'gemma2-9b-it': <Zap className="w-4 h-4" />,
 };
 
 const MODEL_COLORS: Record<string, string> = {
   'llama-3.3-70b-versatile': 'from-purple-500 to-indigo-500',
   'llama-3.1-8b-instant': 'from-blue-500 to-cyan-500',
-  'gemma2-9b-it': 'from-orange-500 to-amber-500',
 };
 
-// Thinking loader with animated dots
 const ThinkingLoader = () => (
   <div className="flex items-center gap-2 px-2 py-2">
     <div className="flex gap-1">
@@ -46,35 +52,42 @@ const ThinkingLoader = () => (
   </div>
 );
 
-const WelcomeScreen = ({ onSelect }: { onSelect: (text: string) => void }) => {
-  const suggestions = [
-    { icon: '💻', text: 'Write code', cat: 'Code' },
-    { icon: '📝', text: 'Write a story', cat: 'Creative' },
-    { icon: '🔬', text: 'Explain science', cat: 'Science' },
-    { icon: '📊', text: 'Analyze data', cat: 'Data' },
-  ];
-  return (
-    <div className="flex items-center justify-center h-full p-4">
-      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-xl text-center">
-        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', duration: 0.8 }}
-          className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-orange-500 via-amber-500 to-yellow-500 flex items-center justify-center shadow-lg shadow-orange-500/20">
-          <Bot className="w-8 h-8 text-white" />
-        </motion.div>
-        <h2 className="text-2xl font-bold mb-3 bg-gradient-to-r from-orange-400 via-amber-400 to-yellow-400 bg-clip-text text-transparent">Amkyaw AI</h2>
-        <p className="text-sm text-muted-foreground mb-6">Powered by Groq - Ultra-fast AI</p>
-        <div className="grid grid-cols-2 gap-2">
-          {suggestions.map((s, i) => (
-            <motion.button key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + i * 0.05 }}
-              onClick={() => onSelect(s.text)} className="p-3 rounded-xl glass glass-hover text-center hover:bg-white/10 transition-all">
-              <span className="text-2xl mb-1 block">{s.icon}</span>
-              <p className="text-xs font-medium">{s.text}</p>
-            </motion.button>
-          ))}
-        </div>
+const WelcomeScreen = ({ onSelect }: { onSelect: (text: string) => void }) => (
+  <div className="flex items-center justify-center h-full p-4">
+    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-xl text-center">
+      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', duration: 0.8 }}
+        className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-orange-500 via-amber-500 to-yellow-500 flex items-center justify-center shadow-lg shadow-orange-500/20">
+        <Bot className="w-8 h-8 text-white" />
       </motion.div>
-    </div>
-  );
-};
+      <h2 className="text-2xl font-bold mb-3 bg-gradient-to-r from-orange-400 via-amber-400 to-yellow-400 bg-clip-text text-transparent">Amkyaw AI</h2>
+      <p className="text-sm text-muted-foreground mb-6">Powered by Groq - Ultra-fast AI</p>
+      
+      {/* AI Capabilities Grid */}
+      <div className="grid grid-cols-3 gap-2 mb-6">
+        {AI_CAPABILITIES.map((cap, i) => (
+          <motion.button key={cap.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.05 }}
+            onClick={() => onSelect(cap.desc)}
+            className="p-3 rounded-xl glass glass-hover text-center hover:bg-white/10 transition-all">
+            <cap.icon className="w-5 h-5 mx-auto mb-1 text-orange-400" />
+            <p className="text-xs font-medium">{cap.label}</p>
+          </motion.button>
+        ))}
+      </div>
+      
+      {/* Quick actions */}
+      <div className="flex flex-wrap gap-2 justify-center">
+        <button onClick={() => onSelect('Write a Python function')} 
+          className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs transition-colors">Write code</button>
+        <button onClick={() => onSelect('Translate to English:')} 
+          className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs transition-colors">Translate</button>
+        <button onClick={() => onSelect('Summarize:')} 
+          className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs transition-colors">Summarize</button>
+        <button onClick={() => onSelect('Analyze sentiment:')} 
+          className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs transition-colors">Analyze</button>
+      </div>
+    </motion.div>
+  </div>
+);
 
 const ChatMessage = ({ message, onCopy, isCopied }: { message: Message; onCopy: (c: string, id: string) => void; isCopied: boolean }) => (
   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
@@ -88,9 +101,7 @@ const ChatMessage = ({ message, onCopy, isCopied }: { message: Message; onCopy: 
       message.role === 'user' ? 'bg-gradient-to-r from-orange-500/10 to-amber-500/10 border border-orange-500/20' : 'glass')}>
       {message.isLoading ? <ThinkingLoader /> : (
         <>
-          <div className="text-sm">
-            <MarkdownMessage content={message.content} />
-          </div>
+          <div className="text-sm"><MarkdownMessage content={message.content} /></div>
           <div className="flex items-center gap-1 mt-2 pt-2 border-t border-white/5 opacity-0 group-hover:opacity-100 transition-opacity">
             <button onClick={() => onCopy(message.content, message.id)} className="p-1.5 rounded-md hover:bg-white/10">
               {isCopied ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
@@ -131,7 +142,6 @@ export default function ChatPage() {
   const [isThinking, setIsThinking] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  const { user, isAuthenticated } = useAuthStore();
   const { chats, currentChat, isLoading, error, createChat, setCurrentChat, addMessage, updateMessage, deleteChat, clearError, setLoading } = useChatStore();
 
   const scrollToBottom = useCallback(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), []);
@@ -172,7 +182,7 @@ export default function ChatPage() {
       updateMessage(chatId, assistantMessage.id, { content: data.response, isLoading: false });
     } catch (err) {
       setIsThinking(false);
-      updateMessage(chatId, assistantMessage.id, { content: err instanceof Error ? err.message : 'Error connecting to AI', isLoading: false });
+      updateMessage(chatId, assistantMessage.id, { content: err instanceof Error ? err.message : 'Error', isLoading: false });
     } finally { setLoading(false); }
   };
 
@@ -180,7 +190,7 @@ export default function ChatPage() {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      {/* Sidebar Overlay */}
+      {/* Sidebar */}
       <AnimatePresence>
         {showSidebar && (
           <>
@@ -188,7 +198,6 @@ export default function ChatPage() {
               className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setShowSidebar(false)} />
             <motion.aside initial={{ x: -280 }} animate={{ x: 0 }} exit={{ x: -280 }}
               className="fixed left-0 top-0 bottom-0 w-72 border-r border-border/50 flex flex-col bg-background/95 backdrop-blur-xl z-50 md:relative md:translate-x-0 md:w-64 md:border-r">
-              {/* Header */}
               <div className="p-3 border-b border-border/50 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center">
@@ -200,16 +209,12 @@ export default function ChatPage() {
                   <X className="w-4 h-4" />
                 </button>
               </div>
-
-              {/* New Chat Button */}
               <div className="p-3">
                 <button onClick={() => { createChat(selectedModel); setShowSidebar(false); }}
                   className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm font-medium hover:shadow-lg hover:shadow-orange-500/20 transition-all">
                   <Plus className="w-4 h-4" /> New Chat
                 </button>
               </div>
-
-              {/* Chat List */}
               <div className="flex-1 overflow-y-auto p-2 space-y-1">
                 {chats.length === 0 ? (
                   <div className="text-center text-muted-foreground py-6">
@@ -231,15 +236,13 @@ export default function ChatPage() {
                   ))
                 )}
               </div>
-
-              {/* Footer */}
               <div className="p-3 border-t border-border/50 space-y-2">
                 <div className="flex gap-1.5">
                   <Link href="/settings" className="flex-1 flex items-center justify-center p-2 rounded-lg hover:bg-white/5"><Settings className="w-4 h-4" /></Link>
                 </div>
                 <Link href="/" className="flex items-center gap-2 p-2 rounded-lg hover:bg-white/5">
                   <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center">
-                    <User className="w-3.5 h-3.5 text-white" />
+                    <Home className="w-3.5 h-3.5 text-white" />
                   </div>
                   <span className="text-xs truncate">Home</span>
                 </Link>
@@ -251,16 +254,11 @@ export default function ChatPage() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden bg-background">
-        {/* Header */}
         <header className="h-12 px-3 flex items-center justify-between border-b border-border/50 bg-background/80 backdrop-blur-xl">
           <div className="flex items-center gap-2">
-            <button onClick={() => setShowSidebar(true)} className="p-2 rounded-lg hover:bg-white/5">
-              <Menu className="w-4 h-4" />
-            </button>
+            <button onClick={() => setShowSidebar(true)} className="p-2 rounded-lg hover:bg-white/5"><Menu className="w-4 h-4" /></button>
             <span className="text-sm font-medium hidden sm:block">Chat</span>
           </div>
-
-          {/* Model Selector */}
           <div className="relative">
             <button onClick={() => setShowModelSelect(!showModelSelect)}
               className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-xs">
@@ -293,7 +291,6 @@ export default function ChatPage() {
           </div>
         </header>
 
-        {/* Messages Area */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {!currentChat || currentChat.messages.length === 0 ? (
             <WelcomeScreen onSelect={(text) => setInput(text)} />
@@ -304,19 +301,14 @@ export default function ChatPage() {
               ))}
             </AnimatePresence>
           )}
-          
-          {/* Thinking indicator */}
           {isThinking && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-3 max-w-4xl mx-auto">
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center shadow-md">
                 <Bot className="w-4 h-4 text-white" />
               </div>
-              <div className="glass rounded-2xl px-4 py-3">
-                <ThinkingLoader />
-              </div>
+              <div className="glass rounded-2xl px-4 py-3"><ThinkingLoader /></div>
             </motion.div>
           )}
-
           {error && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
               className="max-w-4xl mx-auto p-3 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20 text-sm">
@@ -327,7 +319,6 @@ export default function ChatPage() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Area */}
         <ChatInput input={input} setInput={setInput} onSubmit={handleSubmit} isLoading={isLoading} />
       </main>
     </div>

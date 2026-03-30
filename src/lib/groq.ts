@@ -11,8 +11,16 @@ IMPORTANT RULES:
 5. Keep responses concise and helpful.
 6. If the input contains Burmese script (Unicode characters 1000-109F), treat it as Burmese language.
 7. Never define common English words (like "Hi", "Hello") as body parts or unrelated meanings.
-8. For greetings in any language, respond appropriately to the greeting's meaning.`;
+8. For greetings in any language, respond appropriately to the greeting's meaning.
+9. Analyze user input and provide the most relevant response based on these capabilities:
+   - AI Chat / Chatbot
+   - Text Generation (blog, README, caption)
+   - Code Assistant (HTML, CSS, JS, debugging)
+   - Language Processing (translate, grammar, summarize)
+   - Data Understanding (analysis, sentiment)
+   - AI Automation`;
 
+// Groq supported models (updated March 2026 - Gemma deprecated)
 export const GROQ_MODELS = {
   'llama-3.3-70b': {
     name: 'llama-3.3-70b-versatile',
@@ -26,15 +34,21 @@ export const GROQ_MODELS = {
     description: 'Fast & efficient - Best for quick responses',
     maxTokens: 8192,
   },
-  'gemma2-9b': {
-    name: 'gemma2-9b-it',
-    displayName: 'Gemma 2 9B',
-    description: 'Google Gemma - Instruction tuned',
-    maxTokens: 8192,
-  },
 } as const;
 
 export type GroqModelType = keyof typeof GROQ_MODELS;
+
+// AI Capability Options for users
+export const AI_CAPABILITIES = [
+  { id: 'chat', label: '💬 AI Chat', icon: 'MessageSquare', desc: 'Real-time chatbot, customer support' },
+  { id: 'text', label: '✍️ Text Generation', icon: 'FileText', desc: 'Blog, README, caption creation' },
+  { id: 'code', label: '🧠 Code Assistant', icon: 'Code', desc: 'Generate, debug, explain code' },
+  { id: 'translate', label: '🌐 Translate', icon: 'Languages', desc: 'Translate, grammar fix, summarize' },
+  { id: 'analysis', label: '🔍 Data Analysis', icon: 'BarChart3', desc: 'Sentiment, text analysis' },
+  { id: 'automation', label: '🤖 Automation', icon: 'Zap', desc: 'Auto reply, content generation' },
+] as const;
+
+export type AICapabilityType = typeof AI_CAPABILITIES[number]['id'];
 
 // Check if text contains Burmese Unicode characters
 export function isBurmeseText(text: string): boolean {
@@ -53,7 +67,6 @@ export function detectLanguage(text: string): 'burmese' | 'english' | 'other' {
 export function isValidResponse(response: string): boolean {
   if (!response || response.trim().length < 2) return false;
   
-  // Check for common hallucination patterns
   const hallucinationPatterns = [
     /^(The user said|User wrote|You wrote)['"]?(Hi|Hello|Hey)/i,
     /^The term ['"]?\w+['"]? is (not a|an unrelated)/i,
@@ -79,14 +92,13 @@ export async function callGroq(
     throw new Error('GROQ_API_KEY is not defined in environment variables.');
   }
 
-  // Build messages with system prompt
   const systemMessage = { role: 'system', content: BURMESE_SYSTEM_PROMPT };
   const allMessages = [systemMessage, ...messages];
 
   const payload = {
     model,
     messages: allMessages,
-    temperature, // Low temperature to reduce hallucinations
+    temperature,
     top_p: topP,
     max_tokens: 2048,
   };
@@ -117,9 +129,8 @@ export async function getGroqResponse(
   const result = await callGroq(messages, modelConfig.name);
   const response = result.choices?.[0]?.message?.content ?? '';
   
-  // Validate response
   if (!isValidResponse(response)) {
-    return 'ပြန်ဖြေနိုင်သည်မရှိပါ။ ကျေးဇူးပြု၍ မေးခွန်းအား ပြန်လည်ရိုက်ထည့်ပါ။ (Unable to respond. Please re-enter your question.)';
+    return 'ပြန်ဖြေနိုင်သည်မရှိပါ။ ကျေးဇူးပြု၍ မေးခွန်းအား ပြန်လည်ရိုက်ထည့်ပါ။';
   }
   
   return response;
