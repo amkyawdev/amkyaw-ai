@@ -1,11 +1,8 @@
 # 🤖 Amkyaw AI Power Platform
 
-A powerful AI chat platform built with Next.js, featuring multi-AI routing with Groq and HuggingFace integration.
+A powerful AI chat platform built with Next.js, featuring multi-AI routing with Groq and HuggingFace integration, plus public community chat.
 
-![Next.js](https://img.shields.io/badge/Next.js-14-black)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
-![Tailwind](https://img.shields.io/badge/Tailwind-3-cyan)
-![License](https://img.shields.io/badge/License-MIT-green)
+![Next.js](https://img.shields.io/badge/Next.js-14-black) ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue) ![License](https://img.shields.io/badge/License-MIT-green)
 
 ## ✨ Features
 
@@ -17,7 +14,6 @@ A powerful AI chat platform built with Next.js, featuring multi-AI routing with 
 ### 💻 Code Assistant
 - Write code in Python, JavaScript, TypeScript, and more
 - Debug and fix errors
-- Code explanations
 
 ### 🌐 Translation
 - English ↔ Burmese translation
@@ -25,7 +21,11 @@ A powerful AI chat platform built with Next.js, featuring multi-AI routing with 
 
 ### 🖼️ Image Generation
 - Create images with FLUX.1 AI (HuggingFace)
-- Just describe what you want to see
+
+### 👥 Public Chat
+- Group discussions
+- Create new chat groups
+- Real-time messaging
 
 ## 🚀 Tech Stack
 
@@ -39,50 +39,49 @@ A powerful AI chat platform built with Next.js, featuring multi-AI routing with 
 ## 📦 Installation
 
 ```bash
-# Clone repository
 git clone https://github.com/amkyawdev/amkyaw-ai.git
-
-# Install dependencies
+cd amkyaw-ai
 npm install
-
-# Set up environment variables
-cp .env.example .env.local
-
-# Run development server
 npm run dev
 ```
 
 ## 🔧 Environment Variables
 
 ```env
-# Groq API (required)
 GROQ_API_KEY=your_groq_api_key
-
-# HuggingFace API (optional - for image generation)
 HUGGINGFACE_API_KEY=your_huggingface_api_key
-
-# Neon Database (optional)
 NEON_DATABASE_URL=your_neon_database_url
-NEON_AUTH_URL=your_neon_auth_url
-NEON_AUTH_JWKS_URL=your_neon_auth_jwks_url
 ```
 
 ## 📱 Pages
 
-| Page | Description |
-|------|-------------|
-| `/` | Landing page |
-| `/chat` | AI chat interface |
-| `/docs` | Documentation |
-| `/about` | About page |
-| `/settings` | Settings |
-| `/login` | Login page |
-| `/register` | Register page |
-| `/reset-password` | Reset password |
+| Page | Route | Description |
+|------|-------|-------------|
+| Home | `/` | Landing page |
+| AI Chat | `/chat` | Chat with AI |
+| Public Chat | `/public-chat` | Group discussions |
+| Docs | `/docs` | Documentation |
+| About | `/about` | About page |
+| Settings | `/settings` | User settings |
+| Profile | `/profile` | User profile |
+| Login | `/login` | Sign in |
+| Register | `/register` | Sign up |
+| Reset | `/reset-password` | Reset password |
+
+## 🗄️ Database Schema
+
+```sql
+-- Users
+CREATE TABLE users (id SERIAL PRIMARY KEY, username VARCHAR(50), email VARCHAR(100), password_hash TEXT, created_at TIMESTAMP);
+
+-- Chat Groups
+CREATE TABLE chat_groups (id SERIAL PRIMARY KEY, name VARCHAR(100), description TEXT, created_by INT REFERENCES users(id));
+
+-- Messages
+CREATE TABLE messages (id SERIAL PRIMARY KEY, group_id INT REFERENCES chat_groups(id), user_id INT REFERENCES users(id), content TEXT, created_at TIMESTAMP);
+```
 
 ## 🎯 Intent Detection
-
-The system automatically detects user intent:
 
 | Intent | Keywords | API |
 |--------|----------|-----|
@@ -91,22 +90,10 @@ The system automatically detects user intent:
 | Translate | translate, ဘာသာပြန် | Groq |
 | Image | generate image, draw, picture | HuggingFace |
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing`)
-5. Open a Pull Request
-
 ## 📧 Contact
 
 - Email: amk.kyaw92@gmail.com
 - GitHub: https://github.com/amkyawdev/amkyaw-ai
-
-## 📄 License
-
-MIT License - feel free to use this project for any purpose.
 
 ---
 
