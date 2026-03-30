@@ -43,17 +43,25 @@ export function isBurmeseText(text: string): boolean {
 }
 
 // Detect user intent from message
-export function detectIntent(message: string): 'chat' | 'code' | 'translate' | 'default' {
+export type IntentType = 'chat' | 'code' | 'translate' | 'image' | 'default';
+
+export function detectIntent(message: string): IntentType {
   const text = message.toLowerCase();
   
+  // Image generation intent
+  const imageKeywords = ['image', 'photo', 'picture', 'draw', 'generate image', 'create image', 'generate picture', 'create picture', 'draw', 'art', 'artwork', 'illustration', 'stable diffusion', ' ပုံဆွဲ', 'ပုံဖန်တီး', 'ပုံထုတ်'];
+  if (imageKeywords.some(keyword => text.includes(keyword))) {
+    return 'image';
+  }
+  
   // Coding intent
-  const codeKeywords = ['code', 'javascript', 'python', 'html', 'css', 'react', 'node', 'debug', 'fix error', 'write code', 'programming', 'function', 'api', 'sql', 'typescript', 'java', 'php'];
+  const codeKeywords = ['code', 'javascript', 'python', 'html', 'css', 'react', 'node', 'debug', 'fix error', 'write code', 'programming', 'function', 'api', 'sql', 'typescript', 'java', 'php', 'coding', 'program'];
   if (codeKeywords.some(keyword => text.includes(keyword))) {
     return 'code';
   }
   
   // Translate intent
-  const translateKeywords = ['translate', 'translation', 'ဘာသာပြန်', 'interpreter'];
+  const translateKeywords = ['translate', 'translation', 'ဘာသာပြန်', 'interpreter', 'ပြန်ပါ', 'ပြန်ဆို'];
   if (translateKeywords.some(keyword => text.includes(keyword)) || isBurmeseText(message.slice(0, 50))) {
     return 'translate';
   }
@@ -67,12 +75,21 @@ export function detectIntent(message: string): 'chat' | 'code' | 'translate' | '
   return 'default';
 }
 
+// Route to correct AI based on intent
+export function routeAI(intent: IntentType): 'groq' | 'huggingface' {
+  if (intent === 'image') {
+    return 'huggingface';
+  }
+  return 'groq';
+}
+
 // Get thinking text based on intent
 export function getThinkingText(intent: string): string {
   switch (intent) {
     case 'chat': return 'Typing...';
     case 'code': return 'Writing code...';
     case 'translate': return 'Translating...';
+    case 'image': return 'Generating Image...';
     default: return 'Thinking...';
   }
 }

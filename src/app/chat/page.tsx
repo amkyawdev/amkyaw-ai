@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { useChatStore, Message } from "@/stores/chatStore";
 import MarkdownMessage from "@/components/chat/MarkdownMessage";
 import Link from "next/link";
-import { detectIntent, getThinkingText } from "@/lib/groq";
+import { detectIntent, getThinkingText, routeAI } from "@/lib/groq";
 
 const GROQ_MODEL = { name: "llama-3.3-70b-versatile", displayName: "Llama 3.3 70B" };
 
@@ -59,9 +59,14 @@ const WelcomeScreen = ({ onSelect }: { onSelect: (text: string) => void }) => (
   </div>
 );
 
-const ChatMessage = ({ message, onCopy, isCopied }: { message: Message; onCopy: (c: string, id: string) => void; isCopied: boolean }) => (
+const ChatMessage = ({ message, onCopy, isCopied }: { message: Message; onCopy: (c: string, id: string) => void; isCopied: boolean }) => {
+  // Check if message contains image
+  const isImage = message.content.startsWith('[IMAGE:') && message.content.endsWith(']');
+  const imageUrl = isImage ? message.content.slice(8, -1) : null;
+  
+  return (
   <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-    className={cn("flex gap-3 max-w-4xl mx-auto", message.role === "user" ? "flex-row-reverse" : "flex-row")}>
+    className={cn("flex gap-3 max-w-4xl mx-auto group", message.role === "user" ? "flex-row-reverse" : "flex-row")}>
     <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
       className={cn("w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0",
         message.role === "user" ? "bg-gradient-to-br from-orange-500 to-amber-500" : "bg-gradient-to-br from-purple-500 to-indigo-500")}>
@@ -71,7 +76,20 @@ const ChatMessage = ({ message, onCopy, isCopied }: { message: Message; onCopy: 
       message.role === "user" ? "bg-gradient-to-r from-orange-500/15 to-amber-500/15 border border-orange-500/20" : "glass")}>
       {message.isLoading ? <ThinkingLoader text="Thinking..." /> : (
         <>
-          <div className="text-sm"><MarkdownMessage content={message.content} /></div>
+          {/* Image rendering */}
+          {isImage && imageUrl && (
+            <div className="mb-2">
+              <img 
+                src={imageUrl} 
+                alt="Generated" 
+                className="max-w-full rounded-lg border border-orange-500/20"
+                style={{ maxHeight: '400px', objectFit: 'contain' }}
+              />
+            </div>
+          )}
+          {/* Text content */}
+          {!isImage && <div className="text-sm"><MarkdownMessage content={message.content} /></div>}
+          {/* Copy button */}
           <div className="flex items-center gap-1 mt-3 pt-3 border-t border-white/10 opacity-0 group-hover:opacity-100">
             <button onClick={() => onCopy(message.content, message.id)} className="p-2 rounded-lg hover:bg-white/10">
               {isCopied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
@@ -81,7 +99,8 @@ const ChatMessage = ({ message, onCopy, isCopied }: { message: Message; onCopy: 
       )}
     </div>
   </motion.div>
-);
+  );
+};
 
 const ChatInput = ({ input, setInput, onSubmit, isLoading, thinkingText, showThinking }: { input: string; setInput: (v: string) => void; onSubmit: (e: React.FormEvent) => void; isLoading: boolean; thinkingText?: string; showThinking?: boolean }) => {
   return (
@@ -148,7 +167,9 @@ export default function ChatPage() {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
+    // Detect intent and route to correct API
     const intent = detectIntent(input);
+    const aiProvider = routeAI(intent);
     const thinking = getThinkingText(intent);
     setThinkingText(thinking);
 
@@ -165,14 +186,38 @@ export default function ChatPage() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: msgInput, model: "llama-3.3-70b" })
-      });
-      if (!response.ok) throw new Error((await response.json()).error || "Failed");
-      const data = await response.json();
-      updateMessage(chatId, assistantMessage.id, { content: data.response, isLoading: false });
+      let data;
+      
+      if (aiProvider === 'huggingface') {
+        // Use HuggingFace for image generation
+        const imageResponse = await fetch("/api/image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: msgInput })
+        });
+        
+        if (!imageResponse.ok) {
+          const errorData = await imageResponse.json();
+          throw new Error(errorData.error || "Image generation failed");
+        }
+        
+        const imageData = await imageResponse.json();
+        // For image responses, we show the image URL in a special format
+        updateMessage(chatId, assistantMessage.id, { 
+          content: `[IMAGE:${imageData.imageUrl}]`, 
+          isLoading: false 
+        });
+      } else {
+        // Use Groq for text responses
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: msgInput, model: "llama-3.3-70b" })
+        });
+        if (!response.ok) throw new Error((await response.json()).error || "Failed");
+        data = await response.json();
+        updateMessage(chatId, assistantMessage.id, { content: data.response, isLoading: false });
+      }
     } catch (err) {
       updateMessage(chatId, assistantMessage.id, { content: err instanceof Error ? err.message : "Error", isLoading: false });
     } finally { setLoading(false); }
