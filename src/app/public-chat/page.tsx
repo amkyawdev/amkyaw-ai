@@ -48,6 +48,11 @@ export default function PublicChatPage() {
     }
   }, [currentGroupId]);
 
+  // Load groups on mount
+  useEffect(() => {
+    loadGroups("Guest");
+  }, []);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -264,6 +269,11 @@ export default function PublicChatPage() {
 
         {error && (
           <div className="px-4 py-2 bg-red-500/10 text-red-400 text-sm">{error}</div>
+        )}
+        {isLoading && !error && (
+          <div className="flex items-center justify-center h-full">
+            <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
+          </div>
         )}
 
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
