@@ -147,14 +147,27 @@ const ChatInput = ({ input, setInput, onSubmit, isLoading, thinkingText, showThi
 };
 
 export default function ChatPage() {
-  const [input, setInput] = useState("");
   const router = useRouter();
   const [isAuthChecked, setIsAuthChecked] = useState(false);
+  
   useEffect(() => {
     const user = localStorage.getItem("user");
-    if (!user) { router.push("/login"); } else { setIsAuthChecked(true); }
+    if (!user) {
+      router.push("/login");
+    } else {
+      setIsAuthChecked(true);
+    }
   }, [router]);
-  if (!isAuthChecked) return null;
+
+  if (!isAuthChecked) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-orange-500/30 border-t-orange-500 rounded-full animate-spin" />
+      </div>
+    );
+  }
+  
+  const [input, setInput] = useState("");
   const [showSidebar, setShowSidebar] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [thinkingText, setThinkingText] = useState("Thinking...");
