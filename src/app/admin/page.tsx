@@ -16,10 +16,53 @@ interface Payment {
 }
 
 export default function AdminPage() {
+  const [authorized, setAuthorized] = useState(false);
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<number | null>(null);
   const [stats, setStats] = useState({ totalUsers: 0, pendingPayments: 0, totalRevenue: 0 });
+
+  // Simple admin password - change this in production
+  const ADMIN_PASSWORD = "amkyaw2024";
+
+  const handleLogin = () => {
+    if (password === ADMIN_PASSWORD) {
+      setAuthorized(true);
+      localStorage.setItem("admin_auth", "true");
+    } else {
+      setError("Invalid password");
+    }
+  };
+
+  useEffect(() => {
+    const stored = localStorage.getItem("admin_auth");
+    if (stored === "true") setAuthorized(true);
+  }, []);
+
+  // Show login if not authorized
+  if (!authorized) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-card border border-border rounded-2xl p-8">
+          <h1 className="text-2xl font-bold mb-6 text-center">🔧 Admin Login</h1>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Enter admin password"
+            className="w-full p-3 rounded-lg bg-background border border-border mb-4"
+            onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+          />
+          {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+          <button onClick={handleLogin} className="w-full py-3 bg-orange-500 rounded-lg font-medium">
+            Login
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const fetchPayments = async () => {
     setLoading(true);
