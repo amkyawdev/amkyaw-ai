@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Send, Bot, User, Trash2, Plus, MessageSquare, 
@@ -147,6 +148,13 @@ const ChatInput = ({ input, setInput, onSubmit, isLoading, thinkingText, showThi
 
 export default function ChatPage() {
   const [input, setInput] = useState("");
+  const router = useRouter();
+  const [isAuthChecked, setIsAuthChecked] = useState(false);
+  useEffect(() => {
+    const user = localStorage.getItem("user");
+    if (!user) { router.push("/login"); } else { setIsAuthChecked(true); }
+  }, [router]);
+  if (!isAuthChecked) return null;
   const [showSidebar, setShowSidebar] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [thinkingText, setThinkingText] = useState("Thinking...");

@@ -15,9 +15,10 @@ const features = [
 ];
 
 const navItems = [
-  { icon: Bot, label: "AI Chat", href: "/chat", desc: "Chat with AI" },
-  { icon: Hash, label: "Public Chat", href: "/public-chat", desc: "Group discussions" },
-  { icon: Users, label: "Community", href: "/about", desc: "About us" },
+  { icon: Bot, label: "AI Chat", href: "/chat" },
+  { icon: Hash, label: "Public Chat", href: "/public-chat" },
+  { icon: Users, label: "About", href: "/about" },
+  { icon: MessageSquare, label: "Docs", href: "/docs" },
 ];
 
 export default function Home() {
@@ -94,20 +95,15 @@ export default function Home() {
           <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} className="text-center mb-8">
             <h2 className="text-3xl font-bold mb-4">Navigate</h2>
           </motion.div>
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-4 gap-4">
             {navItems.map((item, i) => (
               <Link key={item.href} href={item.href}>
                 <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                  className="p-6 rounded-2xl glass hover:bg-white/10 transition-all flex items-center justify-between group">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500/20 to-amber-500/20 flex items-center justify-center">
-                      <item.icon className="w-6 h-6 text-orange-500" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold">{item.label}</h3>
-                      <p className="text-sm text-muted-foreground">{item.desc}</p>
-                    </div>
+                  className="p-6 rounded-2xl glass hover:bg-white/10 transition-all flex flex-col items-center gap-3 group">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500/20 to-amber-500/20 flex items-center justify-center">
+                    <item.icon className="w-6 h-6 text-orange-500" />
                   </div>
+                  <span className="font-semibold">{item.label}</span>
                   <ChevronRight className="w-5 h-5 text-orange-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </motion.div>
               </Link>

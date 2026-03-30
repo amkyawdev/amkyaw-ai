@@ -74,7 +74,6 @@ export default function PublicChatPage() {
           setCurrentGroupId(data[0].id);
           setCurrentGroupName(data[0].name);
         } else {
-          // Create default group automatically
           await createGroupInternal("general", username);
         }
       } else {
