@@ -27,7 +27,8 @@ export default function PublicChatPage() {
   const router = useRouter();
   const [user, setUser] = useState<{name: string; email: string} | null>(null);
   const [groups, setGroups] = useState<ChatGroup[]>([]);
-  const [currentGroup, setCurrentGroup] = useState<ChatGroup | null>(null);
+  const [currentGroupId, setCurrentGroupId] = useState<number | null>(null);
+  const [currentGroupName, setCurrentGroupName] = useState<string>("general");
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -38,7 +39,6 @@ export default function PublicChatPage() {
   const [error, setError] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Check auth and load data
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (!storedUser) {
@@ -50,16 +50,14 @@ export default function PublicChatPage() {
     loadGroups(userData.name);
   }, [router]);
 
-  // Load messages when group changes
   useEffect(() => {
-    if (currentGroup) {
-      loadMessages(currentGroup.id);
-      const interval = setInterval(() => loadMessages(currentGroup.id), 5000);
+    if (currentGroupId) {
+      loadMessages(currentGroupId);
+      const interval = setInterval(() => loadMessages(currentGroupId), 5000);
       return () => clearInterval(interval);
     }
-  }, [currentGroup]);
+  }, [currentGroupId]);
 
-  // Scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -70,9 +68,15 @@ export default function PublicChatPage() {
         headers: { "x-username": username }
       });
       if (res.ok) {
-        const data = await res.json();
+        const data: ChatGroup[] = await res.json();
         setGroups(data);
-        if (data.length > 0) setCurrentGroup(data[0]);
+        if (data.length > 0) {
+          setCurrentGroupId(data[0].id);
+          setCurrentGroupName(data[0].name);
+        } else {
+          // Create default group automatically
+          await createGroupInternal("general", username);
+        }
       } else {
         const err = await res.json();
         setError(err.error || "Failed to load groups");
@@ -97,41 +101,54 @@ export default function PublicChatPage() {
     }
   };
 
-  const createGroup = async () => {
-    if (!newGroupName.trim()) return;
+  const createGroupInternal = async (name: string, username: string): Promise<ChatGroup | null> => {
     try {
       const res = await fetch("/api/chat-groups", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          "x-username": user?.name || "Anonymous"
+          "x-username": username
         },
-        body: JSON.stringify({ name: newGroupName.trim() })
+        body: JSON.stringify({ name })
       });
       if (res.ok) {
-        const newGroup = await res.json();
-        if (!groups.find(g => g.id === newGroup.id)) {
-          setGroups([...groups, newGroup]);
-        }
-        setCurrentGroup(newGroup);
-        setNewGroupName("");
-        setShowNewGroup(false);
-      } else {
-        const err = await res.json();
-        setError(err.error || "Failed to create group");
+        const newGroup: ChatGroup = await res.json();
+        setGroups(prev => {
+          if (prev.find(g => g.id === newGroup.id)) return prev;
+          return [...prev, newGroup];
+        });
+        setCurrentGroupId(newGroup.id);
+        setCurrentGroupName(newGroup.name);
+        return newGroup;
       }
+      return null;
     } catch (err) {
       console.error("Failed to create group:", err);
-      setError("Network error");
+      return null;
+    }
+  };
+
+  const handleCreateGroup = async () => {
+    if (!newGroupName.trim() || !user) return;
+    const newGroup = await createGroupInternal(newGroupName.trim(), user.name);
+    if (newGroup) {
+      setNewGroupName("");
+      setShowNewGroup(false);
     }
   };
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !currentGroup || !user) return;
+    
+    const messageText = newMessage.trim();
+    if (!messageText || !currentGroupId || !user) {
+      setError("Please enter a message");
+      return;
+    }
 
     setIsSending(true);
     setError("");
+    
     try {
       const res = await fetch("/api/messages", {
         method: "POST",
@@ -140,13 +157,14 @@ export default function PublicChatPage() {
           "x-username": user.name
         },
         body: JSON.stringify({
-          group_id: currentGroup.id,
-          content: newMessage.trim()
+          group_id: currentGroupId,
+          content: messageText
         })
       });
+      
       if (res.ok) {
         setNewMessage("");
-        loadMessages(currentGroup.id);
+        loadMessages(currentGroupId);
       } else {
         const err = await res.json();
         setError(err.error || "Failed to send");
@@ -193,12 +211,16 @@ export default function PublicChatPage() {
 
               <div className="flex-1 overflow-y-auto p-3 space-y-2">
                 {groups.length === 0 ? (
-                  <p className="text-center text-muted-foreground p-4">No groups yet</p>
+                  <p className="text-center text-muted-foreground p-4">No groups</p>
                 ) : (
                   groups.map(group => (
-                    <button key={group.id} onClick={() => { setCurrentGroup(group); setShowSidebar(false); }}
+                    <button key={group.id} onClick={() => { 
+                      setCurrentGroupId(group.id); 
+                      setCurrentGroupName(group.name);
+                      setShowSidebar(false); 
+                    }}
                       className={cn("w-full text-left p-3 rounded-xl flex items-center gap-3 transition-all",
-                        currentGroup?.id === group.id ? "bg-orange-500/15 border border-orange-500/30" : "hover:bg-white/5")}>
+                        currentGroupId === group.id ? "bg-orange-500/15 border border-orange-500/30" : "hover:bg-white/5")}>
                       <Hash className="w-4 h-4 text-orange-500" />
                       <span className="truncate">{group.name}</span>
                     </button>
@@ -209,10 +231,16 @@ export default function PublicChatPage() {
               <div className="p-3 border-t border-border/50">
                 {showNewGroup ? (
                   <div className="space-y-2">
-                    <input type="text" value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)}
-                      placeholder="Group name" className="w-full px-3 py-2 rounded-lg bg-black/30 border border-border/50 text-sm" />
+                    <input 
+                      type="text" 
+                      value={newGroupName} 
+                      onChange={(e) => setNewGroupName(e.target.value)}
+                      placeholder="Group name" 
+                      className="w-full px-3 py-2 rounded-lg bg-black/30 border border-border/50 text-sm" 
+                      onKeyDown={(e) => e.key === "Enter" && handleCreateGroup()}
+                    />
                     <div className="flex gap-2">
-                      <button onClick={createGroup} className="flex-1 py-2 rounded-lg bg-orange-500 text-white text-sm">Create</button>
+                      <button onClick={handleCreateGroup} className="flex-1 py-2 rounded-lg bg-orange-500 text-white text-sm">Create</button>
                       <button onClick={() => setShowNewGroup(false)} className="px-3 py-2 rounded-lg bg-white/10 text-sm">Cancel</button>
                     </div>
                   </div>
@@ -243,12 +271,10 @@ export default function PublicChatPage() {
         <header className="h-14 px-4 flex items-center justify-between border-b border-border/50 bg-background/80">
           <div className="flex items-center gap-3">
             <button onClick={() => setShowSidebar(true)} className="p-2 rounded-lg hover:bg-white/5"><Menu className="w-5 h-5" /></button>
-            {currentGroup && (
-              <div className="flex items-center gap-2">
-                <Hash className="w-5 h-5 text-orange-500" />
-                <span className="font-semibold">{currentGroup.name}</span>
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              <Hash className="w-5 h-5 text-orange-500" />
+              <span className="font-semibold">{currentGroupName}</span>
+            </div>
           </div>
           <Link href="/chat" className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm font-medium">AI Chat</Link>
         </header>
@@ -285,11 +311,18 @@ export default function PublicChatPage() {
 
         <form onSubmit={sendMessage} className="p-4 border-t border-border/50">
           <div className="flex gap-3 max-w-4xl mx-auto">
-            <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)}
-              placeholder={`Message #${currentGroup?.name || 'general'}`}
-              className="flex-1 px-4 py-3 rounded-2xl glass border border-border/50 focus:border-orange-500/50 focus:outline-none" />
-            <button type="submit" disabled={!newMessage.trim() || isSending}
-              className="px-4 py-3 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 text-white disabled:opacity-50">
+            <input 
+              type="text" 
+              value={newMessage} 
+              onChange={(e) => setNewMessage(e.target.value)}
+              placeholder={`Message #${currentGroupName}`}
+              className="flex-1 px-4 py-3 rounded-2xl glass border border-border/50 focus:border-orange-500/50 focus:outline-none" 
+            />
+            <button 
+              type="submit" 
+              disabled={isSending || !currentGroupId}
+              className="px-4 py-3 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 text-white disabled:opacity-50"
+            >
               {isSending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
             </button>
           </div>
