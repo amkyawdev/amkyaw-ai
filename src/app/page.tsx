@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Bot, MessageSquare, Code, Image, Globe, Sparkles,
-  ArrowRight, Users, Hash, ChevronRight, Github, Mail, Heart, User, Settings, LogOut
+  ArrowRight, Users, Hash, Github, Mail, User, LogOut, ShieldCheck
 } from "lucide-react";
 
 const features = [
@@ -23,14 +23,24 @@ const navItems = [
   { icon: MessageSquare, label: "Docs", href: "/docs" },
 ];
 
+interface User {
+  id: number;
+  username: string;
+  email: string;
+  is_premium: boolean;
+  profile_picture?: string;
+}
+
 export default function Home() {
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem("user");
     if (stored) setUser(JSON.parse(stored));
   }, []);
+
+  const isAdmin = user?.email === "aung.thuyrain.at449@gmail.com";
 
   const handleLogout = () => {
     localStorage.removeItem("user");
@@ -67,20 +77,23 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-3">
             {user ? (
-              // Logged in - show user profile
               <div className="flex items-center gap-3">
                 <Link href="/profile" className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-orange-500/50 transition-all">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center">
-                    <User className="w-4 h-4 text-white" />
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center overflow-hidden">
+                    {user.profile_picture ? (
+                      <img src={user.profile_picture} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    ) : (
+                      <User className="w-4 h-4 text-white" />
+                    )}
                   </div>
                   <span className="text-sm font-medium text-white">{user.username}</span>
+                  {isAdmin && <ShieldCheck className="w-4 h-4 text-purple-400" />}
                 </Link>
                 <button onClick={handleLogout} className="p-2 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all">
                   <LogOut className="w-5 h-5" />
                 </button>
               </div>
             ) : (
-              // Not logged in - show Login and Get Started
               <>
                 <Link href="/login" className="px-4 py-2 text-sm font-medium text-zinc-400 hover:text-orange-500">Login</Link>
                 <Link href="/register" className="px-4 py-2 text-sm font-medium text-zinc-400 hover:text-orange-500">Register</Link>
