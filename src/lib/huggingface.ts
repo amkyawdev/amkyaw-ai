@@ -2,13 +2,21 @@
 // Using Flux Schnell for faster inference
 const HF_API_URL = 'https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell';
 
+export interface ImageGenerationOptions {
+  seed?: number;
+  width?: number;
+  height?: number;
+  guidance_scale?: number;
+  num_inference_steps?: number;
+}
+
 export interface HuggingFaceResponse {
   imageUrl?: string;
   error?: string;
   errorMy?: string; // Myanmar error message
 }
 
-export async function generateImage(prompt: string): Promise<HuggingFaceResponse> {
+export async function generateImage(prompt: string, options: ImageGenerationOptions = {}): Promise<HuggingFaceResponse> {
   const apiKey = process.env.HUGGINGFACE_API_KEY;
   
   if (!apiKey) {
@@ -18,16 +26,30 @@ export async function generateImage(prompt: string): Promise<HuggingFaceResponse
     };
   }
 
+  const { width = 1024, height = 1024, seed } = options;
+
   try {
+    // Build the request body with parameters
+    const requestBody: Record<string, unknown> = {
+      inputs: prompt,
+    };
+
+    // Add parameters if specified
+    if (width && height) {
+      requestBody.parameters = {
+        width,
+        height,
+        ...(seed ? { seed } : {}),
+      };
+    }
+
     const response = await fetch(HF_API_URL, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        inputs: prompt,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     // Handle different status codes
