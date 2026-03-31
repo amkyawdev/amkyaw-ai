@@ -68,10 +68,10 @@ export async function callZAI(
   }
 }
 
-// Call Stability AI for image generation
+// Call Stability AI for image generation (optimized for speed)
 export async function callStabilityImage(
   prompt: string,
-  negativePrompt: string = 'blurry, low quality, distorted'
+  negativePrompt: string = 'blurry, low quality, distorted, deformed, bad anatomy'
 ): Promise<{ success: boolean; imageUrl?: string; error?: string }> {
   const apiKey = process.env.STABILITY_API_KEY;
   
@@ -92,10 +92,10 @@ export async function callStabilityImage(
           { text: prompt, weight: 1 },
           { text: negativePrompt, weight: -1 },
         ],
-        cfg_scale: 7,
-        height: 1024,
-        width: 1024,
-        steps: 30,
+        cfg_scale: 5,        // Lower for faster
+        height: 512,        // Smaller for faster
+        width: 512,         // Smaller for faster
+        steps: 10,          // Fewer steps = faster
         samples: 1,
       }),
     });

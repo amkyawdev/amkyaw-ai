@@ -26,22 +26,22 @@ export async function generateImage(prompt: string, options: ImageGenerationOpti
     };
   }
 
-  const { width = 1024, height = 1024, seed } = options;
+  const { width = 512, height = 512, seed } = options;
 
   try {
-    // Build the request body with parameters
+    // Build the request body with optimized parameters for speed
     const requestBody: Record<string, unknown> = {
       inputs: prompt,
     };
 
-    // Add parameters if specified
-    if (width && height) {
-      requestBody.parameters = {
-        width,
-        height,
-        ...(seed ? { seed } : {}),
-      };
-    }
+    // Add parameters optimized for faster generation
+    requestBody.parameters = {
+      width,
+      height,
+      guidance_scale: 3.5,  // Lower for faster generation
+      num_inference_steps: 4, // Fewer steps = much faster
+      ...(seed ? { seed } : {}),
+    };
 
     const response = await fetch(HF_API_URL, {
       method: 'POST',
