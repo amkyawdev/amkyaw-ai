@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Send, Bot, User, Trash2, Plus, MessageSquare, 
-  Settings, Copy, Check, Menu, X, Share2, RefreshCw, Home, Sparkles, Upload, Hash, Users, LogOut, UserCircle
+  Settings, Copy, Check, Menu, X, Share2, RefreshCw, Home, Sparkles, Upload, Hash, Users, LogOut, UserCircle, Code, Cpu, Phone, Languages, Image, Globe
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useChatStore, Message } from "@/stores/chatStore";
@@ -15,30 +15,43 @@ import { AGENTS, Agent, AgentType } from "@/lib/ai-providers";
 
 const GROQ_MODEL = { name: "llama-3.3-70b-versatile", displayName: "Llama 3.3 70B" };
 
+// Map icon names to components
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  sparkles: Sparkles,
+  code: Code,
+  cpu: Cpu,
+  phone: Phone,
+  languages: Languages,
+  image: Image,
+  globe: Globe,
+};
+
 // Agent Selector Component - Small icon buttons in chat area
 const AgentSelector = ({ selectedAgent, onSelectAgent }: { selectedAgent: AgentType; onSelectAgent: (agent: AgentType) => void }) => {
-  const [showDropdown, setShowDropdown] = useState(false);
   const selectedAgentData = AGENTS.find(a => a.id === selectedAgent);
   
   return (
     <div className="relative">
       {/* Small icon buttons row */}
       <div className="flex items-center gap-1">
-        {AGENTS.map((agent) => (
-          <button
-            key={agent.id}
-            onClick={() => onSelectAgent(agent.id)}
-            title={agent.name}
-            className={cn(
-              "w-8 h-8 rounded-lg flex items-center justify-center text-lg transition-all",
-              selectedAgent === agent.id
-                ? "bg-orange-500/20 border border-orange-500/50"
-                : "bg-zinc-900 border border-zinc-800 hover:bg-zinc-800"
-            )}
-          >
-            {agent.icon}
-          </button>
-        ))}
+        {AGENTS.map((agent) => {
+          const IconComponent = iconMap[agent.icon] || Sparkles;
+          return (
+            <button
+              key={agent.id}
+              onClick={() => onSelectAgent(agent.id)}
+              title={agent.name}
+              className={cn(
+                "w-8 h-8 rounded-lg flex items-center justify-center transition-all",
+                selectedAgent === agent.id
+                  ? "bg-orange-500/20 border border-orange-500/50"
+                  : "bg-zinc-900 border border-zinc-800 hover:bg-zinc-800"
+              )}
+            >
+              <IconComponent className={cn("w-4 h-4", selectedAgent === agent.id ? "text-orange-400" : "text-zinc-400")} />
+            </button>
+          );
+        })}
       </div>
       
       {/* Selected agent name with animation */}
@@ -46,7 +59,7 @@ const AgentSelector = ({ selectedAgent, onSelectAgent }: { selectedAgent: AgentT
         key={selectedAgent}
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap"
+        className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap"
       >
         <span className="text-xs font-medium text-orange-400">
           {selectedAgentData?.name}
