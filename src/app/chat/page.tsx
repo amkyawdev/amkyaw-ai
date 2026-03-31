@@ -310,21 +310,21 @@ export default function ChatPage() {
         )}
       </AnimatePresence>
 
-      <main className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-14 px-4 flex items-center justify-between border-b border-border/50 bg-background/80">
+      <main className="flex-1 flex flex-col overflow-hidden bg-zinc-950">
+        {/* Header */}
+        <header className="h-16 border-b border-zinc-800 flex items-center justify-between px-8 bg-zinc-950/80 backdrop-blur-md">
           <div className="flex items-center gap-3">
-            <motion.button onClick={() => setShowSidebar(true)} className="p-2 rounded-lg hover:bg-white/5" whileHover={{ scale: 1.05 }}>
-              <Menu className="w-5 h-5" />
-            </motion.button>
-            <h1 className="font-semibold hidden sm:block">Amkyaw AI</h1>
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+            <h2 className="font-semibold text-zinc-200">AI Assistant</h2>
           </div>
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800">
             <Sparkles className="w-4 h-4 text-orange-500" />
-            <span className="text-sm font-medium">{GROQ_MODEL.displayName}</span>
+            <span className="text-sm font-medium text-zinc-300">{GROQ_MODEL.displayName}</span>
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto px-4 py-8 space-y-6 scrollbar-thin scrollbar-thumb-zinc-800">
           {!currentChat || currentChat.messages.length === 0 ? (
             <WelcomeScreen onSelect={(text) => setInput(text)} />
           ) : (
@@ -344,7 +344,10 @@ export default function ChatPage() {
           <div ref={messagesEndRef} />
         </div>
 
-        <ChatInput input={input} setInput={setInput} onSubmit={handleSubmit} isLoading={isLoading} thinkingText={thinkingText} showThinking={true} />
+        {/* Input */}
+        <div className="p-6 bg-zinc-950 border-t border-zinc-800">
+          <ChatInput input={input} setInput={setInput} onSubmit={handleSubmit} isLoading={isLoading} thinkingText={thinkingText} showThinking={true} />
+        </div>
       </main>
     </div>
   );
