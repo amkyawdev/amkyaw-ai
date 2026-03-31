@@ -633,9 +633,8 @@ export default function ChatPage() {
             </div>
             {/* User Avatar - only show when logged in */}
             {user && (
-              <div className="flex items-center gap-2 pl-4 border-l border-zinc-800">
+              <div className="pl-4 border-l border-zinc-800">
                 <UserAvatar user={user} />
-                <span className="text-sm text-zinc-300 font-medium">{user.name || user.email}</span>
               </div>
             )}
           </div>
