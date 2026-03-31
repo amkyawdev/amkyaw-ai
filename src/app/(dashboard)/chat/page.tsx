@@ -142,6 +142,26 @@ const ChatMessage = ({ message, onCopy, isCopied }: { message: Message; onCopy: 
   const isImage = message.content.startsWith('[IMAGE:') && message.content.endsWith(']');
   const imageUrl = isImage ? message.content.slice(8, -1) : null;
   
+  // Detect if content is primarily code
+  const isCodeContent = () => {
+    if (message.role === 'user') return false;
+    const content = message.content;
+    // Check for code blocks (``` or multiple programming patterns)
+    const hasCodeBlock = content.includes('```') || content.includes('```python') || content.includes('```javascript') || content.includes('```typescript') || content.includes('```html') || content.includes('```css') || content.includes('```java') || content.includes('```cpp') || content.includes('```go') || content.includes('```rust') || content.includes('```sql');
+    // Check for function definitions, imports, class definitions
+    const hasCodePatterns = /^(import |export |function |const |let |var |class |def |public |private |protected |interface |enum )/m.test(content);
+    // Check if more than 30% of lines start with common code patterns
+    const lines = content.split('\n');
+    const codeLines = lines.filter(line => 
+      /^\s*(import |export |function |const |let |var |class |def |public |private |protected |interface |enum |return |if |for |while |switch |case |break|continue|try|catch|throw|async|await|\{|\}|=>|;)\s/.test(line) ||
+      /^\s*[\w]+\s*\(.*\)\s*\{/.test(line) ||
+      /^\s*#include|^\s*using |^\s*package |^\s*import /.test(line)
+    );
+    return hasCodeBlock || (hasCodePatterns && codeLines.length > 3);
+  };
+  
+  const isCode = isCodeContent();
+  
   return (
   <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
     className={cn("flex gap-3 max-w-4xl mx-auto group", message.role === "user" ? "flex-row-reverse" : "flex-row")}>
@@ -151,7 +171,12 @@ const ChatMessage = ({ message, onCopy, isCopied }: { message: Message; onCopy: 
       {message.role === "user" ? <User className="w-5 h-5 text-white" /> : <Bot className="w-5 h-5 text-white" />}
     </motion.div>
     <div className={cn("rounded-2xl px-5 py-4 max-w-[85%]",
-      message.role === "user" ? "bg-gradient-to-r from-orange-500/15 to-amber-500/15 border border-orange-500/20" : "glass")}>
+      isCode 
+        ? "bg-[#1e1e1e] border border-gray-700"  // Code background
+        : message.role === "user" 
+          ? "bg-gradient-to-r from-orange-500/15 to-amber-500/15 border border-orange-500/20" 
+          : "glass"
+    )}>
       {message.isLoading ? <ThinkingLoader text="Thinking..." /> : (
         <>
           {/* Image rendering */}
