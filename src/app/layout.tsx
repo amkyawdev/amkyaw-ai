@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { cn } from '@/lib/utils';
-import Navbar from '@/components/layout/Navbar';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { FontSizeProvider } from '@/components/providers/FontSizeProvider';
+import { UsageProvider } from '@/components/layout/Sidebar';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -20,11 +20,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={cn(inter.className, 'min-h-screen bg-background antialiased')}>
+      <body className={cn(inter.className, 'min-h-screen bg-zinc-950 antialiased')}>
         <ThemeProvider>
           <FontSizeProvider>
-            <Navbar />
-            <main>{children}</main>
+            <UsageProvider>
+              {children}
+            </UsageProvider>
           </FontSizeProvider>
         </ThemeProvider>
       </body>
