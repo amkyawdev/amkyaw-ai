@@ -16,7 +16,8 @@ export default function LoginPage() {
     setIsLoading(true);
     setError("");
     if (email && password) {
-      localStorage.setItem("user", JSON.stringify({ 
+      localStorage.setItem("user", JSON.stringify({
+        id: 1, 
         email, 
         username: email.split("@")[0],
         is_premium: false 

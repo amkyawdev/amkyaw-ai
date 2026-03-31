@@ -3,11 +3,11 @@
 import React, { useState, useEffect, createContext, useContext } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { 
   MessageSquare, Image as ImageIcon, Users, CreditCard, ShieldCheck, 
   Settings, LogOut, Plus, Zap, User, Info, HelpCircle, Menu, X, 
-  LogIn, UserPlus
+  LogIn
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -23,14 +23,17 @@ interface User {
 interface Limits {
   chat: number;
   image: number;
+  isUnlimited?: boolean;
 }
 
 interface UsageContextType {
   user: User | null;
   isPremium: boolean;
+  isAdmin: boolean;
   limits: Limits;
   login: (user: User) => void;
   logout: () => void;
+  useFeature: (feature: string) => boolean;
   updateLimits: (limits: Partial<Limits>) => void;
 }
 
@@ -38,9 +41,11 @@ interface UsageContextType {
 const UsageContext = createContext<UsageContextType>({
   user: null,
   isPremium: false,
-  limits: { chat: 5, image: 1 },
+  isAdmin: false,
+  limits: { chat: 30, image: 5 },
   login: () => {},
   logout: () => {},
+  useFeature: () => true,
   updateLimits: () => {},
 });
 
@@ -49,23 +54,74 @@ export const useUsage = () => useContext(UsageContext);
 // Provider
 export function UsageProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [limits, setLimits] = useState<Limits>({ chat: 5, image: 1 });
+  const [limits, setLimits] = useState<Limits>({ chat: 30, image: 5 });
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem("user");
-    if (stored) setUser(JSON.parse(stored));
-    const storedLimits = localStorage.getItem("limits");
-    if (storedLimits) setLimits(JSON.parse(storedLimits));
+    if (stored) {
+      const userData = JSON.parse(stored);
+      setUser(userData);
+      
+      // Check if admin (aung.thuyrain.at449@gmail.com)
+      if (userData.email === "aung.thuyrain.at449@gmail.com") {
+        setIsAdmin(true);
+        setLimits({ chat: 999999, image: 999999, isUnlimited: true });
+      } else {
+        // Demo mode: 30 chat, 5 image
+        const storedLimits = localStorage.getItem("limits");
+        if (storedLimits) {
+          setLimits(JSON.parse(storedLimits));
+        } else {
+          setLimits({ chat: 30, image: 5 });
+          localStorage.setItem("limits", JSON.stringify({ chat: 30, image: 5 }));
+        }
+      }
+    } else {
+      // Not logged in - demo mode
+      setLimits({ chat: 30, image: 5 });
+      localStorage.setItem("limits", JSON.stringify({ chat: 30, image: 5 }));
+    }
   }, []);
 
   const login = (userData: User) => {
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
+    
+    // Set limits based on email
+    if (userData.email === "aung.thuyrain.at449@gmail.com") {
+      setIsAdmin(true);
+      setLimits({ chat: 999999, image: 999999, isUnlimited: true });
+    } else {
+      setIsAdmin(false);
+      setLimits({ chat: 30, image: 5 });
+      localStorage.setItem("limits", JSON.stringify({ chat: 30, image: 5 }));
+    }
   };
 
   const logout = () => {
     setUser(null);
+    setIsAdmin(false);
     localStorage.removeItem("user");
+    // Reset to demo mode
+    setLimits({ chat: 30, image: 5 });
+    localStorage.setItem("limits", JSON.stringify({ chat: 30, image: 5 }));
+  };
+
+  const useFeature = (feature: string): boolean => {
+    if (isAdmin) return true; // No limit for admin
+    
+    if (feature === "chat" && limits.chat > 0) {
+      setLimits(prev => ({ ...prev, chat: prev.chat - 1 }));
+      localStorage.setItem("limits", JSON.stringify({ ...limits, chat: limits.chat - 1 }));
+      return true;
+    }
+    if (feature === "image" && limits.image > 0) {
+      setLimits(prev => ({ ...prev, image: prev.image - 1 }));
+      localStorage.setItem("limits", JSON.stringify({ ...limits, image: limits.image - 1 }));
+      return true;
+    }
+    return false;
   };
 
   const updateLimits = (newLimits: Partial<Limits>) => {
@@ -79,10 +135,12 @@ export function UsageProvider({ children }: { children: React.ReactNode }) {
   return (
     <UsageContext.Provider value={{ 
       user, 
-      isPremium: user?.is_premium || false, 
+      isPremium: user?.is_premium || isAdmin, 
+      isAdmin,
       limits, 
       login, 
       logout,
+      useFeature,
       updateLimits 
     }}>
       {children}
@@ -126,10 +184,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const { user, isPremium, limits, logout } = useUsage();
-
-  // Check if user is admin
-  const isAdmin = user?.email === "aung.thuyrain.at449@gmail.com";
+  const { user, isPremium, isAdmin, limits, logout, useFeature } = useUsage();
 
   // Add admin menu for admin user
   const allMenuGroups = isAdmin 
@@ -222,36 +277,47 @@ export function Sidebar() {
 
         {/* Footer */}
         <div className="p-4 border-t border-zinc-900/50 space-y-4 bg-zinc-950/50">
-          {/* Usage Stats - Only for non-premium */}
-          {!isPremium && (
+          {/* Usage Stats - Only for non-admin */}
+          {!isAdmin && (
             <div className="px-4 py-4 bg-gradient-to-br from-orange-500/10 to-transparent rounded-2xl border border-orange-500/10 space-y-3">
               <div className="flex items-center gap-2 text-orange-500">
                 <Zap size={14} fill="currentColor" />
-                <span className="text-[10px] font-bold uppercase">Free Tier</span>
+                <span className="text-[10px] font-bold uppercase">Demo Mode</span>
               </div>
               <div className="space-y-2">
                 <div className="space-y-1">
                   <div className="flex justify-between text-[10px]">
                     <span className="text-zinc-500">Chat</span>
-                    <span className="text-zinc-300">{limits.chat}/5</span>
+                    <span className="text-zinc-300">{limits.chat}/30</span>
                   </div>
                   <div className="w-full h-1 bg-zinc-900 rounded-full">
-                    <div className="h-full bg-orange-500" style={{ width: `${(limits.chat / 5) * 100}%` }} />
+                    <div className="h-full bg-orange-500" style={{ width: `${(limits.chat / 30) * 100}%` }} />
                   </div>
                 </div>
                 <div className="space-y-1">
                   <div className="flex justify-between text-[10px]">
                     <span className="text-zinc-500">Images</span>
-                    <span className="text-zinc-300">{limits.image}/1</span>
+                    <span className="text-zinc-300">{limits.image}/5</span>
                   </div>
                   <div className="w-full h-1 bg-zinc-900 rounded-full">
-                    <div className="h-full bg-orange-500" style={{ width: `${(limits.image / 1) * 100}%` }} />
+                    <div className="h-full bg-orange-500" style={{ width: `${(limits.image / 5) * 100}%` }} />
                   </div>
                 </div>
               </div>
               <button onClick={() => handleNavigation("/payment")} className="w-full py-2.5 bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-bold uppercase rounded-xl">
                 Upgrade to Pro
               </button>
+            </div>
+          )}
+
+          {/* Admin Badge */}
+          {isAdmin && (
+            <div className="px-4 py-3 bg-gradient-to-br from-purple-500/10 to-blue-500/10 rounded-2xl border border-purple-500/20">
+              <div className="flex items-center gap-2 text-purple-400">
+                <ShieldCheck size={14} />
+                <span className="text-[10px] font-bold uppercase">Admin Mode</span>
+              </div>
+              <p className="text-[10px] text-zinc-500 mt-1">No limits - Full access</p>
             </div>
           )}
 
@@ -291,7 +357,7 @@ export function Sidebar() {
                 <p className="text-sm font-bold text-white truncate">{user.username}</p>
                 <p className="text-[10px] text-zinc-500 truncate">{user.email}</p>
               </div>
-              {isPremium && <ShieldCheck size={20} className="text-orange-500" />}
+              {(isPremium || isAdmin) && <ShieldCheck size={20} className="text-orange-500" />}
             </div>
           )}
 
@@ -306,19 +372,5 @@ export function Sidebar() {
         </div>
       </div>
     </>
-  );
-}
-
-// App Layout
-export default function AppLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <UsageProvider>
-      <div className="flex h-screen bg-zinc-950">
-        <Sidebar />
-        <main className="flex-1 overflow-hidden">
-          {children}
-        </main>
-      </div>
-    </UsageProvider>
   );
 }
