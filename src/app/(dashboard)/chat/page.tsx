@@ -43,6 +43,55 @@ const UserAvatar = ({ user }: { user: { name?: string; email?: string; avatar?: 
   return <UserCircle className="w-8 h-8 text-zinc-400" />;
 };
 
+// Floating particles background
+const FloatingParticles = () => {
+  const particles = Array.from({ length: 20 }, (_, i) => ({
+    id: i,
+    size: Math.random() * 6 + 2,
+    x: Math.random() * 100,
+    delay: Math.random() * 5,
+    duration: Math.random() * 10 + 15,
+    opacity: Math.random() * 0.5 + 0.1,
+  }));
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {particles.map((p) => (
+        <div
+          key={p.id}
+          className="absolute rounded-full bg-gradient-to-r from-orange-400/30 to-amber-400/30"
+          style={{
+            width: p.size,
+            height: p.size,
+            left: `${p.x}%`,
+            bottom: '-20px',
+            opacity: p.opacity,
+            animation: `floatUp ${p.duration}s linear ${p.delay}s infinite`,
+          }}
+        />
+      ))}
+      <style jsx>{`
+        @keyframes floatUp {
+          0% {
+            transform: translateY(0) scale(1);
+            opacity: 0;
+          }
+          10% {
+            opacity: 0.6;
+          }
+          90% {
+            opacity: 0.6;
+          }
+          100% {
+            transform: translateY(-100vh) scale(0.5);
+            opacity: 0;
+          }
+        }
+      `}</style>
+    </div>
+  );
+};
+
 // Simple Thinking Loader
 const ThinkingLoader = ({ text }: { text: string }) => (
   <div className="flex items-center gap-3 px-4 py-3">
@@ -352,7 +401,10 @@ export default function ChatPage() {
         )}
       </AnimatePresence>
 
-      <main className="flex-1 flex flex-col overflow-hidden bg-zinc-950">
+      <main className="flex-1 flex flex-col overflow-hidden bg-zinc-950 relative">
+        {/* Floating Particles Background */}
+        <FloatingParticles />
+        
         {/* Header */}
         <header className="h-16 border-b border-zinc-800 flex items-center justify-between px-8 bg-zinc-950/80 backdrop-blur-md">
           <div className="flex items-center gap-3">

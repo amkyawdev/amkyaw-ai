@@ -17,6 +17,55 @@ interface Group {
   member_count: number;
 }
 
+// Floating particles background
+const FloatingParticles = () => {
+  const particles = Array.from({ length: 15 }, (_, i) => ({
+    id: i,
+    size: Math.random() * 5 + 2,
+    x: Math.random() * 100,
+    delay: Math.random() * 5,
+    duration: Math.random() * 10 + 15,
+    opacity: Math.random() * 0.4 + 0.1,
+  }));
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {particles.map((p) => (
+        <div
+          key={p.id}
+          className="absolute rounded-full bg-gradient-to-r from-orange-400/30 to-amber-400/30"
+          style={{
+            width: p.size,
+            height: p.size,
+            left: `${p.x}%`,
+            bottom: '-20px',
+            opacity: p.opacity,
+            animation: `floatUp ${p.duration}s linear ${p.delay}s infinite`,
+          }}
+        />
+      ))}
+      <style jsx>{`
+        @keyframes floatUp {
+          0% {
+            transform: translateY(0) scale(1);
+            opacity: 0;
+          }
+          10% {
+            opacity: 0.5;
+          }
+          90% {
+            opacity: 0.5;
+          }
+          100% {
+            transform: translateY(-100vh) scale(0.5);
+            opacity: 0;
+          }
+        }
+      `}</style>
+    </div>
+  );
+};
+
 export default function PublicChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -91,9 +140,10 @@ export default function PublicChatPage() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-zinc-950 text-zinc-100">
+    <div className="flex flex-col h-full bg-zinc-950 text-zinc-100 relative">
+      <FloatingParticles />
       {/* Header */}
-      <div className="h-16 border-b border-zinc-800 flex items-center justify-between px-4 md:px-8 bg-zinc-950/80 backdrop-blur-md">
+      <div className="h-16 border-b border-zinc-800 flex items-center justify-between px-4 md:px-8 bg-zinc-950/80 backdrop-blur-md relative z-10">
         <div className="flex items-center gap-3">
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
           <Users size={20} className="text-orange-500" />
