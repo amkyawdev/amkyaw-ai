@@ -352,78 +352,79 @@ const ChatInput = ({ input, setInput, onSubmit, isLoading, thinkingText, showThi
           </motion.div>
         )}
         
-        <form onSubmit={onSubmit} className="max-w-4xl mx-auto flex gap-3 items-end">
-          {/* Agent Selector - Clickable dropdown */}
-          {selectedAgent && onSelectAgent && (
-            <AnimatePresence>
-              <motion.div 
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="relative mb-2"
+        {/* Agent Selector - Above input box */}
+        {selectedAgent && onSelectAgent && (
+          <AnimatePresence>
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="relative mb-3"
+            >
+              {/* Main button showing current agent */}
+              <button
+                type="button"
+                onClick={() => setShowAgentDropdown(!showAgentDropdown)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg glass border border-border/50 hover:border-orange-500/30 transition-all"
               >
-                {/* Main button showing current agent */}
-                <button
-                  type="button"
-                  onClick={() => setShowAgentDropdown(!showAgentDropdown)}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg glass border border-border/50 hover:border-orange-500/30 transition-all"
+                <Sparkles className="w-3.5 h-3.5 text-orange-400" />
+                <span className="text-xs font-medium text-zinc-300">AI Agent</span>
+                <motion.div
+                  animate={{ rotate: showAgentDropdown ? 180 : 0 }}
+                  className="w-3 h-3 text-zinc-500"
                 >
-                  <Sparkles className="w-3.5 h-3.5 text-orange-400" />
-                  <span className="text-xs font-medium text-zinc-300">AI Agent</span>
-                  <motion.div
-                    animate={{ rotate: showAgentDropdown ? 180 : 0 }}
-                    className="w-3 h-3 text-zinc-500"
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M6 9l6 6 6-6" />
-                    </svg>
-                  </motion.div>
-                </button>
-                
-                {/* Animated dropdown */}
-                {showAgentDropdown && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                    className="absolute bottom-full left-0 mb-2 py-2 rounded-xl glass border border-border/50 shadow-xl overflow-hidden"
-                  >
-                    {AGENTS.map((agent, index) => {
-                      const IconComponent = iconMap[agent.icon] || Sparkles;
-                      return (
-                        <motion.button
-                          key={agent.id}
-                          type="button"
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: index * 0.05 }}
-                          onClick={() => {
-                            onSelectAgent(agent.id);
-                            setShowAgentDropdown(false);
-                          }}
-                          className={cn(
-                            "w-full flex items-center gap-3 px-4 py-2.5 text-left transition-all",
-                            selectedAgent === agent.id
-                              ? "bg-orange-500/20 text-orange-400"
-                              : "hover:bg-white/5 text-zinc-300"
-                          )}
-                        >
-                          <IconComponent className={cn("w-4 h-4", selectedAgent === agent.id ? "text-orange-400" : "text-zinc-500")} />
-                          <span className="text-sm">{agent.name}</span>
-                          {selectedAgent === agent.id && (
-                            <motion.div 
-                              initial={{ scale: 0 }} 
-                              animate={{ scale: 1 }}
-                              className="ml-auto w-1.5 h-1.5 bg-orange-500 rounded-full" 
-                            />
-                          )}
-                        </motion.button>
-                      );
-                    })}
-                  </motion.div>
-                )}
-              </motion.div>
-            </AnimatePresence>
-          )}
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M6 9l6 6 6-6" />
+                  </svg>
+                </motion.div>
+              </button>
+              
+              {/* Animated dropdown */}
+              {showAgentDropdown && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                  className="absolute top-full left-0 mt-2 py-2 rounded-xl glass border border-border/50 shadow-xl overflow-hidden z-50"
+                >
+                  {AGENTS.map((agent, index) => {
+                    const IconComponent = iconMap[agent.icon] || Sparkles;
+                    return (
+                      <motion.button
+                        key={agent.id}
+                        type="button"
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        onClick={() => {
+                          onSelectAgent(agent.id);
+                          setShowAgentDropdown(false);
+                        }}
+                        className={cn(
+                          "w-full flex items-center gap-3 px-4 py-2.5 text-left transition-all",
+                          selectedAgent === agent.id
+                            ? "bg-orange-500/20 text-orange-400"
+                            : "hover:bg-white/5 text-zinc-300"
+                        )}
+                      >
+                        <IconComponent className={cn("w-4 h-4", selectedAgent === agent.id ? "text-orange-400" : "text-zinc-500")} />
+                        <span className="text-sm">{agent.name}</span>
+                        {selectedAgent === agent.id && (
+                          <motion.div 
+                            initial={{ scale: 0 }} 
+                            animate={{ scale: 1 }}
+                            className="ml-auto w-1.5 h-1.5 bg-orange-500 rounded-full" 
+                          />
+                        )}
+                      </motion.button>
+                    );
+                  })}
+                </motion.div>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        )}
+        
+        <form onSubmit={onSubmit} className="max-w-4xl mx-auto flex gap-3 items-end">
           <div className="flex-1">
             <textarea value={input} onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onSubmit(e); } }}
