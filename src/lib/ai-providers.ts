@@ -5,6 +5,84 @@ const ZAI_ENDPOINT = 'https://api.z.ai/api/paas/v4/chat/completions';
 const STABILITY_ENDPOINT = 'https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0';
 const ALIBABA_ENDPOINT = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
 
+// Agent types for different use cases
+export type AgentType = 'general' | 'coder' | 'ai_developer' | 'contact' | 'translate' | 'image';
+
+export interface Agent {
+  id: AgentType;
+  name: string;
+  nameMy: string;
+  icon: string;
+  description: string;
+  descriptionMy: string;
+  capabilities: ('chat' | 'code' | 'translate' | 'image' | 'reasoning' | 'web' | 'contact')[];
+  systemPrompt: string;
+}
+
+// Define available agents
+export const AGENTS: Agent[] = [
+  {
+    id: 'general',
+    name: 'General Assistant',
+    nameMy: 'ယေဘူယျ အကူညီပါး',
+    icon: '💬',
+    description: 'General conversation and help',
+    descriptionMy: 'ယေဘူယျ စကားပြောခြင်းနဲ့ အကူညီ',
+    capabilities: ['chat', 'reasoning'],
+    systemPrompt: 'You are a helpful AI assistant. Respond in the same language as the user.',
+  },
+  {
+    id: 'coder',
+    name: 'Coder Agent',
+    nameMy: 'ကုဒ်ရေးသူ',
+    icon: '💻',
+    description: 'Write, debug, and explain code',
+    descriptionMy: 'ကုဒ်ရေးခြင်း၊ ပြင်ဆင်ခြင်းနဲ့ ရှင်းပါးခြင်း',
+    capabilities: ['code', 'chat'],
+    systemPrompt: 'You are an expert programmer. Write clean, well-documented code with explanations. Use markdown code blocks.',
+  },
+  {
+    id: 'ai_developer',
+    name: 'AI Developer',
+    nameMy: 'AI ဖန်တီးသူ',
+    icon: '🤖',
+    description: 'Build AI apps, APIs, and integrations',
+    descriptionMy: 'AI အပလီကေးရှင်း၊ API နဲ့ ပါဝင်မှုများ ဖန်တီးခြင်း',
+    capabilities: ['code', 'chat', 'reasoning'],
+    systemPrompt: 'You are an AI development expert. Help build AI applications, APIs, and integrations. Provide complete code examples.',
+  },
+  {
+    id: 'contact',
+    name: 'Contact Agent',
+    nameMy: 'ဆက်သွယ်ရေးသူ',
+    icon: '📞',
+    description: 'Handle inquiries and support',
+    descriptionMy: 'မေးခွန်းများ ဖြေကြားခြင်းနဲ့ ပါးစပ်ဆက်သွယ်ခြင်း',
+    capabilities: ['chat', 'web'],
+    systemPrompt: 'You are a customer support agent. Be friendly, professional, and helpful. Collect contact information when needed.',
+  },
+  {
+    id: 'translate',
+    name: 'Translator',
+    nameMy: 'ဘာသာပြန်သူ',
+    icon: '🌐',
+    description: 'Translate between languages',
+    descriptionMy: 'ဘာသာစကားများ ပြန်လည်ပါးရှင်းခြင်း',
+    capabilities: ['translate', 'chat'],
+    systemPrompt: 'You are a translator. Translate accurately while preserving the meaning and tone. Respond in the target language.',
+  },
+  {
+    id: 'image',
+    name: 'Image Generator',
+    nameMy: 'ပုံဆွဲသူ',
+    icon: '🎨',
+    description: 'Generate images from text',
+    descriptionMy: 'စာသားများကနေ ပုံများ ဖန်တီးခြင်း',
+    capabilities: ['image', 'chat'],
+    systemPrompt: 'You are an image generation assistant. Create detailed prompts for image generation.',
+  },
+];
+
 export interface AIProvider {
   name: string;
   type: 'groq' | 'zai' | 'ollama' | 'alibaba' | 'stability' | 'huggingface';

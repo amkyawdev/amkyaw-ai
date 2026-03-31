@@ -11,8 +11,32 @@ import { useChatStore, Message } from "@/stores/chatStore";
 import MarkdownMessage from "@/components/chat/MarkdownMessage";
 import Link from "next/link";
 import { detectIntent, getThinkingText, routeAI } from "@/lib/groq";
+import { AGENTS, Agent, AgentType } from "@/lib/ai-providers";
 
 const GROQ_MODEL = { name: "llama-3.3-70b-versatile", displayName: "Llama 3.3 70B" };
+
+// Agent Selector Component
+const AgentSelector = ({ selectedAgent, onSelectAgent }: { selectedAgent: AgentType; onSelectAgent: (agent: AgentType) => void }) => {
+  return (
+    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+      {AGENTS.map((agent) => (
+        <button
+          key={agent.id}
+          onClick={() => onSelectAgent(agent.id)}
+          className={cn(
+            "flex items-center gap-2 px-4 py-2 rounded-full transition-all whitespace-nowrap",
+            selectedAgent === agent.id
+              ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg"
+              : "glass hover:bg-white/10"
+          )}
+        >
+          <span className="text-lg">{agent.icon}</span>
+          <span className="text-sm font-medium">{agent.name}</span>
+        </button>
+      ))}
+    </div>
+  );
+};
 
 // Component to separate text and code blocks
 const ContentWithSeparateCode = ({ content }: { content: string }) => {
@@ -313,6 +337,7 @@ export default function ChatPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [thinkingText, setThinkingText] = useState("Thinking...");
   const [user, setUser] = useState<{ name?: string; email?: string; avatar?: string } | null>(null);
+  const [selectedAgent, setSelectedAgent] = useState<AgentType>('general');
 
   // Load user from localStorage on mount
   useEffect(() => {
@@ -396,11 +421,15 @@ export default function ChatPage() {
           isLoading: false 
         });
       } else {
-        // Use Groq for text responses
+        // Use Groq for text responses with agent context
         const response = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt: msgInput, model: "llama-3.3-70b" })
+          body: JSON.stringify({ 
+            prompt: msgInput, 
+            model: "llama-3.3-70b",
+            agent: selectedAgent
+          })
         });
         if (!response.ok) throw new Error((await response.json()).error || "Failed");
         data = await response.json();
@@ -505,6 +534,10 @@ export default function ChatPage() {
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800">
               <Sparkles className="w-4 h-4 text-orange-500" />
               <span className="text-sm font-medium text-zinc-300">{GROQ_MODEL.displayName}</span>
+            </div>
+            {/* Agent Selector */}
+            <div className="flex items-center gap-2 pl-4 border-l border-zinc-800">
+              <AgentSelector selectedAgent={selectedAgent} onSelectAgent={setSelectedAgent} />
             </div>
             {/* User Avatar - only show when logged in */}
             {user && (

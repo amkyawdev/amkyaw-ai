@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { callGroq, GROQ_MODELS, GroqModelType, BURMESE_SYSTEM_PROMPT, isValidResponse } from '@/lib/groq';
-import { callWithFallback, isZAIConfigured, isStabilityConfigured, isOllamaConfigured, isAlibabaConfigured } from '@/lib/ai-providers';
+import { callWithFallback, isZAIConfigured, isStabilityConfigured, isOllamaConfigured, isAlibabaConfigured, AGENTS, AgentType } from '@/lib/ai-providers';
 
 export const runtime = 'nodejs';
 
@@ -48,7 +48,8 @@ export async function POST(request: NextRequest) {
       topP = 0.8,
       chatId,
       messages: chatMessages,
-      forceProvider 
+      forceProvider,
+      agent = 'general'
     } = body;
 
     if (!prompt && (!chatMessages || chatMessages.length === 0)) {
@@ -74,8 +75,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Build messages array with system prompt
-    const systemMessage = { role: 'system', content: AMKYAW_SYSTEM_PROMPT };
+    // Build messages array with system prompt based on selected agent
+    const selectedAgentData = AGENTS.find(a => a.id === (agent as AgentType)) || AGENTS[0];
+    const agentSystemPrompt = `${AMKYAW_SYSTEM_PROMPT}\n\n## Current Agent Mode: ${selectedAgentData.name}\n${selectedAgentData.systemPrompt}`;
+    
+    const systemMessage = { role: 'system', content: agentSystemPrompt };
     const userMessage = { role: 'user', content: prompt };
     
     const messages = chatMessages 
@@ -143,6 +147,7 @@ export async function POST(request: NextRequest) {
       response,
       model: modelKey,
       provider,
+      agent: selectedAgentData.name,
       chatId,
       availableProviders: {
         groq: true,
