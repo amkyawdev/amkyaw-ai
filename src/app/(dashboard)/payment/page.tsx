@@ -1,9 +1,40 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { CreditCard, ShieldCheck, CheckCircle, Smartphone, Wallet, Building2, Upload, ArrowRight, Info, Phone, User } from "lucide-react";
+import { CreditCard, ShieldCheck, CheckCircle, Smartphone, Wallet, Building2, Upload, ArrowRight, Info, Phone, User, Sparkles, Zap, Clock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+
+// Pricing Plans
+const PRICING_PLANS = [
+  {
+    id: "monthly",
+    name: "Monthly",
+    duration: "၁ လန်း",
+    price: 5000,
+    priceDisplay: "၅,ဝဝဝ",
+    features: ["Unlimited Chat", "4K Image Generation", "Priority Support"],
+    popular: false,
+  },
+  {
+    id: "6months",
+    name: "6 Months",
+    duration: "၆ လ",
+    price: 25000,
+    priceDisplay: "၂၅,ဝဝဝ",
+    features: ["Everything in Monthly", "2 Months Free", "Early Access"],
+    popular: true,
+  },
+  {
+    id: "yearly",
+    name: "Yearly",
+    duration: "၁ နှစ်",
+    price: 50000,
+    priceDisplay: "၅၀,ဝဝဝ",
+    features: ["Everything in 6 Months", "4 Months Free", "Exclusive Features"],
+    popular: false,
+  },
+];
 
 export default function PaymentPage() {
   const [step, setStep] = useState(1);
@@ -11,6 +42,7 @@ export default function PaymentPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
+  const [selectedPlan, setSelectedPlan] = useState<typeof PRICING_PLANS[0] | null>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem("user");
@@ -32,7 +64,7 @@ export default function PaymentPage() {
 
   const handlePaymentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!method || !screenshotUrl) return;
+    if (!method || !screenshotUrl || !selectedPlan) return;
 
     setIsLoading(true);
     try {
@@ -42,7 +74,8 @@ export default function PaymentPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           user_id: userId,
-          amount: 5000,
+          amount: selectedPlan.price,
+          plan: selectedPlan.id,
           screenshot_url: screenshotUrl,
         }),
       });
@@ -55,6 +88,11 @@ export default function PaymentPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handlePlanSelect = (plan: typeof PRICING_PLANS[0]) => {
+    setSelectedPlan(plan);
+    setStep(1.5); // Go to payment method selection
   };
 
   return (
@@ -105,18 +143,19 @@ export default function PaymentPage() {
 
         {/* Steps Indicator */}
         <div className="flex items-center justify-center gap-4 md:gap-6">
-          {[1, 2, 3].map((s) => (
-            <div key={s} className="flex items-center gap-4">
+          {[(step < 2 ? 1 : 1.5), 2, 3].filter((s, i, arr) => s !== undefined).map((s, idx, arr) => (
+            <div key={idx} className="flex items-center gap-4">
               <div className={cn(
                 "w-10 md:w-12 h-10 md:h-12 rounded-2xl flex items-center justify-center font-bold transition-all duration-500 border-2",
-                step >= s ? "bg-orange-500 border-orange-400 text-white shadow-lg shadow-orange-500/30 scale-110" : "bg-zinc-900 text-zinc-600 border-zinc-800"
+                (step >= 2 && idx === 0) || (step >= 2 && idx === 1) ? "bg-orange-500 border-orange-400 text-white shadow-lg shadow-orange-500/30 scale-110" : 
+                step >= (s as number) ? "bg-orange-500 border-orange-400 text-white shadow-lg shadow-orange-500/30 scale-110" : "bg-zinc-900 text-zinc-600 border-zinc-800"
               )}>
-                {step > s ? <CheckCircle size={20} /> : <span className="text-lg">{s}</span>}
+                {step > (s as number) ? <CheckCircle size={20} /> : <span className="text-lg">{idx === 0 && step < 2 ? 1 : idx === 0 ? '1' : idx === 1 ? 2 : 3}</span>}
               </div>
-              {s < 3 && <div className={cn("w-8 md:w-16 h-1 bg-zinc-800 rounded-full", step > s && "bg-orange-500/20")}>
+              {idx < arr.length - 1 && <div className={cn("w-8 md:w-16 h-1 bg-zinc-800 rounded-full", step > (s as number) && "bg-orange-500/20")}>
                 <motion.div
                   initial={{ width: 0 }}
-                  animate={{ width: step > s ? "100%" : "0%" }}
+                  animate={{ width: step > (s as number) ? "100%" : "0%" }}
                   className="h-full bg-orange-500"
                 />
               </div>}
@@ -125,34 +164,111 @@ export default function PaymentPage() {
         </div>
 
         <AnimatePresence mode="wait">
+          {/* Step 1: Select Plan */}
           {step === 1 && (
             <motion.div
               key="step1"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto"
+              className="space-y-8"
             >
-              {paymentMethods.map((pm) => (
-                <button
-                  key={pm.id}
-                  onClick={() => { setMethod(pm.id as any); setStep(2); }}
-                  className="group relative p-8 md:p-10 bg-zinc-900/50 backdrop-blur-xl border border-zinc-800 rounded-[40px] hover:border-orange-500/50 transition-all text-left space-y-6 overflow-hidden"
-                >
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-white/[0.02] rounded-bl-[100px] -z-10" />
-                  <div className={cn("w-16 md:w-20 h-16 md:h-20 rounded-3xl flex items-center justify-center text-white shadow-2xl transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-500", pm.color)}>
-                    <pm.icon size={32} />
-                  </div>
-                  <div className="space-y-2">
-                    <h3 className="text-2xl md:text-3xl font-black text-white group-hover:text-orange-500 transition-colors">{pm.name}</h3>
-                    <p className="text-zinc-500 text-sm">Fast and secure transfer via the official {pm.name} application.</p>
-                  </div>
-                  <div className="flex items-center justify-between text-zinc-500 group-hover:text-white pt-4 border-t border-zinc-800/50">
-                    <span className="text-xs font-bold uppercase tracking-wider">Select Method</span>
-                    <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />
-                  </div>
-                </button>
-              ))}
+              <div className="text-center">
+                <h3 className="text-2xl font-bold text-white mb-2">Choose Your Plan</h3>
+                <p className="text-zinc-500">သင့်အတွက် အသင့်တားမွတ်တဲ့ ပါးပါးကို ရွေးပါ။</p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                {PRICING_PLANS.map((plan) => (
+                  <button
+                    key={plan.id}
+                    onClick={() => handlePlanSelect(plan)}
+                    className={cn(
+                      "relative group p-6 bg-zinc-900/50 backdrop-blur-xl border rounded-3xl transition-all text-left space-y-4 hover:border-orange-500/50",
+                      plan.popular ? "border-orange-500/50 ring-2 ring-orange-500/20" : "border-zinc-800"
+                    )}
+                  >
+                    {plan.popular && (
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-orange-500 text-white text-xs font-bold rounded-full">
+                        အလိုအပ်ဆုံး
+                      </div>
+                    )}
+                    <div className="text-center space-y-2">
+                      <h4 className="text-xl font-bold text-white">{plan.name}</h4>
+                      <p className="text-zinc-500 text-sm">{plan.duration}</p>
+                    </div>
+                    <div className="text-center">
+                      <span className="text-3xl md:text-4xl font-black text-orange-500">{plan.priceDisplay}</span>
+                      <span className="text-zinc-500 text-sm"> ကျပ်</span>
+                    </div>
+                    <div className="space-y-2 pt-4 border-t border-zinc-800">
+                      {plan.features.map((feature, i) => (
+                        <div key={i} className="flex items-center gap-2 text-sm text-zinc-400">
+                          <CheckCircle size={14} className="text-orange-500" />
+                          <span>{feature}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className={cn(
+                      "w-full py-3 rounded-xl font-bold transition-all",
+                      plan.popular ? "bg-orange-500 text-white hover:bg-orange-600" : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
+                    )}>
+                      ရွေးမည်။
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Step 1.5: Select Payment Method */}
+          {step === 1.5 && selectedPlan && (
+            <motion.div
+              key="step1.5"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="space-y-6"
+            >
+              {/* Selected Plan Summary */}
+              <div className="p-4 bg-orange-500/10 border border-orange-500/20 rounded-2xl flex items-center justify-between max-w-md mx-auto">
+                <div>
+                  <p className="text-zinc-400 text-sm">ရွေးလိုက်တဲ့ ပါးပါး</p>
+                  <p className="text-white font-bold">{selectedPlan.name} ({selectedPlan.duration})</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-zinc-400 text-sm">ပါးပါးတန်ဖိုး</p>
+                  <p className="text-orange-500 font-bold text-xl">{selectedPlan.priceDisplay} ကျပ်</p>
+                </div>
+              </div>
+
+              <div className="text-center space-y-2">
+                <h3 className="text-2xl font-bold text-white">ငွေပါးနည်းရွေးပါ</h3>
+                <p className="text-zinc-500">သင့်အရန်ကုန်လိုက်ပါ။</p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+                {paymentMethods.map((pm) => (
+                  <button
+                    key={pm.id}
+                    onClick={() => { setMethod(pm.id as any); setStep(2); }}
+                    className="group relative p-8 md:p-10 bg-zinc-900/50 backdrop-blur-xl border border-zinc-800 rounded-[40px] hover:border-orange-500/50 transition-all text-left space-y-6 overflow-hidden"
+                  >
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-white/[0.02] rounded-bl-[100px] -z-10" />
+                    <div className={cn("w-16 md:w-20 h-16 md:h-20 rounded-3xl flex items-center justify-center text-white shadow-2xl transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-500", pm.color)}>
+                      <pm.icon size={32} />
+                    </div>
+                    <div className="space-y-2">
+                      <h3 className="text-2xl md:text-3xl font-black text-white group-hover:text-orange-500 transition-colors">{pm.name}</h3>
+                      <p className="text-zinc-500 text-sm">Fast and secure transfer via the official {pm.name} application.</p>
+                    </div>
+                    <div className="flex items-center justify-between text-zinc-500 group-hover:text-white pt-4 border-t border-zinc-800/50">
+                      <span className="text-xs font-bold uppercase tracking-wider">ရွေးမည်။</span>
+                      <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />
+                    </div>
+                  </button>
+                ))}
+              </div>
             </motion.div>
           )}
 
@@ -182,7 +298,11 @@ export default function PaymentPage() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-zinc-500 text-sm">Amount</span>
-                      <span className="text-white font-bold">5,000 Ks</span>
+                      <span className="text-white font-bold">{selectedPlan ? selectedPlan.priceDisplay : '5,000'} Ks</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-zinc-500 text-sm">Plan</span>
+                      <span className="text-orange-400 font-bold">{selectedPlan?.name || 'Monthly'} ({selectedPlan?.duration || '၁ လန်း'})</span>
                     </div>
                   </div>
                 ))}
