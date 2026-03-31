@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Send, Bot, User, Trash2, Plus, MessageSquare, 
-  Settings, Copy, Check, Menu, X, Share2, RefreshCw, Home, Sparkles, Upload, Hash, Users, LogOut
+  Settings, Copy, Check, Menu, X, Share2, RefreshCw, Home, Sparkles, Upload, Hash, Users, LogOut, UserCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useChatStore, Message } from "@/stores/chatStore";
@@ -13,6 +13,35 @@ import Link from "next/link";
 import { detectIntent, getThinkingText, routeAI } from "@/lib/groq";
 
 const GROQ_MODEL = { name: "llama-3.3-70b-versatile", displayName: "Llama 3.3 70B" };
+
+// Avatar component for user
+const UserAvatar = ({ user }: { user: { name?: string; email?: string; avatar?: string } | null }) => {
+  if (!user) return null;
+  
+  // If user has avatar URL
+  if (user.avatar) {
+    return (
+      <img 
+        src={user.avatar} 
+        alt={user.name || "User"} 
+        className="w-8 h-8 rounded-full object-cover border-2 border-orange-500/50"
+      />
+    );
+  }
+  
+  // If user has name, show initials
+  if (user.name) {
+    const initials = user.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+    return (
+      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-white text-sm font-bold border-2 border-orange-500/50">
+        {initials}
+      </div>
+    );
+  }
+  
+  // Default fallback
+  return <UserCircle className="w-8 h-8 text-zinc-400" />;
+};
 
 // Simple Thinking Loader
 const ThinkingLoader = ({ text }: { text: string }) => (
@@ -150,6 +179,19 @@ export default function ChatPage() {
   const [showSidebar, setShowSidebar] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [thinkingText, setThinkingText] = useState("Thinking...");
+  const [user, setUser] = useState<{ name?: string; email?: string; avatar?: string } | null>(null);
+
+  // Load user from localStorage on mount
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (e) {
+        console.error("Failed to parse user:", e);
+      }
+    }
+  }, []);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const { chats, currentChat, isLoading, error, createChat, setCurrentChat, addMessage, updateMessage, deleteChat, clearError, setLoading } = useChatStore();
@@ -317,9 +359,19 @@ export default function ChatPage() {
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
             <h2 className="font-semibold text-zinc-200">AI Assistant</h2>
           </div>
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800">
-            <Sparkles className="w-4 h-4 text-orange-500" />
-            <span className="text-sm font-medium text-zinc-300">{GROQ_MODEL.displayName}</span>
+          <div className="flex items-center gap-4">
+            {/* Model Badge */}
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800">
+              <Sparkles className="w-4 h-4 text-orange-500" />
+              <span className="text-sm font-medium text-zinc-300">{GROQ_MODEL.displayName}</span>
+            </div>
+            {/* User Avatar - only show when logged in */}
+            {user && (
+              <div className="flex items-center gap-2 pl-4 border-l border-zinc-800">
+                <UserAvatar user={user} />
+                <span className="text-sm text-zinc-300 font-medium">{user.name || user.email}</span>
+              </div>
+            )}
           </div>
         </header>
 
