@@ -451,7 +451,13 @@ export default function ChatPage() {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       try {
-        setUser(JSON.parse(storedUser));
+        const parsed = JSON.parse(storedUser);
+        // Support both avatar and profile_picture field names
+        setUser({
+          name: parsed.username,
+          email: parsed.email,
+          avatar: parsed.avatar || parsed.profile_picture
+        });
       } catch (e) {
         console.error("Failed to parse user:", e);
       }
