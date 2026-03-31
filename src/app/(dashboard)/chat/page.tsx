@@ -319,7 +319,16 @@ const ChatMessage = ({ message, onCopy, isCopied }: { message: Message; onCopy: 
   );
 };
 
-const ChatInput = ({ input, setInput, onSubmit, isLoading, thinkingText, showThinking }: { input: string; setInput: (v: string) => void; onSubmit: (e: React.FormEvent) => void; isLoading: boolean; thinkingText?: string; showThinking?: boolean }) => {
+const ChatInput = ({ input, setInput, onSubmit, isLoading, thinkingText, showThinking, selectedAgent, onSelectAgent }: { 
+  input: string; 
+  setInput: (v: string) => void; 
+  onSubmit: (e: React.FormEvent) => void; 
+  isLoading: boolean; 
+  thinkingText?: string; 
+  showThinking?: boolean;
+  selectedAgent?: AgentType;
+  onSelectAgent?: (agent: AgentType) => void;
+}) => {
   return (
     <div className="p-4 border-t border-border/50 bg-background/95 backdrop-blur-xl">
       <div className="max-w-4xl mx-auto">
@@ -343,6 +352,31 @@ const ChatInput = ({ input, setInput, onSubmit, isLoading, thinkingText, showThi
         )}
         
         <form onSubmit={onSubmit} className="max-w-4xl mx-auto flex gap-3 items-end">
+          {/* Agent Selector Row - above input */}
+          {selectedAgent && onSelectAgent && (
+            <div className="flex items-center gap-1 mb-2">
+              {AGENTS.slice(0, 4).map((agent) => {
+                const IconComponent = iconMap[agent.icon] || Sparkles;
+                return (
+                  <button
+                    key={agent.id}
+                    type="button"
+                    onClick={() => onSelectAgent(agent.id)}
+                    title={agent.name}
+                    className={cn(
+                      "w-6 h-6 rounded flex items-center justify-center transition-all",
+                      selectedAgent === agent.id
+                        ? "bg-orange-500/30 border border-orange-500/60"
+                        : "bg-zinc-900/60 border border-zinc-800/60 hover:bg-zinc-800/60"
+                    )}
+                  >
+                    <IconComponent className={cn("w-3 h-3", selectedAgent === agent.id ? "text-orange-400" : "text-zinc-500")} />
+                  </button>
+                );
+              })}
+              <span className="text-xs text-orange-400/80 ml-2">{AGENTS.find(a => a.id === selectedAgent)?.name}</span>
+            </div>
+          )}
           <div className="flex-1">
             <textarea value={input} onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onSubmit(e); } }}
@@ -566,10 +600,6 @@ export default function ChatPage() {
               <Sparkles className="w-4 h-4 text-orange-500" />
               <span className="text-sm font-medium text-zinc-300">{GROQ_MODEL.displayName}</span>
             </div>
-            {/* Agent Selector */}
-            <div className="flex items-center gap-2 pl-4 border-l border-zinc-800">
-              <AgentSelector selectedAgent={selectedAgent} onSelectAgent={setSelectedAgent} />
-            </div>
             {/* User Avatar - only show when logged in */}
             {user && (
               <div className="flex items-center gap-2 pl-4 border-l border-zinc-800">
@@ -603,7 +633,7 @@ export default function ChatPage() {
 
         {/* Input */}
         <div className="p-6 bg-zinc-950 border-t border-zinc-800">
-          <ChatInput input={input} setInput={setInput} onSubmit={handleSubmit} isLoading={isLoading} thinkingText={thinkingText} showThinking={true} />
+          <ChatInput input={input} setInput={setInput} onSubmit={handleSubmit} isLoading={isLoading} thinkingText={thinkingText} showThinking={true} selectedAgent={selectedAgent} onSelectAgent={setSelectedAgent} />
         </div>
       </main>
     </div>
