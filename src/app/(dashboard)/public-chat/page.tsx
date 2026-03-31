@@ -73,16 +73,28 @@ export default function PublicChatPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [currentGroup, setCurrentGroup] = useState("public");
-  const [groups, setGroups] = useState<Group[]>([
-    { name: "AI Chat", member_count: 128 },
-    { name: "Coding", member_count: 85 },
-    { name: "Myanmar", member_count: 234 },
-    { name: "Technology", member_count: 156 },
-    { name: "General", member_count: 312 },
-  ]);
+  const [groups, setGroups] = useState<{ name: string; description?: string; member_count: number }[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newGroupName, setNewGroupName] = useState("");
+  const [newGroupDescription, setNewGroupDescription] = useState("");
+  const [showJoinConfirm, setShowJoinConfirm] = useState(false);
+  const [pendingGroup, setPendingGroup] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Fetch groups from API
+  const fetchGroups = async () => {
+    try {
+      const res = await fetch("/api/chat-groups");
+      if (res.ok) {
+        const data = await res.json();
+        setGroups(data.groups || []);
+      }
+    } catch (err) { console.error("Failed to fetch groups:", err); }
+  };
+
+  useEffect(() => {
+    fetchGroups();
+  }, []);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -128,15 +140,37 @@ export default function PublicChatPage() {
 
   const handleCreateGroup = () => {
     if (newGroupName.trim()) {
-      setGroups([...groups, { name: newGroupName, member_count: 1 }]);
-      setCurrentGroup(newGroupName);
-      setShowCreateModal(false);
-      setNewGroupName("");
+      // Call API to create group
+      fetch("/api/chat-groups", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          name: newGroupName, 
+          description: newGroupDescription 
+        }),
+      }).then(() => {
+        setCurrentGroup(newGroupName);
+        setShowCreateModal(false);
+        setNewGroupName("");
+        setNewGroupDescription("");
+        fetchGroups();
+      });
     }
   };
 
   const handleJoinGroup = (groupName: string) => {
-    setCurrentGroup(groupName);
+    if (currentGroup !== groupName) {
+      setPendingGroup(groupName);
+      setShowJoinConfirm(true);
+    }
+  };
+
+  const confirmJoinGroup = () => {
+    if (pendingGroup) {
+      setCurrentGroup(pendingGroup);
+      setShowJoinConfirm(false);
+      setPendingGroup(null);
+    }
   };
 
   return (
@@ -300,6 +334,16 @@ export default function PublicChatPage() {
                     className="w-full mt-1 px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-orange-500/50"
                   />
                 </div>
+                <div>
+                  <label className="text-sm font-bold text-zinc-400">Description (optional)</label>
+                  <textarea
+                    value={newGroupDescription}
+                    onChange={(e) => setNewGroupDescription(e.target.value)}
+                    placeholder="What's this group about?"
+                    rows={3}
+                    className="w-full mt-1 px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-orange-500/50 resize-none"
+                  />
+                </div>
                 <button
                   onClick={handleCreateGroup}
                   disabled={!newGroupName.trim()}
@@ -307,6 +351,51 @@ export default function PublicChatPage() {
                 >
                   Create Group <ArrowRight size={18} />
                 </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Join Group Confirmation Modal */}
+      <AnimatePresence>
+        {showJoinConfirm && pendingGroup && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setShowJoinConfirm(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.95 }}
+              className="w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-2xl p-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="text-center space-y-4">
+                <div className="w-16 h-16 mx-auto rounded-full bg-orange-500/20 flex items-center justify-center">
+                  <Users size={32} className="text-orange-500" />
+                </div>
+                <h3 className="text-xl font-bold text-white">Join Group?</h3>
+                <p className="text-zinc-400">
+                  သင့်ကို <span className="text-orange-500 font-bold">#{pendingGroup}</span> အုပ်ချိုက်သို့ ပါဝင်လိုပါသလား?
+                </p>
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={() => setShowJoinConfirm(false)}
+                    className="flex-1 py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-medium rounded-xl transition-all"
+                  >
+                    မလုပ်ပါ
+                  </button>
+                  <button
+                    onClick={confirmJoinGroup}
+                    className="flex-1 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl transition-all"
+                  >
+                    ပါဝင်ပါ
+                  </button>
+                </div>
               </div>
             </motion.div>
           </motion.div>
