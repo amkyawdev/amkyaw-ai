@@ -1,12 +1,14 @@
-// ZAI API (Zhipu AI) and Stability AI integration with fallback system
+// ZAI API (Zhipu AI), Stability AI, Ollama, and Alibaba Cloud integration with fallback system
 import { BURMESE_SYSTEM_PROMPT } from './groq';
 
 const ZAI_ENDPOINT = 'https://api.z.ai/api/paas/v4/chat/completions';
 const STABILITY_ENDPOINT = 'https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0';
+const ALIBABA_ENDPOINT = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
 
 export interface AIProvider {
   name: string;
-  type: 'zai' | 'groq' | 'stability' | 'huggingface';
+  type: 'groq' | 'zai' | 'ollama' | 'alibaba' | 'stability' | 'huggingface';
+  capabilities: ('chat' | 'code' | 'translate' | 'image' | 'reasoning')[];
 }
 
 // Check if ZAI is configured
@@ -17,6 +19,16 @@ export function isZAIConfigured(): boolean {
 // Check if Stability is configured
 export function isStabilityConfigured(): boolean {
   return !!process.env.STABILITY_API_KEY;
+}
+
+// Check if Ollama is configured (local or hosted)
+export function isOllamaConfigured(): boolean {
+  return !!process.env.OLLAMA_API_KEY || !!process.env.OLLAMA_BASE_URL;
+}
+
+// Check if Alibaba is configured
+export function isAlibabaConfigured(): boolean {
+  return !!process.env.ALIBABA_API_KEY;
 }
 
 // Call ZAI API
@@ -106,14 +118,98 @@ export async function callStabilityImage(
   }
 }
 
+// Call Ollama API (supports local and hosted Ollama instances)
+export async function callOllama(
+  messages: { role: string; content: string }[],
+  model: string = 'llama3'
+): Promise<{ success: boolean; response?: string; error?: string }> {
+  const apiKey = process.env.OLLAMA_API_KEY;
+  const baseUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
+  
+  try {
+    const response = await fetch(`${baseUrl}/api/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(apiKey ? { 'Authorization': `Bearer ${apiKey}` } : {}),
+      },
+      body: JSON.stringify({
+        model,
+        messages,
+        stream: false,
+      }),
+    });
+
+    if (!response.ok) {
+      return { success: false, error: `Ollama API error: ${response.status}` };
+    }
+
+    const data = await response.json();
+    const responseText = data.message?.content;
+    
+    if (responseText) {
+      return { success: true, response: responseText };
+    }
+    
+    return { success: false, error: 'No response from Ollama' };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+}
+
+// Call Alibaba Cloud (DashScope) API
+export async function callAlibaba(
+  messages: { role: string; content: string }[],
+  model: string = 'qwen-plus'
+): Promise<{ success: boolean; response?: string; error?: string }> {
+  const apiKey = process.env.ALIBABA_API_KEY;
+  
+  if (!apiKey) {
+    return { success: false, error: 'ALIBABA_API_KEY not configured' };
+  }
+
+  try {
+    const response = await fetch(ALIBABA_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        messages,
+        temperature: 0.7,
+        max_tokens: 2048,
+      }),
+    });
+
+    if (!response.ok) {
+      return { success: false, error: `Alibaba API error: ${response.status}` };
+    }
+
+    const data = await response.json();
+    const responseText = data.choices?.[0]?.message?.content;
+    
+    if (responseText) {
+      return { success: true, response: responseText };
+    }
+    
+    return { success: false, error: 'No response from Alibaba' };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+}
+
 // Fallback chain for chat - tries providers in order
 export async function callWithFallback(
   messages: { role: string; content: string }[],
   preferredProvider: AIProvider['type'] = 'groq'
 ): Promise<{ success: boolean; response?: string; provider?: string; error?: string }> {
   const providers: AIProvider[] = [
-    { name: 'Groq', type: 'groq' },
-    { name: 'ZAI', type: 'zai' },
+    { name: 'Groq', type: 'groq', capabilities: ['chat', 'code', 'translate', 'reasoning'] },
+    { name: 'ZAI', type: 'zai', capabilities: ['chat', 'code', 'translate', 'reasoning'] },
+    { name: 'Ollama', type: 'ollama', capabilities: ['chat', 'code', 'translate', 'reasoning'] },
+    { name: 'Alibaba', type: 'alibaba', capabilities: ['chat', 'code', 'translate', 'reasoning'] },
   ];
 
   // Try preferred provider first
@@ -132,7 +228,7 @@ export async function callWithFallback(
         const result = await callGroq(messages);
         const response = result.choices?.[0]?.message?.content;
         if (response) {
-          return { success: true, response, provider: 'Groq' };
+          return { success: true, response, provider: 'Groq (Llama 3.3)' };
         }
       } else if (provider.type === 'zai') {
         if (!isZAIConfigured()) continue;
@@ -148,6 +244,26 @@ export async function callWithFallback(
           if (response) {
             return { success: true, response, provider: 'ZAI (GLM-5)' };
           }
+        }
+      } else if (provider.type === 'ollama') {
+        if (!isOllamaConfigured()) continue;
+        
+        const systemMsg = { role: 'system', content: getEnhancedSystemPrompt() };
+        const allMessages = [systemMsg, ...messages];
+        
+        const result = await callOllama(allMessages, 'llama3');
+        if (result.success && result.response) {
+          return { success: true, response: result.response, provider: 'Ollama (Llama 3)' };
+        }
+      } else if (provider.type === 'alibaba') {
+        if (!isAlibabaConfigured()) continue;
+        
+        const systemMsg = { role: 'system', content: getEnhancedSystemPrompt() };
+        const allMessages = [systemMsg, ...messages];
+        
+        const result = await callAlibaba(allMessages, 'qwen-plus');
+        if (result.success && result.response) {
+          return { success: true, response: result.response, provider: 'Alibaba (Qwen Plus)' };
         }
       }
     } catch (error) {
