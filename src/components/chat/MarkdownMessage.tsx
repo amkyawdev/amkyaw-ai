@@ -5,6 +5,8 @@ import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 import { cn } from '@/lib/utils';
+import { useState } from 'react';
+import { Copy, Check } from 'lucide-react';
 
 interface MarkdownMessageProps {
   content: string;
@@ -32,23 +34,11 @@ export default function MarkdownMessage({ content, className }: MarkdownMessageP
               );
             }
             
-            return (
-              <SyntaxHighlighter
-                style={oneDark}
-                language={match ? match[1] : 'text'}
-                PreTag="div"
-                className="rounded-lg overflow-hidden text-sm"
-                showLineNumbers
-                customStyle={{
-                  margin: '1rem 0',
-                  padding: '1rem',
-                  background: 'rgba(0, 0, 0, 0.3)',
-                  borderRadius: '0.5rem',
-                }}
-              >
-                {String(children).replace(/\n$/, '')}
-              </SyntaxHighlighter>
-            );
+            // Code block - add copy button
+            const codeContent = String(children).replace(/\n$/, '');
+            const language = match ? match[1] : 'text';
+            
+            return <CodeBlockWithCopy code={codeContent} language={language} />;
           },
           a({ href, children, ...props }) {
             return (
@@ -126,6 +116,57 @@ export default function MarkdownMessage({ content, className }: MarkdownMessageP
       >
         {content}
       </ReactMarkdown>
+    </div>
+  );
+}
+
+// Code block with copy button
+function CodeBlockWithCopy({ code, language }: { code: string; language: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="relative group rounded-lg overflow-hidden my-3">
+      {/* Header with language and copy button */}
+      <div className="flex items-center justify-between px-4 py-2 bg-zinc-800/80 border-b border-zinc-700">
+        <span className="text-xs text-zinc-400 uppercase font-mono">{language}</span>
+        <button
+          onClick={handleCopy}
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-zinc-700/50 hover:bg-zinc-600/50 text-zinc-300 text-xs transition-all"
+        >
+          {copied ? (
+            <>
+              <Check className="w-3.5 h-3.5 text-green-400" />
+              <span className="text-green-400">ကူးယူပါပါ။</span>
+            </>
+          ) : (
+            <>
+              <Copy className="w-3.5 h-3.5" />
+              <span>ကူးယူမည်။</span>
+            </>
+          )}
+        </button>
+      </div>
+      <SyntaxHighlighter
+        style={oneDark}
+        language={language}
+        PreTag="div"
+        className="rounded-b-lg text-sm"
+        showLineNumbers
+        customStyle={{
+          margin: 0,
+          padding: '1rem',
+          background: 'rgba(0, 0, 0, 0.4)',
+          borderRadius: '0 0 0.5rem 0.5rem',
+        }}
+      >
+        {code}
+      </SyntaxHighlighter>
     </div>
   );
 }
