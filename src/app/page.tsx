@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Bot, MessageSquare, Code, Image, Globe, Sparkles,
-  ArrowRight, Users, Hash, ChevronRight, Github, Mail, Heart, User, Settings
+  ArrowRight, Users, Hash, ChevronRight, Github, Mail, Heart, User, Settings, LogOut
 } from "lucide-react";
 
 const features = [
@@ -31,6 +31,14 @@ export default function Home() {
     const stored = localStorage.getItem("user");
     if (stored) setUser(JSON.parse(stored));
   }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("limits");
+    localStorage.setItem("limits", JSON.stringify({ chat: 30, image: 5 }));
+    setUser(null);
+    router.push("/");
+  };
 
   const handleGetStarted = () => {
     if (user) {
@@ -59,15 +67,23 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-3">
             {user ? (
-              <>
-                <Link href="/profile" className="px-4 py-2 text-sm font-medium text-zinc-400 hover:text-white">Profile</Link>
-                <Link href="/chat" className="px-4 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm font-medium">
-                  Go to Chat
+              // Logged in - show user profile
+              <div className="flex items-center gap-3">
+                <Link href="/profile" className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-orange-500/50 transition-all">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center">
+                    <User className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="text-sm font-medium text-white">{user.username}</span>
                 </Link>
-              </>
+                <button onClick={handleLogout} className="p-2 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all">
+                  <LogOut className="w-5 h-5" />
+                </button>
+              </div>
             ) : (
+              // Not logged in - show Login and Get Started
               <>
                 <Link href="/login" className="px-4 py-2 text-sm font-medium text-zinc-400 hover:text-orange-500">Login</Link>
+                <Link href="/register" className="px-4 py-2 text-sm font-medium text-zinc-400 hover:text-orange-500">Register</Link>
                 <button onClick={handleGetStarted} className="px-4 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm font-medium">
                   Get Started
                 </button>
