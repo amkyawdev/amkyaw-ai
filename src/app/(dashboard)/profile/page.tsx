@@ -24,6 +24,16 @@ export default function ProfilePage() {
     profilePicture: user?.profile_picture || `https://api.dicebear.com/7.x/lorelei/svg?seed=boy1`,
     joinedAt: new Date().toLocaleDateString(),
     userId: "AM-000000",
+    // Social links
+    website: "",
+    tiktok: "",
+    facebook: "",
+  });
+
+  const [socialLinks, setSocialLinks] = useState({
+    website: "",
+    tiktok: "",
+    facebook: "",
   });
 
   useEffect(() => {
@@ -38,6 +48,14 @@ export default function ProfilePage() {
         profilePicture: userData.profile_picture || `https://api.dicebear.com/7.x/lorelei/svg?seed=boy1`,
         joinedAt: userData.created_at || new Date().toLocaleDateString(),
         userId: userData.id || "AM-000000",
+        website: userData.website || "",
+        tiktok: userData.tiktok || "",
+        facebook: userData.facebook || "",
+      });
+      setSocialLinks({
+        website: userData.website || "",
+        tiktok: userData.tiktok || "",
+        facebook: userData.facebook || "",
       });
     }
     setLoading(false);
@@ -68,6 +86,9 @@ export default function ProfilePage() {
       userData.username = profile.username;
       userData.bio = profile.bio;
       userData.profile_picture = profile.profilePicture;
+      userData.website = socialLinks.website;
+      userData.tiktok = socialLinks.tiktok;
+      userData.facebook = socialLinks.facebook;
       localStorage.setItem("user", JSON.stringify(userData));
     }
     setTimeout(() => {
@@ -169,6 +190,75 @@ export default function ProfilePage() {
           ) : (
             <p className="text-zinc-400">{profile.bio}</p>
           )}
+        </div>
+
+        {/* Social Links Section */}
+        <div className="p-6 bg-zinc-900 border border-zinc-800 rounded-2xl space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-white text-lg">Social Links</h3>
+            <button onClick={() => isEditing ? handleSave() : setIsEditing(true)} className="p-2 bg-orange-500 hover:bg-orange-600 rounded-lg transition-all">
+              {isEditing ? <Save size={16} /> : <Edit2 size={16} />}
+            </button>
+          </div>
+          <div className="space-y-3">
+            {/* Website */}
+            <div className="flex items-center gap-3 p-3 bg-zinc-950 rounded-xl">
+              <span className="text-xl">🌐</span>
+              {isEditing ? (
+                <input
+                  type="url"
+                  value={socialLinks.website}
+                  onChange={(e) => setSocialLinks({ ...socialLinks, website: e.target.value })}
+                  placeholder="https://yourwebsite.com"
+                  className="flex-1 bg-transparent text-zinc-300 focus:outline-none"
+                />
+              ) : socialLinks.website ? (
+                <a href={socialLinks.website} target="_blank" rel="noopener noreferrer" className="flex-1 text-orange-400 hover:text-orange-300 truncate">
+                  {socialLinks.website}
+                </a>
+              ) : (
+                <span className="flex-1 text-zinc-600">Not set</span>
+              )}
+            </div>
+            {/* TikTok */}
+            <div className="flex items-center gap-3 p-3 bg-zinc-950 rounded-xl">
+              <span className="text-xl">🎵</span>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={socialLinks.tiktok}
+                  onChange={(e) => setSocialLinks({ ...socialLinks, tiktok: e.target.value })}
+                  placeholder="@yourtiktok"
+                  className="flex-1 bg-transparent text-zinc-300 focus:outline-none"
+                />
+              ) : socialLinks.tiktok ? (
+                <a href={`https://tiktok.com/@${socialLinks.tiktok.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="flex-1 text-orange-400 hover:text-orange-300 truncate">
+                  @{socialLinks.tiktok.replace('@', '')}
+                </a>
+              ) : (
+                <span className="flex-1 text-zinc-600">Not set</span>
+              )}
+            </div>
+            {/* Facebook */}
+            <div className="flex items-center gap-3 p-3 bg-zinc-950 rounded-xl">
+              <span className="text-xl">📘</span>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={socialLinks.facebook}
+                  onChange={(e) => setSocialLinks({ ...socialLinks, facebook: e.target.value })}
+                  placeholder="facebook.com/yourprofile"
+                  className="flex-1 bg-transparent text-zinc-300 focus:outline-none"
+                />
+              ) : socialLinks.facebook ? (
+                <a href={`https://facebook.com/${socialLinks.facebook.replace('facebook.com/', '')}`} target="_blank" rel="noopener noreferrer" className="flex-1 text-orange-400 hover:text-orange-300 truncate">
+                  {socialLinks.facebook}
+                </a>
+              ) : (
+                <span className="flex-1 text-zinc-600">Not set</span>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Account Info */}

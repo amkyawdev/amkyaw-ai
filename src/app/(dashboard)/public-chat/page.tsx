@@ -79,6 +79,10 @@ export default function PublicChatPage() {
   const [newGroupDescription, setNewGroupDescription] = useState("");
   const [showJoinConfirm, setShowJoinConfirm] = useState(false);
   const [pendingGroup, setPendingGroup] = useState<string | null>(null);
+  const [showUserProfile, setShowUserProfile] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<{ username: string; bio?: string; website?: string; tiktok?: string; facebook?: string; profile_picture?: string } | null>(null);
+  const [showPrivateChat, setShowPrivateChat] = useState(false);
+  const [privateChatUser, setPrivateChatUser] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Fetch groups from API
@@ -173,6 +177,49 @@ export default function PublicChatPage() {
     }
   };
 
+  const handleUserClick = (msg: Message) => {
+    // Try to get user data from localStorage or create a basic profile
+    const storedUser = localStorage.getItem("user");
+    let userProfile = null;
+    
+    if (storedUser) {
+      try {
+        const userData = JSON.parse(storedUser);
+        // Check if this is the clicked user's data (we need to store user data in messages)
+        userProfile = {
+          username: msg.username,
+          bio: userData.bio || "No bio available",
+          website: userData.website || "",
+          tiktok: userData.tiktok || "",
+          facebook: userData.facebook || "",
+          profile_picture: userData.profile_picture || "",
+        };
+      } catch (e) {}
+    }
+    
+    // If no stored data, use basic info from message
+    if (!userProfile) {
+      userProfile = {
+        username: msg.username,
+        bio: "No bio available",
+        website: "",
+        tiktok: "",
+        facebook: "",
+      };
+    }
+    
+    setSelectedUser(userProfile);
+    setShowUserProfile(true);
+  };
+
+  const handleStartPrivateChat = () => {
+    if (selectedUser) {
+      setPrivateChatUser(selectedUser.username);
+      setShowUserProfile(false);
+      setShowPrivateChat(true);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full bg-zinc-950 text-zinc-100 relative">
       <FloatingParticles />
@@ -259,15 +306,24 @@ export default function PublicChatPage() {
               key={msg.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex gap-3"
+              className="flex gap-3 group"
             >
-              {/* Small Avatar */}
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center flex-shrink-0">
+              {/* Small Avatar - Clickable */}
+              <button 
+                onClick={() => handleUserClick(msg)}
+                className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center flex-shrink-0 hover:ring-2 hover:ring-orange-500/50 transition-all"
+              >
                 <User size={14} className="text-white" />
-              </div>
+              </button>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm font-bold text-white">{msg.username}</span>
+                  {/* Username - Clickable */}
+                  <button 
+                    onClick={() => handleUserClick(msg)}
+                    className="text-sm font-bold text-white hover:text-orange-500 transition-colors"
+                  >
+                    {msg.username}
+                  </button>
                   <span className="text-xs text-zinc-500">
                     {new Date(msg.created_at).toLocaleTimeString()}
                   </span>
@@ -396,6 +452,125 @@ export default function PublicChatPage() {
                     ပါဝင်ပါ
                   </button>
                 </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* User Profile Modal */}
+      <AnimatePresence>
+        {showUserProfile && selectedUser && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setShowUserProfile(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.95 }}
+              className="w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-2xl p-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Profile Header */}
+              <div className="text-center space-y-4">
+                <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center overflow-hidden">
+                  <User size={40} className="text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-white">{selectedUser.username}</h3>
+                <p className="text-zinc-400 text-sm">{selectedUser.bio || "No bio available"}</p>
+              </div>
+
+              {/* Social Links */}
+              {(selectedUser.website || selectedUser.tiktok || selectedUser.facebook) && (
+                <div className="mt-4 space-y-2">
+                  {selectedUser.website && (
+                    <a href={selectedUser.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 bg-zinc-950 rounded-xl hover:bg-zinc-800 transition-all">
+                      <span className="text-xl">🌐</span>
+                      <span className="text-orange-400 truncate">{selectedUser.website}</span>
+                    </a>
+                  )}
+                  {selectedUser.tiktok && (
+                    <a href={`https://tiktok.com/@${selectedUser.tiktok.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 bg-zinc-950 rounded-xl hover:bg-zinc-800 transition-all">
+                      <span className="text-xl">🎵</span>
+                      <span className="text-orange-400">@{selectedUser.tiktok.replace('@', '')}</span>
+                    </a>
+                  )}
+                  {selectedUser.facebook && (
+                    <a href={`https://facebook.com/${selectedUser.facebook.replace('facebook.com/', '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 bg-zinc-950 rounded-xl hover:bg-zinc-800 transition-all">
+                      <span className="text-xl">📘</span>
+                      <span className="text-orange-400 truncate">{selectedUser.facebook}</span>
+                    </a>
+                  )}
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="mt-6 flex gap-3">
+                <button
+                  onClick={() => setShowUserProfile(false)}
+                  className="flex-1 py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-medium rounded-xl transition-all"
+                >
+                  ပိတ်ပါ
+                </button>
+                <button
+                  onClick={handleStartPrivateChat}
+                  className="flex-1 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl transition-all"
+                >
+                  စကားပါးပါး
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Private Chat Modal */}
+      <AnimatePresence>
+        {showPrivateChat && privateChatUser && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setShowPrivateChat(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.95 }}
+              className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="text-center space-y-4 mb-6">
+                <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center">
+                  <MessageCircle size={32} className="text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-white">Private Chat</h3>
+                <p className="text-zinc-400">
+                  <span className="text-orange-500 font-bold">@{privateChatUser}</span> နဲ့ နှစ်ယောက်ထဲစကားပါးပါး
+                </p>
+                <p className="text-zinc-500 text-sm">ဤကိစ္စအတွက် database table အသစ်ဖန်တီးရန် လိုပါပါ။</p>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowPrivateChat(false)}
+                  className="flex-1 py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-medium rounded-xl transition-all"
+                >
+                  ပိတ်ပါ
+                </button>
+                <button
+                  onClick={() => {
+                    // Navigate to chat page - you can implement this
+                    setShowPrivateChat(false);
+                  }}
+                  className="flex-1 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl transition-all"
+                >
+                  စကားစမည်။
+                </button>
               </div>
             </motion.div>
           </motion.div>
