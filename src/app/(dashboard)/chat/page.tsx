@@ -142,22 +142,28 @@ const ChatMessage = ({ message, onCopy, isCopied }: { message: Message; onCopy: 
   const isImage = message.content.startsWith('[IMAGE:') && message.content.endsWith(']');
   const imageUrl = isImage ? message.content.slice(8, -1) : null;
   
-  // Detect if content is primarily code
+  // Detect if content is primarily code (not just mixed with text)
   const isCodeContent = () => {
     if (message.role === 'user') return false;
     const content = message.content;
-    // Check for code blocks (``` or multiple programming patterns)
-    const hasCodeBlock = content.includes('```') || content.includes('```python') || content.includes('```javascript') || content.includes('```typescript') || content.includes('```html') || content.includes('```css') || content.includes('```java') || content.includes('```cpp') || content.includes('```go') || content.includes('```rust') || content.includes('```sql');
-    // Check for function definitions, imports, class definitions
-    const hasCodePatterns = /^(import |export |function |const |let |var |class |def |public |private |protected |interface |enum )/m.test(content);
-    // Check if more than 30% of lines start with common code patterns
-    const lines = content.split('\n');
-    const codeLines = lines.filter(line => 
-      /^\s*(import |export |function |const |let |var |class |def |public |private |protected |interface |enum |return |if |for |while |switch |case |break|continue|try|catch|throw|async|await|\{|\}|=>|;)\s/.test(line) ||
-      /^\s*[\w]+\s*\(.*\)\s*\{/.test(line) ||
-      /^\s*#include|^\s*using |^\s*package |^\s*import /.test(line)
-    );
-    return hasCodeBlock || (hasCodePatterns && codeLines.length > 3);
+    
+    // Must have code blocks to be considered code
+    const hasCodeBlock = content.includes('```');
+    if (!hasCodeBlock) return false;
+    
+    // Count code block lines vs normal text lines
+    const codeBlockMatch = content.match(/```[\s\S]*?```/g);
+    if (!codeBlockMatch) return false;
+    
+    // Calculate total code block characters
+    const codeBlockChars = codeBlockMatch.join('').length;
+    const totalChars = content.length;
+    
+    // If code blocks make up more than 40% of content, apply dark background
+    // Or if there's significant code outside blocks
+    const hasCodePatterns = /^(import |export |function |const |let |var |class |def |public |private |protected |interface |enum |return |if |for |while |switch |case )/m.test(content);
+    
+    return (codeBlockChars / totalChars > 0.4) || (hasCodePatterns && codeBlockMatch.length >= 2);
   };
   
   const isCode = isCodeContent();
