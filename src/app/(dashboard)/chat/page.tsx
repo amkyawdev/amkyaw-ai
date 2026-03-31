@@ -346,6 +346,11 @@ export default function ChatPage() {
         if (!response.ok) throw new Error((await response.json()).error || "Failed");
         data = await response.json();
         updateMessage(chatId, assistantMessage.id, { content: data.response, isLoading: false });
+        
+        // Track which provider was used
+        if (data.provider) {
+          console.log('Response from provider:', data.provider);
+        }
       }
     } catch (err) {
       updateMessage(chatId, assistantMessage.id, { content: err instanceof Error ? err.message : "Error", isLoading: false });

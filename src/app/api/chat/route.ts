@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { callGroq, GROQ_MODELS, GroqModelType, BURMESE_SYSTEM_PROMPT, isValidResponse } from '@/lib/groq';
-import { callWithFallback, isZAIConfigured, isStabilityConfigured } from '@/lib/ai-providers';
+import { callWithFallback, isZAIConfigured, isStabilityConfigured, isOllamaConfigured, isAlibabaConfigured } from '@/lib/ai-providers';
 
 export const runtime = 'nodejs';
 
@@ -60,8 +60,10 @@ export async function POST(request: NextRequest) {
 
     // Get available providers
     const availableProviders = {
-      groq: true, // Groq is primary
+      groq: true,
       zai: isZAIConfigured(),
+      ollama: isOllamaConfigured(),
+      alibaba: isAlibabaConfigured(),
     };
 
     const modelKey = model as GroqModelType;
@@ -83,27 +85,17 @@ export async function POST(request: NextRequest) {
     let response = '';
     let provider = 'Groq';
 
-    // Use fallback system if preferred provider fails
-    if (forceProvider === 'zai' && isZAIConfigured()) {
-      const result = await callWithFallback(messages, 'zai');
-      if (result.success && result.response) {
-        response = result.response;
-        provider = result.provider || 'ZAI';
-      } else {
-        // Fallback to Groq
-        const groqResult = await callGroq(messages, GROQ_MODELS['llama-3.3-70b'].name, temperature, topP);
-        response = groqResult.choices?.[0]?.message?.content ?? '';
-        provider = 'Groq (fallback)';
-      }
-    } else {
-      // Try Groq first (primary)
-      try {
-        const modelConfig = GROQ_MODELS[modelKey] || GROQ_MODELS['llama-3.3-70b'];
-        const groqResult = await callGroq(messages, modelConfig.name, temperature, topP);
-        response = groqResult.choices?.[0]?.message?.content ?? '';
-        provider = 'Groq';
-      } catch (groqError) {
-        // If Groq fails and ZAI is available, try ZAI
+    // Try each provider in order until one succeeds (auto rotation)
+    try {
+      // 1. Try Groq first (primary)
+      const modelConfig = GROQ_MODELS[modelKey] || GROQ_MODELS['llama-3.3-70b'];
+      const groqResult = await callGroq(messages, modelConfig.name, temperature, topP);
+      response = groqResult.choices?.[0]?.message?.content ?? '';
+      provider = 'Groq';
+      
+      // If Groq fails, try other providers
+      if (!response || !isValidResponse(response)) {
+        // 2. Try ZAI if configured
         if (isZAIConfigured()) {
           const zaiResult = await callWithFallback(messages, 'zai');
           if (zaiResult.success && zaiResult.response) {
@@ -111,6 +103,34 @@ export async function POST(request: NextRequest) {
             provider = zaiResult.provider || 'ZAI';
           }
         }
+        
+        // 3. Try Ollama if configured
+        if (!response && isOllamaConfigured()) {
+          const { callOllama } = await import('@/lib/ai-providers');
+          const ollamaResult = await callOllama(messages, 'llama3');
+          if (ollamaResult.success && ollamaResult.response) {
+            response = ollamaResult.response;
+            provider = 'Ollama (Llama 3)';
+          }
+        }
+        
+        // 4. Try Alibaba if configured
+        if (!response && isAlibabaConfigured()) {
+          const { callAlibaba } = await import('@/lib/ai-providers');
+          const alibabaResult = await callAlibaba(messages, 'qwen-plus');
+          if (alibabaResult.success && alibabaResult.response) {
+            response = alibabaResult.response;
+            provider = 'Alibaba (Qwen Plus)';
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Provider chain error:', error);
+      // If primary fails, try fallback chain
+      const fallbackResult = await callWithFallback(messages, 'groq');
+      if (fallbackResult.success && fallbackResult.response) {
+        response = fallbackResult.response;
+        provider = fallbackResult.provider || 'Fallback';
       }
     }
 
@@ -127,6 +147,8 @@ export async function POST(request: NextRequest) {
       availableProviders: {
         groq: true,
         zai: isZAIConfigured(),
+        ollama: isOllamaConfigured(),
+        alibaba: isAlibabaConfigured(),
         stability: isStabilityConfigured(),
       },
     });
