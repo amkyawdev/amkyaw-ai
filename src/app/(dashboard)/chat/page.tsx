@@ -113,11 +113,22 @@ const ContentWithSeparateCode = ({ content }: { content: string }) => {
   );
 };
 
-// Avatar component for user - show project icon only
+// Avatar component for user - show avatar picture or project icon
 const UserAvatar = ({ user }: { user: { name?: string; email?: string; avatar?: string } | null }) => {
   if (!user) return null;
   
-  // Always show project icon (not email)
+  // If user has avatar URL, show the picture
+  if (user.avatar) {
+    return (
+      <img 
+        src={user.avatar} 
+        alt={user.name || "User"} 
+        className="w-8 h-8 rounded-full object-cover border-2 border-orange-500/50"
+      />
+    );
+  }
+  
+  // Default show project icon
   return (
     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-white border-2 border-orange-500/50">
       <span className="text-sm font-bold">AK</span>
