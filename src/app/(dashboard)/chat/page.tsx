@@ -15,25 +15,43 @@ import { AGENTS, Agent, AgentType } from "@/lib/ai-providers";
 
 const GROQ_MODEL = { name: "llama-3.3-70b-versatile", displayName: "Llama 3.3 70B" };
 
-// Agent Selector Component
+// Agent Selector Component - Small icon buttons in chat area
 const AgentSelector = ({ selectedAgent, onSelectAgent }: { selectedAgent: AgentType; onSelectAgent: (agent: AgentType) => void }) => {
+  const [showDropdown, setShowDropdown] = useState(false);
+  const selectedAgentData = AGENTS.find(a => a.id === selectedAgent);
+  
   return (
-    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-      {AGENTS.map((agent) => (
-        <button
-          key={agent.id}
-          onClick={() => onSelectAgent(agent.id)}
-          className={cn(
-            "flex items-center gap-2 px-4 py-2 rounded-full transition-all whitespace-nowrap",
-            selectedAgent === agent.id
-              ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg"
-              : "glass hover:bg-white/10"
-          )}
-        >
-          <span className="text-lg">{agent.icon}</span>
-          <span className="text-sm font-medium">{agent.name}</span>
-        </button>
-      ))}
+    <div className="relative">
+      {/* Small icon buttons row */}
+      <div className="flex items-center gap-1">
+        {AGENTS.map((agent) => (
+          <button
+            key={agent.id}
+            onClick={() => onSelectAgent(agent.id)}
+            title={agent.name}
+            className={cn(
+              "w-8 h-8 rounded-lg flex items-center justify-center text-lg transition-all",
+              selectedAgent === agent.id
+                ? "bg-orange-500/20 border border-orange-500/50"
+                : "bg-zinc-900 border border-zinc-800 hover:bg-zinc-800"
+            )}
+          >
+            {agent.icon}
+          </button>
+        ))}
+      </div>
+      
+      {/* Selected agent name with animation */}
+      <motion.div 
+        key={selectedAgent}
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap"
+      >
+        <span className="text-xs font-medium text-orange-400">
+          {selectedAgentData?.name}
+        </span>
+      </motion.div>
     </div>
   );
 };
