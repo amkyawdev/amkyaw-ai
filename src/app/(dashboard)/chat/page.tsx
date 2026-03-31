@@ -14,6 +14,50 @@ import { detectIntent, getThinkingText, routeAI } from "@/lib/groq";
 
 const GROQ_MODEL = { name: "llama-3.3-70b-versatile", displayName: "Llama 3.3 70B" };
 
+// Component to separate text and code blocks
+const ContentWithSeparateCode = ({ content }: { content: string }) => {
+  // Split content by code blocks
+  const parts = content.split(/(```[\s\S]*?```)/g);
+  
+  return (
+    <div className="space-y-3">
+      {parts.map((part, index) => {
+        if (part.startsWith('```')) {
+          // Code block
+          const codeMatch = part.match(/```(\w*)\n?([\s\S]*?)```/);
+          const language = codeMatch?.[1] || 'text';
+          const code = codeMatch?.[2] || part.slice(3, -3);
+          
+          return (
+            <div key={index} className="rounded-lg overflow-hidden bg-[#1a1a1a] border border-gray-700">
+              <div className="px-3 py-1 bg-gray-800 text-xs text-gray-400 flex items-center justify-between">
+                <span>{language || 'code'}</span>
+                <button 
+                  onClick={() => navigator.clipboard.writeText(code)}
+                  className="hover:text-white"
+                >
+                  <Copy className="w-3 h-3" />
+                </button>
+              </div>
+              <pre className="p-3 text-sm text-gray-200 overflow-x-auto font-mono">
+                <code>{code}</code>
+              </pre>
+            </div>
+          );
+        } else if (part.trim()) {
+          // Regular text - render as markdown
+          return (
+            <div key={index} className="text-gray-200">
+              <MarkdownMessage content={part} />
+            </div>
+          );
+        }
+        return null;
+      })}
+    </div>
+  );
+};
+
 // Avatar component for user
 const UserAvatar = ({ user }: { user: { name?: string; email?: string; avatar?: string } | null }) => {
   if (!user) return null;
@@ -196,8 +240,17 @@ const ChatMessage = ({ message, onCopy, isCopied }: { message: Message; onCopy: 
               />
             </div>
           )}
-          {/* Text content */}
-          {!isImage && <div className="text-sm"><MarkdownMessage content={message.content} /></div>}
+          {/* Text content - separate from code blocks */}
+          {!isImage && (
+            <div className="text-sm">
+              {isCode ? (
+                // Separate text and code
+                <ContentWithSeparateCode content={message.content} />
+              ) : (
+                <MarkdownMessage content={message.content} />
+              )}
+            </div>
+          )}
           {/* Copy button */}
           <div className="flex items-center gap-1 mt-3 pt-3 border-t border-white/10 opacity-0 group-hover:opacity-100">
             <button onClick={() => onCopy(message.content, message.id)} className="p-2 rounded-lg hover:bg-white/10">
