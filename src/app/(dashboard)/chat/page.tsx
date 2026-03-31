@@ -113,33 +113,16 @@ const ContentWithSeparateCode = ({ content }: { content: string }) => {
   );
 };
 
-// Avatar component for user
+// Avatar component for user - show project icon only
 const UserAvatar = ({ user }: { user: { name?: string; email?: string; avatar?: string } | null }) => {
   if (!user) return null;
   
-  // If user has avatar URL
-  if (user.avatar) {
-    return (
-      <img 
-        src={user.avatar} 
-        alt={user.name || "User"} 
-        className="w-8 h-8 rounded-full object-cover border-2 border-orange-500/50"
-      />
-    );
-  }
-  
-  // If user has name, show initials
-  if (user.name) {
-    const initials = user.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
-    return (
-      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-white text-sm font-bold border-2 border-orange-500/50">
-        {initials}
-      </div>
-    );
-  }
-  
-  // Default fallback
-  return <UserCircle className="w-8 h-8 text-zinc-400" />;
+  // Always show project icon (not email)
+  return (
+    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-white border-2 border-orange-500/50">
+      <span className="text-sm font-bold">AK</span>
+    </div>
+  );
 };
 
 // Floating particles background
@@ -381,10 +364,10 @@ const ChatInput = ({ input, setInput, onSubmit, isLoading, thinkingText, showThi
               {/* Animated dropdown */}
               {showAgentDropdown && (
                 <motion.div
-                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                  className="absolute top-full left-0 mt-2 py-2 rounded-xl glass border border-border/50 shadow-xl overflow-hidden z-50"
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  className="absolute bottom-full left-0 mb-2 py-2 rounded-xl glass border border-border/50 shadow-xl overflow-hidden z-50"
                 >
                   {AGENTS.map((agent, index) => {
                     const IconComponent = iconMap[agent.icon] || Sparkles;
