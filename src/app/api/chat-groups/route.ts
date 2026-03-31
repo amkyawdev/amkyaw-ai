@@ -19,7 +19,7 @@ export async function GET() {
   try {
     const db = await getDb();
     const result = await db('SELECT id, name, description FROM chat_groups ORDER BY created_at DESC');
-    return NextResponse.json(result);
+    return NextResponse.json({ groups: result });
   } catch (error) {
     console.error('Chat groups error:', error);
     return NextResponse.json({ error: 'Failed to fetch groups', details: String(error) }, { status: 500 });

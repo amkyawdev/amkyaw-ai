@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
   try {
     const db = await getDb();
     const { searchParams } = new URL(request.url);
-    const groupId = searchParams.get('group_id');
+    const groupId = searchParams.get('group') || searchParams.get('group_id');
     
     if (!groupId) {
       return NextResponse.json({ error: 'Group ID required' }, { status: 400 });
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       [groupId]
     );
 
-    return NextResponse.json(result);
+    return NextResponse.json({ messages: result });
   } catch (error) {
     console.error('Messages error:', error);
     return NextResponse.json({ error: 'Failed to fetch messages', details: String(error) }, { status: 500 });
