@@ -2,340 +2,122 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import Link from "next/link";
-import { 
-  Bot, User, Send, Hash, Plus, MessageSquare, 
-  Menu, X, Loader2, LogOut, Home, Users, Settings
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Users, Send, User, MessageCircle, Hash, AtSign, Lock } from "lucide-react";
 
 interface Message {
   id: number;
-  content: string;
   username: string;
+  content: string;
   created_at: string;
 }
 
-interface ChatGroup {
-  id: number;
-  name: string;
-  description: string;
-}
-
 export default function PublicChatPage() {
-  
-  const [user, setUser] = useState<{name: string; email: string}>({name: "Guest", email: ""});
-  const [groups, setGroups] = useState<ChatGroup[]>([]);
-  const [currentGroupId, setCurrentGroupId] = useState<number | null>(null);
-  const [currentGroupName, setCurrentGroupName] = useState<string>("general");
   const [messages, setMessages] = useState<Message[]>([]);
-  const [newMessage, setNewMessage] = useState("");
+  const [input, setInput] = useState("");
+  const [username, setUsername] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [isSending, setIsSending] = useState(false);
-  const [showSidebar, setShowSidebar] = useState(false);
-  const [showNewGroup, setShowNewGroup] = useState(false);
-  const [newGroupName, setNewGroupName] = useState("");
-  const [error, setError] = useState("");
+  const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  
-
   useEffect(() => {
-    if (currentGroupId) {
-      loadMessages(currentGroupId);
-      const interval = setInterval(() => loadMessages(currentGroupId), 5000);
-      return () => clearInterval(interval);
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      const userData = JSON.parse(storedUser);
+      setUsername(userData.username || userData.email?.split("@")[0] || "Anonymous");
+    } else {
+      setUsername("Guest_" + Math.random().toString(36).substring(7));
     }
-  }, [currentGroupId]);
-
-  // Load groups on mount
-  useEffect(() => {
-    loadGroups("Guest");
+    fetchMessages();
+    const interval = setInterval(fetchMessages, 5000);
+    return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  const loadGroups = async (username: string) => {
+  const fetchMessages = async () => {
     try {
-      const res = await fetch("/api/chat-groups", {
-        headers: { "x-username": username }
-      });
-      if (res.ok) {
-        const data: ChatGroup[] = await res.json();
-        setGroups(data);
-        if (data.length > 0) {
-          setCurrentGroupId(data[0].id);
-          setCurrentGroupName(data[0].name);
-        } else {
-          await createGroupInternal("general", username);
-        }
-      } else {
-        const err = await res.json();
-        setError(err.error || "Failed to load groups");
-      }
-    } catch (err) {
-      console.error("Failed to load groups:", err);
-      setError("Network error");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const loadMessages = async (groupId: number) => {
-    try {
-      const res = await fetch(`/api/messages?group_id=${groupId}`);
+      const res = await fetch("/api/messages?group=public");
       if (res.ok) {
         const data = await res.json();
-        setMessages(data);
+        setMessages(data.messages || []);
       }
-    } catch (err) {
-      console.error("Failed to load messages:", err);
-    }
+    } catch (err) { console.error(err); }
+    setIsLoading(false);
   };
 
-  const createGroupInternal = async (name: string, username: string): Promise<ChatGroup | null> => {
-    try {
-      const res = await fetch("/api/chat-groups", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "x-username": username
-        },
-        body: JSON.stringify({ name })
-      });
-      if (res.ok) {
-        const newGroup: ChatGroup = await res.json();
-        setGroups(prev => {
-          if (prev.find(g => g.id === newGroup.id)) return prev;
-          return [...prev, newGroup];
-        });
-        setCurrentGroupId(newGroup.id);
-        setCurrentGroupName(newGroup.name);
-        return newGroup;
-      }
-      return null;
-    } catch (err) {
-      console.error("Failed to create group:", err);
-      return null;
-    }
-  };
-
-  const handleCreateGroup = async () => {
-    if (!newGroupName.trim() || !user) return;
-    const newGroup = await createGroupInternal(newGroupName.trim(), user.name);
-    if (newGroup) {
-      setNewGroupName("");
-      setShowNewGroup(false);
-    }
-  };
-
-  const sendMessage = async (e: React.FormEvent) => {
+  const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const messageText = newMessage.trim();
-    if (!messageText || !currentGroupId || !user) {
-      setError("Please enter a message");
-      return;
-    }
-
-    setIsSending(true);
-    setError("");
-    
+    if (!input.trim() || !username) return;
+    setSending(true);
     try {
       const res = await fetch("/api/messages", {
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "x-username": user.name
-        },
-        body: JSON.stringify({
-          group_id: currentGroupId,
-          content: messageText
-        })
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: input, group: "public", username }),
       });
-      
       if (res.ok) {
-        setNewMessage("");
-        loadMessages(currentGroupId);
-      } else {
-        const err = await res.json();
-        setError(err.error || "Failed to send");
+        setInput("");
+        fetchMessages();
       }
-    } catch (err) {
-      console.error("Failed to send message:", err);
-      setError("Network error");
-    } finally {
-      setIsSending(false);
-    }
+    } catch (err) { console.error(err); }
+    setSending(false);
   };
 
-  
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
-      </div>
-    );
-  }
-
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      <AnimatePresence>
-        {showSidebar && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setShowSidebar(false)} />
-            <motion.aside initial={{ x: -300 }} animate={{ x: 0 }} exit={{ x: -300 }}
-              className="fixed left-0 top-0 bottom-0 w-72 border-r border-border/50 flex flex-col bg-background/95 backdrop-blur-xl z-50 md:relative md:translate-x-0">
-              <div className="p-4 border-b border-border/50">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Hash className="w-5 h-5 text-orange-500" />
-                    <span className="font-bold">Public Chats</span>
-                  </div>
-                  <button onClick={() => setShowSidebar(false)} className="md:hidden p-2"><X className="w-5 h-5" /></button>
-                </div>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-3 space-y-2">
-                {groups.length === 0 ? (
-                  <p className="text-center text-muted-foreground p-4">No groups</p>
-                ) : (
-                  groups.map(group => (
-                    <button key={group.id} onClick={() => { 
-                      setCurrentGroupId(group.id); 
-                      setCurrentGroupName(group.name);
-                      setShowSidebar(false); 
-                    }}
-                      className={cn("w-full text-left p-3 rounded-xl flex items-center gap-3 transition-all",
-                        currentGroupId === group.id ? "bg-orange-500/15 border border-orange-500/30" : "hover:bg-white/5")}>
-                      <Hash className="w-4 h-4 text-orange-500" />
-                      <span className="truncate">{group.name}</span>
-                    </button>
-                  ))
-                )}
-              </div>
-
-              <div className="p-3 border-t border-border/50">
-                {showNewGroup ? (
-                  <div className="space-y-2">
-                    <input 
-                      type="text" 
-                      value={newGroupName} 
-                      onChange={(e) => setNewGroupName(e.target.value)}
-                      placeholder="Group name" 
-                      className="w-full px-3 py-2 rounded-lg bg-black/30 border border-border/50 text-sm" 
-                      onKeyDown={(e) => e.key === "Enter" && handleCreateGroup()}
-                    />
-                    <div className="flex gap-2">
-                      <button onClick={handleCreateGroup} className="flex-1 py-2 rounded-lg bg-orange-500 text-white text-sm">Create</button>
-                      <button onClick={() => setShowNewGroup(false)} className="px-3 py-2 rounded-lg bg-white/10 text-sm">Cancel</button>
-                    </div>
-                  </div>
-                ) : (
-                  <button onClick={() => setShowNewGroup(true)} className="w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-orange-500/10 text-orange-500 hover:bg-orange-500/20">
-                    <Plus className="w-4 h-4" /> New Group
-                  </button>
-                )}
-              </div>
-
-              <motion.div className="p-3 border-t border-border/50 space-y-2">
-                <Link href="/" className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5">
-                  <Home className="w-5 h-5" /><span className="text-sm">Home</span>
-                </Link>
-                <Link href="/chat" className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5">
-                  <Bot className="w-5 h-5 text-orange-500" /><span className="text-sm">AI Chat</span>
-                </Link>
-                <Link href="/about" className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5">
-                  <Users className="w-5 h-5" /><span className="text-sm">About</span>
-                </Link>
-                <Link href="/docs" className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5">
-                  <MessageSquare className="w-5 h-5" /><span className="text-sm">Docs</span>
-                </Link>
-                <Link href="/profile" className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5">
-                  <User className="w-5 h-5" /><span className="text-sm">Profile</span>
-                </Link>
-                <Link href="/settings" className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5">
-                  <Settings className="w-5 h-5" /><span className="text-sm">Settings</span>
-                </Link>
-                <Link href="/login" className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-orange-400">
-                  <LogOut className="w-5 h-5" /><span className="text-sm">Login</span>
-                </Link>
-              </motion.div>
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
-
-      <main className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-14 px-4 flex items-center justify-between border-b border-border/50 bg-background/80">
-          <div className="flex items-center gap-3">
-            <button onClick={() => setShowSidebar(true)} className="p-2 rounded-lg hover:bg-white/5"><Menu className="w-5 h-5" /></button>
-            <div className="flex items-center gap-2">
-              <Hash className="w-5 h-5 text-orange-500" />
-              <span className="font-semibold">{currentGroupName}</span>
-            </div>
-          </div>
-          <Link href="/chat" className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm font-medium">AI Chat</Link>
-        </header>
-
-        {error && (
-          <div className="px-4 py-2 bg-red-500/10 text-red-400 text-sm">{error}</div>
-        )}
-        {isLoading && !error && (
-          <div className="flex items-center justify-center h-full">
-            <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
-          </div>
-        )}
-
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-              <MessageSquare className="w-12 h-12 mb-4 opacity-30" />
-              <p>No messages yet</p>
-              <p className="text-sm">Be the first to say something!</p>
-            </div>
-          ) : (
-            messages.map(msg => (
-              <motion.div key={msg.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                className={cn("flex gap-3", msg.username === user?.name ? "flex-row-reverse" : "flex-row")}>
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center flex-shrink-0">
-                  <span className="text-xs font-bold text-white">{msg.username?.charAt(0).toUpperCase()}</span>
-                </div>
-                <div className={cn("max-w-[70%] rounded-2xl px-4 py-2",
-                  msg.username === user?.name ? "bg-orange-500/20" : "glass")}>
-                  <p className="text-xs text-orange-500 mb-1">{msg.username}</p>
-                  <p className="text-sm">{msg.content}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{new Date(msg.created_at).toLocaleTimeString()}</p>
-                </div>
-              </motion.div>
-            ))
-          )}
-          <div ref={messagesEndRef} />
+    <div className="flex flex-col h-full bg-zinc-950 text-zinc-100">
+      
+      {/* Header */}
+      <div className="h-16 border-b border-zinc-800 flex items-center justify-between px-8 bg-zinc-950/80 backdrop-blur-md">
+        <div className="flex items-center gap-3">
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+          <Users size={20} className="text-orange-500" />
+          <h2 className="font-semibold text-zinc-200">Public Chat</h2>
         </div>
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800">
+          <Hash size={14} className="text-zinc-500" />
+          <span className="text-sm text-zinc-400">public-group</span>
+        </div>
+      </div>
 
-        <form onSubmit={sendMessage} className="p-4 border-t border-border/50">
-          <div className="flex gap-3 max-w-4xl mx-auto">
-            <input 
-              type="text" 
-              value={newMessage} 
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder={`Message #${currentGroupName}`}
-              className="flex-1 px-4 py-3 rounded-2xl glass border border-border/50 focus:border-orange-500/50 focus:outline-none" 
-            />
-            <button 
-              type="submit" 
-              disabled={isSending || !currentGroupId}
-              className="px-4 py-3 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 text-white disabled:opacity-50"
-            >
-              {isSending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
-            </button>
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {isLoading ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="w-8 h-8 border-2 border-orange-500/30 border-t-orange-500 rounded-full animate-spin" />
           </div>
+        ) : messages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-center text-zinc-500">
+            <MessageCircle size={48} className="mb-4 opacity-50" />
+            <p>No messages yet. Start the conversation!</p>
+          </div>
+        ) : (
+          <AnimatePresence>
+            {messages.map((msg) => (
+              <motion.div key={msg.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex gap-3">
+                <div className="w-10 h-10 bg-zinc-800 rounded-xl flex items-center justify-center shrink-0">
+                  <User size={18} className="text-zinc-500" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-bold text-white text-sm">{msg.username}</span>
+                    <span className="text-[10px] text-zinc-600">{new Date(msg.created_at).toLocaleTimeString()}</span>
+                  </div>
+                  <p className="text-zinc-300 text-sm bg-zinc-900/50 p-3 rounded-xl rounded-tl-none border border-zinc-800/50">{msg.content}</p>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input */}
+      <div className="p-4 bg-zinc-950 border-t border-zinc-800">
+        <form onSubmit={handleSend} className="flex gap-3">
+          <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Type a message..." className="flex-1 p-4 bg-zinc-900 border border-zinc-800 rounded-xl text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-orange-500/50" />
+          <button type="submit" disabled={!input.trim() || sending} className="p-4 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white rounded-xl transition-all">
+            <Send size={20} />
+          </button>
         </form>
-      </main>
+      </div>
     </div>
   );
 }

@@ -1,53 +1,24 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bot, User, Mail, LogOut, Settings, MessageSquare, Calendar, Edit2, Save, X, Camera } from "lucide-react";
-
-interface UserData {
-  name: string;
-  email: string;
-  avatar?: string;
-}
+import { User, Mail, MessageSquare, ImageIcon, Crown } from "lucide-react";
+import { useUsage } from "@/components/layout/Sidebar";
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [user, setUser] = useState<UserData | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editName, setEditName] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, isPremium } = useUsage();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      const userData = JSON.parse(storedUser);
-      setUser(userData);
-      setEditName(userData.name || "");
-    } else {
-      router.push("/login");
-    }
-    setIsLoading(false);
+    const stored = localStorage.getItem("user");
+    if (!stored) router.push("/login");
+    setLoading(false);
   }, [router]);
 
-  const handleSave = () => {
-    if (user && editName.trim()) {
-      const updatedUser = { ...user, name: editName.trim() };
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-      setUser(updatedUser);
-      setIsEditing(false);
-    }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    router.push("/login");
-  };
-
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="flex items-center justify-center h-full bg-zinc-950">
         <div className="w-8 h-8 border-2 border-orange-500/30 border-t-orange-500 rounded-full animate-spin" />
       </div>
     );
@@ -56,94 +27,61 @@ export default function ProfilePage() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-background">
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center">
-              <Bot className="w-5 h-5 text-white" />
-            </div>
-            <span className="font-bold text-lg">Amkyaw AI</span>
-          </Link>
-          <div className="flex items-center gap-4">
-            <Link href="/chat" className="text-sm hover:text-orange-500">Chat</Link>
-            <Link href="/settings" className="text-sm hover:text-orange-500">Settings</Link>
+    <div className="flex flex-col h-full bg-zinc-950 text-zinc-100 p-4 md:p-8 overflow-y-auto">
+      <div className="max-w-2xl mx-auto w-full space-y-8">
+        
+        {/* Header */}
+        <div className="text-center space-y-4">
+          <div className="w-24 h-24 mx-auto rounded-2xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center shadow-xl shadow-orange-500/20">
+            {user.profile_picture ? (
+              <img src={user.profile_picture} alt="Avatar" className="w-full h-full object-cover rounded-2xl" />
+            ) : (
+              <User size={48} className="text-white" />
+            )}
+          </div>
+          <h2 className="text-3xl font-extrabold text-white">{user.username || "User"}</h2>
+          <p className="text-zinc-500">{user.email}</p>
+          {isPremium && (
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-orange-500/10 text-orange-500 rounded-full text-sm font-bold uppercase">
+              <Crown size={14} /> Premium Member
+            </span>
+          )}
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-4">
+          <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-xl text-center">
+            <MessageSquare size={24} className="mx-auto mb-2 text-zinc-500" />
+            <div className="text-2xl font-bold text-white">0</div>
+            <div className="text-xs text-zinc-500 uppercase">Chats</div>
+          </div>
+          <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-xl text-center">
+            <ImageIcon size={24} className="mx-auto mb-2 text-zinc-500" />
+            <div className="text-2xl font-bold text-white">0</div>
+            <div className="text-xs text-zinc-500 uppercase">Images</div>
+          </div>
+          <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-xl text-center">
+            <Crown size={24} className="mx-auto mb-2 text-orange-500" />
+            <div className="text-2xl font-bold text-orange-500">{isPremium ? "Pro" : "Free"}</div>
+            <div className="text-xs text-zinc-500 uppercase">Plan</div>
           </div>
         </div>
-      </nav>
 
-      <div className="pt-24 pb-12 px-4">
-        <div className="max-w-2xl mx-auto">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-2xl p-8">
-            <div className="flex items-center justify-between mb-8">
-              <h1 className="text-2xl font-bold">Profile</h1>
-              <Link href="/settings" className="p-2 rounded-lg hover:bg-white/10">
-                <Settings className="w-5 h-5" />
-              </Link>
+        {/* Info */}
+        <div className="p-6 bg-zinc-900 border border-zinc-800 rounded-2xl space-y-4">
+          <h3 className="font-bold text-white text-lg">Account Details</h3>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 p-3 bg-zinc-950 rounded-xl">
+              <User size={18} className="text-zinc-500" />
+              <span className="text-zinc-300">{user.username || "Not set"}</span>
             </div>
-
-            <div className="flex flex-col items-center mb-8">
-              <div className="relative">
-                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-4xl font-bold text-white">
-                  {user.name?.charAt(0).toUpperCase() || "U"}
-                </div>
-                <button className="absolute bottom-0 right-0 p-2 rounded-full bg-orange-500 text-white hover:bg-orange-600">
-                  <Camera className="w-4 h-4" />
-                </button>
-              </div>
+            <div className="flex items-center gap-3 p-3 bg-zinc-950 rounded-xl">
+              <Mail size={18} className="text-zinc-500" />
+              <span className="text-zinc-300">{user.email}</span>
             </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 p-4 rounded-xl bg-white/5">
-                <User className="w-5 h-5 text-orange-500" />
-                <div className="flex-1">
-                  <p className="text-sm text-muted-foreground">Name</p>
-                  {isEditing ? (
-                    <div className="flex items-center gap-2 mt-1">
-                      <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)}
-                        className="flex-1 px-3 py-2 rounded-lg bg-black/30 border border-border/50 focus:border-orange-500/50 focus:outline-none" />
-                      <button onClick={handleSave} className="p-2 rounded-lg bg-green-500/20 text-green-500"><Save className="w-4 h-4" /></button>
-                      <button onClick={() => { setIsEditing(false); setEditName(user.name || ""); }} className="p-2 rounded-lg bg-red-500/20 text-red-500"><X className="w-4 h-4" /></button>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium">{user.name}</p>
-                      <button onClick={() => setIsEditing(true)} className="p-1 rounded hover:bg-white/10"><Edit2 className="w-4 h-4 text-muted-foreground" /></button>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 p-4 rounded-xl bg-white/5">
-                <Mail className="w-5 h-5 text-orange-500" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Email</p>
-                  <p className="font-medium">{user.email}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 p-4 rounded-xl bg-white/5">
-                <Calendar className="w-5 h-5 text-orange-500" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Member since</p>
-                  <p className="font-medium">{new Date().toLocaleDateString()}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-8 pt-6 border-t border-border/50 space-y-3">
-              <Link href="/chat" className="flex items-center gap-3 p-4 rounded-xl hover:bg-white/5 transition-colors">
-                <MessageSquare className="w-5 h-5 text-orange-500" /><span>Go to Chat</span>
-              </Link>
-              <Link href="/settings" className="flex items-center gap-3 p-4 rounded-xl hover:bg-white/5 transition-colors">
-                <Settings className="w-5 h-5 text-orange-500" /><span>Settings</span>
-              </Link>
-              <button onClick={handleLogout} className="w-full flex items-center gap-3 p-4 rounded-xl hover:bg-white/5 transition-colors text-red-400">
-                <LogOut className="w-5 h-5" /><span>Logout</span>
-              </button>
-            </div>
-          </motion.div>
+          </div>
         </div>
+
       </div>
     </div>
   );

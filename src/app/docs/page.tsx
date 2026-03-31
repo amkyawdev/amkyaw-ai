@@ -1,87 +1,63 @@
 "use client";
 
-import { motion } from "framer-motion";
-import Link from "next/link";
-import { BookOpen, Bot, MessageSquare, Code, Image, Globe, Settings, Hash, Sparkles, ChevronRight, Github, Mail } from "lucide-react";
-
-const sections = [
-  { title: "Getting Started", icon: Sparkles, items: [
-    { name: "Introduction", desc: "What is Amkyaw AI?" },
-    { name: "Quick Start", desc: "Get started in 30 seconds" },
-  ]},
-  { title: "AI Features", icon: Bot, items: [
-    { name: "AI Chat", desc: "Chat with Llama 3.3 70B" },
-    { name: "Code Assistant", desc: "Write and debug code" },
-    { name: "Translation", desc: "English ↔ Burmese" },
-    { name: "Image Generation", desc: "Create images with FLUX.1" },
-  ]},
-  { title: "Community", icon: Hash, items: [
-    { name: "Public Chat", desc: "Group discussions" },
-    { name: "Create Group", desc: "Start new conversation" },
-  ]},
-  { title: "Account", icon: Settings, items: [
-    { name: "Login", desc: "Sign in to your account" },
-    { name: "Register", desc: "Create new account" },
-    { name: "Profile", desc: "Manage your profile" },
-  ]},
-];
+import { Book, Code, Zap, MessageSquare, ImageIcon, CreditCard, Shield, ChevronRight } from "lucide-react";
 
 export default function DocsPage() {
+  const sections = [
+    { icon: MessageSquare, title: "Getting Started", desc: "Learn how to use the AI chat feature", items: ["Basic chat commands", "Switching AI models"] },
+    { icon: ImageIcon, title: "Image Generation", desc: "Create images with AI", items: ["Writing prompts", "Downloading images"] },
+    { icon: CreditCard, title: "Subscription Plans", desc: "Upgrade to premium", items: ["Free tier limits", "Premium benefits"] },
+    { icon: Shield, title: "Security", desc: "Keep your account safe", items: ["Password tips", "Privacy settings"] },
+  ];
+
   return (
-    <div className="min-h-screen bg-background">
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center">
-              <Bot className="w-5 h-5 text-white" />
-            </div>
-            <span className="font-bold text-lg">Amkyaw AI</span>
-          </Link>
-          <div className="flex items-center gap-4">
-            <Link href="/chat" className="text-sm hover:text-orange-500">AI Chat</Link>
-            <Link href="/public-chat" className="text-sm hover:text-orange-500">Public Chat</Link>
+    <div className="flex flex-col h-full bg-zinc-950 text-zinc-100 p-4 md:p-8 overflow-y-auto">
+      <div className="max-w-3xl mx-auto w-full space-y-8">
+        
+        {/* Header */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 text-orange-500 text-sm font-bold uppercase tracking-widest">
+            <Book size={14} /> Documentation
           </div>
+          <h2 className="text-4xl font-extrabold text-white">How to Use</h2>
+          <p className="text-zinc-500 text-lg">Learn how to get the most out of Amkyaw AI Platform.</p>
         </div>
-      </nav>
 
-      <div className="pt-24 pb-12 px-4">
-        <div className="max-w-6xl mx-auto">
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center">
-                <BookOpen className="w-6 h-6 text-white" />
-              </div>
-              <h1 className="text-4xl font-bold">Documentation</h1>
-            </div>
-            <p className="text-muted-foreground text-lg">Learn how to use Amkyaw AI Power Platform</p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            {sections.map((section, i) => (
-              <motion.div key={section.title} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }}
-                className="glass rounded-2xl overflow-hidden">
-                <div className="p-5 border-b border-border/50 flex items-center gap-4">
-                  <section.icon className="w-5 h-5 text-orange-500" />
-                  <h2 className="text-xl font-semibold">{section.title}</h2>
+        {/* Sections */}
+        <div className="space-y-4">
+          {sections.map((section, i) => (
+            <div key={i} className="p-6 bg-zinc-900 border border-zinc-800 rounded-2xl">
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-orange-500/10 rounded-xl">
+                  <section.icon size={24} className="text-orange-500" />
                 </div>
-                <div className="p-4">
-                  <div className="grid gap-2">
-                    {section.items.map((item) => (
-                      <Link key={item.name} href={item.name === "Introduction" ? "/about" : "/" + item.name.toLowerCase().replace(" ", "-")}
-                        className="flex items-center justify-between p-3 rounded-xl hover:bg-white/5 transition-colors group">
-                        <div>
-                          <p className="font-medium">{item.name}</p>
-                          <p className="text-sm text-muted-foreground">{item.desc}</p>
-                        </div>
-                        <ChevronRight className="w-5 h-5 text-orange-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </Link>
+                <div className="flex-1">
+                  <h3 className="font-bold text-white text-lg mb-1">{section.title}</h3>
+                  <p className="text-zinc-500 text-sm mb-3">{section.desc}</p>
+                  <ul className="space-y-2">
+                    {section.items.map((item, j) => (
+                      <li key={j} className="flex items-center gap-2 text-sm text-zinc-400">
+                        <ChevronRight size={14} className="text-zinc-600" /> {item}
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 </div>
-              </motion.div>
-            ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Tips */}
+        <div className="p-6 bg-zinc-900 border border-zinc-800 rounded-2xl">
+          <h3 className="font-bold text-white mb-4">Quick Tips</h3>
+          <div className="space-y-3 text-sm text-zinc-400">
+            <p>• Use specific prompts for better results</p>
+            <p>• Try different AI models for different tasks</p>
+            <p>• Check your usage limits in the sidebar</p>
+            <p>• Contact support for help: 09 6777 40154</p>
           </div>
         </div>
+
       </div>
     </div>
   );
