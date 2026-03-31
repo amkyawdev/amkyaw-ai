@@ -1,60 +1,67 @@
 "use client";
 
-import { Book, Code, Zap, MessageSquare, ImageIcon, CreditCard, Shield, ChevronRight } from "lucide-react";
+import { BookOpen, Search, Zap, Code, Terminal, MessageSquare, Image as ImageIcon, Shield } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function DocsPage() {
-  const sections = [
-    { icon: MessageSquare, title: "Getting Started", desc: "Learn how to use the AI chat feature", items: ["Basic chat commands", "Switching AI models"] },
-    { icon: ImageIcon, title: "Image Generation", desc: "Create images with AI", items: ["Writing prompts", "Downloading images"] },
-    { icon: CreditCard, title: "Subscription Plans", desc: "Upgrade to premium", items: ["Free tier limits", "Premium benefits"] },
-    { icon: Shield, title: "Security", desc: "Keep your account safe", items: ["Password tips", "Privacy settings"] },
+  const guides = [
+    { icon: Zap, title: "Getting Started", desc: "Learn the basics of Amkyaw AI Platform" },
+    { icon: MessageSquare, title: "AI Chat Guide", desc: "Tips for better prompts and conversation" },
+    { icon: ImageIcon, title: "Image Generation", desc: "How to generate high-quality images" },
+    { icon: Shield, title: "Security & Privacy", desc: "How we protect your data and privacy" },
   ];
 
   return (
     <div className="flex flex-col h-full bg-zinc-950 text-zinc-100 p-4 md:p-8 overflow-y-auto">
-      <div className="max-w-3xl mx-auto w-full space-y-8">
+      <div className="max-w-4xl mx-auto w-full space-y-12">
         
         {/* Header */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 text-orange-500 text-sm font-bold uppercase tracking-widest">
-            <Book size={14} /> Documentation
+        <div className="text-center space-y-4">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-500 text-sm font-medium">
+            <BookOpen size={14} />
+            <span>Documentation</span>
           </div>
-          <h2 className="text-4xl font-extrabold text-white">How to Use</h2>
-          <p className="text-zinc-500 text-lg">Learn how to get the most out of Amkyaw AI Platform.</p>
+          <h2 className="text-4xl md:text-5xl font-bold text-white tracking-tight">How can we help?</h2>
+          <div className="relative max-w-xl mx-auto mt-8">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={20} />
+            <input
+              type="text"
+              placeholder="Search documentation..."
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl py-4 pl-12 pr-6 text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition-all"
+            />
+          </div>
         </div>
 
-        {/* Sections */}
-        <div className="space-y-4">
-          {sections.map((section, i) => (
-            <div key={i} className="p-6 bg-zinc-900 border border-zinc-800 rounded-2xl">
-              <div className="flex items-start gap-4">
-                <div className="p-3 bg-orange-500/10 rounded-xl">
-                  <section.icon size={24} className="text-orange-500" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-bold text-white text-lg mb-1">{section.title}</h3>
-                  <p className="text-zinc-500 text-sm mb-3">{section.desc}</p>
-                  <ul className="space-y-2">
-                    {section.items.map((item, j) => (
-                      <li key={j} className="flex items-center gap-2 text-sm text-zinc-400">
-                        <ChevronRight size={14} className="text-zinc-600" /> {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+        {/* Guides Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {guides.map((guide, i) => (
+            <motion.button
+              key={i}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+              className="p-8 bg-zinc-900 border border-zinc-800 rounded-3xl text-left hover:border-orange-500/50 transition-all group space-y-4"
+            >
+              <div className="w-12 h-12 bg-orange-500/10 rounded-xl flex items-center justify-center text-orange-500 group-hover:scale-110 transition-transform">
+                <guide.icon size={24} />
               </div>
-            </div>
+              <div className="space-y-1">
+                <h3 className="text-xl font-bold text-white group-hover:text-orange-500 transition-colors">{guide.title}</h3>
+                <p className="text-zinc-500 text-sm leading-relaxed">{guide.desc}</p>
+              </div>
+            </motion.button>
           ))}
         </div>
 
-        {/* Tips */}
-        <div className="p-6 bg-zinc-900 border border-zinc-800 rounded-2xl">
-          <h3 className="font-bold text-white mb-4">Quick Tips</h3>
-          <div className="space-y-3 text-sm text-zinc-400">
-            <p>• Use specific prompts for better results</p>
-            <p>• Try different AI models for different tasks</p>
-            <p>• Check your usage limits in the sidebar</p>
-            <p>• Contact support for help: 09 6777 40154</p>
+        {/* Developer API Section */}
+        <div className="p-8 bg-zinc-900 border border-zinc-800 rounded-3xl space-y-6">
+          <div className="flex items-center gap-3 text-orange-500">
+            <Terminal size={24} />
+            <h3 className="text-2xl font-bold text-white">Developer API</h3>
+          </div>
+          <p className="text-zinc-500">Integrate Amkyaw AI into your own applications with our powerful API. Coming soon for enterprise users.</p>
+          <div className="bg-zinc-950 p-6 rounded-2xl border border-zinc-800 font-mono text-sm text-orange-400">
+            <code>GET /api/v1/chat?prompt=hello</code>
           </div>
         </div>
 
