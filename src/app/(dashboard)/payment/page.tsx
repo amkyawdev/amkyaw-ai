@@ -1,16 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { CreditCard, Check, Loader2, Phone, Upload, Wallet, ArrowRight } from "lucide-react";
-import Link from "next/link";
+import { CreditCard, ShieldCheck, CheckCircle, Smartphone, Wallet, Building2, Upload, ArrowRight, Info, Phone, User } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 export default function PaymentPage() {
-  const [amount, setAmount] = useState("3000");
-  const [screenshot, setScreenshot] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [step, setStep] = useState(1);
+  const [method, setMethod] = useState<"kpay" | "wave" | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
@@ -18,127 +17,235 @@ export default function PaymentPage() {
     if (stored) setUser(JSON.parse(stored));
   }, []);
 
+  const paymentMethods = [
+    { id: "kpay", name: "KBZPay", icon: Smartphone, color: "bg-blue-600", account: "09677740154", owner: "U AUNG MYO KYAW" },
+    { id: "wave", name: "WaveMoney", icon: Wallet, color: "bg-yellow-500", account: "09677740154", owner: "U AUNG MYO KYAW" },
+  ];
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setUploading(true);
     const reader = new FileReader();
-    reader.onload = () => {
-      setScreenshot(reader.result as string);
-      setUploading(false);
-    };
+    reader.onload = () => setScreenshotUrl(reader.result as string);
     reader.readAsDataURL(file);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handlePaymentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!screenshot) return;
-    setSubmitting(true);
+    if (!method || !screenshotUrl) return;
+
+    setIsLoading(true);
     try {
-      const userId = user?.id || 1; // Use guest user if not logged in
+      const userId = user?.id || 1;
       const res = await fetch("/api/payments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           user_id: userId,
-          amount: parseFloat(amount),
-          screenshot_url: screenshot,
+          amount: 5000,
+          screenshot_url: screenshotUrl,
         }),
       });
-      if (res.ok) setSubmitted(true);
-    } catch (err) { console.error(err); }
-    setSubmitting(false);
+
+      if (res.ok) {
+        setStep(3);
+      }
+    } catch (error) {
+      console.error("Payment submission error:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const plans = [
-    { days: 30, price: 3000, name: "Monthly" },
-    { days: 90, price: 8000, name: "3 Months" },
-    { days: 180, price: 15000, name: "6 Months" },
-    { days: 365, price: 25000, name: "Yearly" },
-  ];
-
-  if (submitted) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-          className="max-w-md w-full bg-card border border-border rounded-2xl p-8 text-center">
-          <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Check className="w-8 h-8 text-green-500" />
-          </div>
-          <h1 className="text-2xl font-bold mb-2">Payment Submitted!</h1>
-          <p className="text-muted-foreground mb-6">Your payment is pending approval.</p>
-          <Link href="/chat" className="inline-flex items-center gap-2 px-6 py-3 bg-orange-500 rounded-lg font-medium">
-            Go to Chat <ArrowRight className="w-4 h-4" />
-          </Link>
-        </motion.div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center gap-3 mb-8">
-          <Link href="/" className="p-2 rounded-lg hover:bg-white/5 text-2xl">←</Link>
-          <h1 className="text-2xl font-bold">💎 Premium Payment</h1>
+    <div className="flex flex-col h-full bg-zinc-950 text-zinc-100 p-4 md:p-8 overflow-y-auto relative">
+      {/* Background Effects */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10">
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-orange-500/10 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-amber-500/10 rounded-full blur-[120px] animate-pulse [animation-delay:2s]" />
+      </div>
+
+      <div className="max-w-5xl mx-auto w-full space-y-12 relative z-10">
+        
+        {/* Header */}
+        <div className="text-center space-y-4">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-500 text-xs font-bold uppercase tracking-widest"
+          >
+            <ShieldCheck size={14} />
+            <span>Elite Membership</span>
+          </motion.div>
+          <motion.h2
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-4xl md:text-6xl font-black text-white tracking-tight"
+          >
+            Unlock <span className="text-orange-500">Pro</span> Potential
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="text-orange-500 font-bold text-sm uppercase tracking-widest"
+          >
+            ပရီမီယံ အဆင့်မြှင့်တင်ပါ
+          </motion.p>
+          <motion.p
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="text-zinc-500 max-w-2xl mx-auto text-lg"
+          >
+            Unlimited AI conversations, 4K image generation, and priority access to new features for just <span className="text-white font-bold">5,000 Ks</span> per month.
+          </motion.p>
         </div>
 
-        {/* Payment Form - Available for all users */}
-        <div className="grid md:grid-cols-2 gap-8">
-          <div className="space-y-4">
-            <h2 className="text-lg font-semibold">Select Plan</h2>
-            <div className="grid grid-cols-2 gap-3">
-              {plans.map((plan) => (
-                <button key={plan.days} onClick={() => setAmount(String(plan.price))}
-                  className={`p-4 rounded-xl border transition-all ${amount === String(plan.price) 
-                    ? "border-orange-500 bg-orange-500/10" : "border-border hover:border-orange-500/50"}`}>
-                  <div className="font-bold text-lg">{plan.name}</div>
-                  <div className="text-orange-400">{plan.price} MMK</div>
+        {/* Steps Indicator */}
+        <div className="flex items-center justify-center gap-4 md:gap-6">
+          {[1, 2, 3].map((s) => (
+            <div key={s} className="flex items-center gap-4">
+              <div className={cn(
+                "w-10 md:w-12 h-10 md:h-12 rounded-2xl flex items-center justify-center font-bold transition-all duration-500 border-2",
+                step >= s ? "bg-orange-500 border-orange-400 text-white shadow-lg shadow-orange-500/30 scale-110" : "bg-zinc-900 text-zinc-600 border-zinc-800"
+              )}>
+                {step > s ? <CheckCircle size={20} /> : <span className="text-lg">{s}</span>}
+              </div>
+              {s < 3 && <div className={cn("w-8 md:w-16 h-1 bg-zinc-800 rounded-full", step > s && "bg-orange-500/20")}>
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: step > s ? "100%" : "0%" }}
+                  className="h-full bg-orange-500"
+                />
+              </div>}
+            </div>
+          ))}
+        </div>
+
+        <AnimatePresence mode="wait">
+          {step === 1 && (
+            <motion.div
+              key="step1"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto"
+            >
+              {paymentMethods.map((pm) => (
+                <button
+                  key={pm.id}
+                  onClick={() => { setMethod(pm.id as any); setStep(2); }}
+                  className="group relative p-8 md:p-10 bg-zinc-900/50 backdrop-blur-xl border border-zinc-800 rounded-[40px] hover:border-orange-500/50 transition-all text-left space-y-6 overflow-hidden"
+                >
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-white/[0.02] rounded-bl-[100px] -z-10" />
+                  <div className={cn("w-16 md:w-20 h-16 md:h-20 rounded-3xl flex items-center justify-center text-white shadow-2xl transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-500", pm.color)}>
+                    <pm.icon size={32} />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-2xl md:text-3xl font-black text-white group-hover:text-orange-500 transition-colors">{pm.name}</h3>
+                    <p className="text-zinc-500 text-sm">Fast and secure transfer via the official {pm.name} application.</p>
+                  </div>
+                  <div className="flex items-center justify-between text-zinc-500 group-hover:text-white pt-4 border-t border-zinc-800/50">
+                    <span className="text-xs font-bold uppercase tracking-wider">Select Method</span>
+                    <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />
+                  </div>
                 </button>
               ))}
-            </div>
-          </div>
+            </motion.div>
+          )}
 
-          <div className="bg-card border border-border rounded-2xl p-6">
-            <h2 className="text-lg font-semibold mb-4">KBZPay Payment</h2>
-            <div className="bg-muted rounded-lg p-4 mb-4">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                <Phone className="w-4 h-4" /> KBZPay Number
+          {step === 2 && (
+            <motion.div
+              key="step2"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="max-w-xl mx-auto"
+            >
+              <div className="p-8 bg-zinc-900/50 backdrop-blur-xl border border-zinc-800 rounded-[40px] space-y-6">
+                <div className="text-center space-y-2">
+                  <h3 className="text-2xl font-bold text-white">Transfer Details</h3>
+                  <p className="text-zinc-500">Send payment to the account below</p>
+                </div>
+
+                {paymentMethods.filter(pm => pm.id === method).map((pm) => (
+                  <div key={pm.id} className="p-6 bg-zinc-950/50 rounded-2xl space-y-4 border border-zinc-800">
+                    <div className="flex items-center justify-between">
+                      <span className="text-zinc-500 text-sm">Account Name</span>
+                      <span className="text-white font-bold">{pm.owner}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-zinc-500 text-sm">Phone Number</span>
+                      <span className="text-orange-500 font-bold">{pm.account}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-zinc-500 text-sm">Amount</span>
+                      <span className="text-white font-bold">5,000 Ks</span>
+                    </div>
+                  </div>
+                ))}
+
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-zinc-400">Upload Payment Screenshot</label>
+                  <div className="relative border-2 border-dashed border-zinc-800 rounded-2xl p-8 text-center hover:border-orange-500/50 transition-all">
+                    <input type="file" accept="image/*" onChange={handleFileChange} className="absolute inset-0 opacity-0 cursor-pointer" />
+                    {screenshotUrl ? (
+                      <img src={screenshotUrl} alt="Screenshot" className="max-h-48 mx-auto rounded-xl" />
+                    ) : (
+                      <div className="space-y-2">
+                        <Upload size={32} className="mx-auto text-zinc-600" />
+                        <p className="text-zinc-500 text-sm">Click to upload screenshot</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <button onClick={() => setStep(1)} className="flex-1 py-4 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-2xl transition-all">
+                    Back
+                  </button>
+                  <button 
+                    onClick={handlePaymentSubmit} 
+                    disabled={!screenshotUrl || isLoading}
+                    className="flex-1 py-4 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-bold rounded-2xl transition-all flex items-center justify-center gap-2"
+                  >
+                    {isLoading ? <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }}><Loader2 size={20} /></motion.div> : "Submit Payment"}
+                  </button>
+                </div>
               </div>
-              <div className="text-xl font-mono">09 6777 40154</div>
-            </div>
-            <div className="bg-muted rounded-lg p-4 mb-4">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                <Wallet className="w-4 h-4" /> Amount to Pay
+            </motion.div>
+          )}
+
+          {step === 3 && (
+            <motion.div
+              key="step3"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="max-w-md mx-auto text-center"
+            >
+              <div className="p-12 bg-zinc-900/50 backdrop-blur-xl border border-zinc-800 rounded-[40px] space-y-8">
+                <div className="w-24 h-24 bg-green-500/10 rounded-full flex items-center justify-center mx-auto">
+                  <CheckCircle size={48} className="text-green-500" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-3xl font-black text-white">Payment Submitted!</h3>
+                  <p className="text-zinc-500">Your payment is pending approval. We'll notify you once verified.</p>
+                </div>
+                <button onClick={() => { setStep(1); setScreenshotUrl(null); }} className="px-8 py-4 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-2xl transition-all">
+                  Done
+                </button>
               </div>
-              <div className="text-2xl font-bold text-orange-400">{amount} MMK</div>
-            </div>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm mb-2">Upload Screenshot</label>
-                <label className="border-2 border-dashed border-border rounded-lg p-4 text-center cursor-pointer hover:border-orange-500/50 transition-colors block">
-                  {screenshot ? (
-                    <img src={screenshot} alt="Receipt" className="max-h-40 mx-auto rounded-lg" />
-                  ) : uploading ? (
-                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-orange-500" />
-                  ) : (
-                    <>
-                      <Upload className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
-                      <p className="text-sm text-muted-foreground">Click to upload</p>
-                    </>
-                  )}
-                  <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
-                </label>
-              </div>
-              <button type="submit" disabled={!screenshot || submitting}
-                className="w-full py-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-lg font-medium disabled:opacity-50 flex items-center justify-center gap-2">
-                {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <CreditCard className="w-5 h-5" />}
-                Submit Payment
-              </button>
-            </form>
-          </div>
-        </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
       </div>
     </div>
   );
+}
+
+function Loader2({ size }: { size: number }) {
+  return <div style={{ width: size, height: size, border: '2px solid white', borderTopColor: 'transparent', borderRadius: '50%' }} className="animate-spin" />;
 }
