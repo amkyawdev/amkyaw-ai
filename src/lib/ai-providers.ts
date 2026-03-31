@@ -6,7 +6,73 @@ const STABILITY_ENDPOINT = 'https://api.stability.ai/v1/generation/stable-diffus
 const ALIBABA_ENDPOINT = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
 
 // Agent types for different use cases
-export type AgentType = 'general' | 'coder' | 'ai_developer' | 'contact' | 'translate' | 'image';
+export type AgentType = 'general' | 'coder' | 'ai_developer' | 'contact' | 'translate' | 'image' | 'web_builder';
+
+// Web fetch tool for external website integration
+export async function fetchWebsite(url: string): Promise<{ success: boolean; content?: string; error?: string }> {
+  try {
+    // Validate URL
+    const parsedUrl = new URL(url);
+    if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+      return { success: false, error: 'Invalid URL protocol. Only HTTP and HTTPS are supported.' };
+    }
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; AmkyawAI/1.0)',
+      },
+    });
+    
+    if (!response.ok) {
+      return { success: false, error: `Failed to fetch: ${response.status}` };
+    }
+    
+    const content = await response.text();
+    // Return first 50000 characters to avoid token limits
+    return { success: true, content: content.slice(0, 50000) };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+}
+
+// Analyze website structure
+export async function analyzeWebsite(url: string): Promise<{ success: boolean; data?: object; error?: string }> {
+  try {
+    const fetchResult = await fetchWebsite(url);
+    if (!fetchResult.success || !fetchResult.content) {
+      return { success: false, error: fetchResult.error || 'Failed to fetch website' };
+    }
+    
+    const html = fetchResult.content;
+    
+    // Extract basic info
+    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+    const descriptionMatch = html.match(/<meta[^>]*name="description"[^>]*content="([^"]+)"/i);
+    const keywordsMatch = html.match(/<meta[^>]*name="keywords"[^>]*content="([^"]+)"/i);
+    
+    // Count elements
+    const scripts = (html.match(/<script/gi) || []).length;
+    const styles = (html.match(/<link[^>]*rel="stylesheet"/gi) || []).length;
+    const images = (html.match(/<img/gi) || []).length;
+    const links = (html.match(/<a[^>]*href/gi) || []).length;
+    
+    return {
+      success: true,
+      data: {
+        url,
+        title: titleMatch?.[1] || 'No title',
+        description: descriptionMatch?.[1] || '',
+        keywords: keywordsMatch?.[1] || '',
+        stats: { scripts, styles, images, links },
+        hasLoginForm: html.includes('<form') && (html.toLowerCase().includes('password') || html.toLowerCase().includes('login')),
+        isEcommerce: html.toLowerCase().includes('cart') || html.toLowerCase().includes('checkout') || html.toLowerCase().includes('price'),
+      }
+    };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+}
 
 export interface Agent {
   id: AgentType;
@@ -80,6 +146,16 @@ export const AGENTS: Agent[] = [
     descriptionMy: 'စာသားများကနေ ပုံများ ဖန်တီးခြင်း',
     capabilities: ['image', 'chat'],
     systemPrompt: 'You are an image generation assistant. Create detailed prompts for image generation.',
+  },
+  {
+    id: 'web_builder',
+    name: 'Web Builder',
+    nameMy: 'ဝက်ဘ်ဆိုက်ဖန်တီးသူ',
+    icon: '🌍',
+    description: 'Analyze websites, build integrations, create plans',
+    descriptionMy: 'ဝက်ဘ်ဆိုက်များ ခွဲခြမ်းခြင်း၊ ပါဝင်မှုများ ဖန်တီးခြင်း၊ အစီစဉ်များ ရေးခြင်း',
+    capabilities: ['web', 'code', 'chat'],
+    systemPrompt: 'You are a web development expert. You can fetch and analyze websites, suggest improvements, create integration plans, write code for web applications, and help with website development.',
   },
 ];
 
