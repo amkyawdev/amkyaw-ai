@@ -67,7 +67,7 @@ export async function GET() {
       WHERE table_schema = 'public'
     `);
     
-    return NextResponse.json({ tables: tables.map(t => t.table_name) });
+    return NextResponse.json({ tables: tables.map((t: any) => t.table_name) });
   } catch (error) {
     return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
   }

@@ -315,7 +315,7 @@ const ChatMessage = ({ message, onCopy, isCopied }: { message: Message; onCopy: 
 
 const ChatInput = ({ input, setInput, onSubmit, isLoading, thinkingText, showThinking, selectedAgent, onSelectAgent }: { 
   input: string; 
-  setInput: (v: string) => void; 
+  setInput: React.Dispatch<React.SetStateAction<string>>; 
   onSubmit: (e: React.FormEvent) => void; 
   isLoading: boolean; 
   thinkingText?: string; 
@@ -345,7 +345,7 @@ const ChatInput = ({ input, setInput, onSubmit, isLoading, thinkingText, showThi
       if (data.success) {
         // Append fetched content to input
         const prefix = data.type === 'youtube' ? '📺 YouTube Video:\n' : `📄 ${data.title || 'Website'}:\n`;
-        setInput(prev => prev + (prev ? '\n\n' : '') + prefix + data.content);
+        setInput((prev: string) => prev + (prev ? '\n\n' : '') + prefix + data.content);
       } else {
         alert(data.error || 'Failed to fetch URL');
       }
