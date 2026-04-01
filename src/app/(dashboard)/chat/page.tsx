@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Send, Bot, User, Trash2, Plus, MessageSquare, 
-  Settings, Copy, Check, Menu, X, Share2, RefreshCw, Home, Sparkles, Upload, Hash, Users, LogOut, UserCircle, Code, Cpu, Phone, Languages, Image, Globe
+  Settings, Copy, Check, Menu, X, Share2, RefreshCw, Home, Sparkles, Upload, Hash, Users, LogOut, UserCircle, Code, Cpu, Phone, Languages, Image, Globe, ScanText
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useChatStore, Message } from "@/stores/chatStore";
@@ -313,7 +313,7 @@ const ChatMessage = ({ message, onCopy, isCopied }: { message: Message; onCopy: 
   );
 };
 
-const ChatInput = ({ input, setInput, onSubmit, isLoading, thinkingText, showThinking, selectedAgent, onSelectAgent }: { 
+const ChatInput = ({ input, setInput, onSubmit, isLoading, thinkingText, showThinking, selectedAgent, onSelectAgent, onLoadingChange }: { 
   input: string; 
   setInput: React.Dispatch<React.SetStateAction<string>>; 
   onSubmit: (e: React.FormEvent) => void; 
@@ -322,6 +322,7 @@ const ChatInput = ({ input, setInput, onSubmit, isLoading, thinkingText, showThi
   showThinking?: boolean;
   selectedAgent?: AgentType;
   onSelectAgent?: (agent: AgentType) => void;
+  onLoadingChange?: (loading: boolean) => void;
 }) => {
   const [showAgentDropdown, setShowAgentDropdown] = useState(false);
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
@@ -513,27 +514,51 @@ const ChatInput = ({ input, setInput, onSubmit, isLoading, thinkingText, showThi
             </button>
             <button
               type="button"
-              onClick={() => {
+              onClick={async () => {
                 const input = document.createElement('input');
                 input.type = 'file';
                 input.accept = 'image/*';
                 input.onchange = async (e) => {
                   const file = (e.target as HTMLInputElement).files?.[0];
                   if (file) {
-                    const reader = new FileReader();
-                    reader.onload = () => {
-                      setInput(prev => prev + (prev ? '\n' : '') + `[IMAGE:${reader.result}]`);
-                    };
-                    reader.readAsDataURL(file);
+                    const formData = new FormData();
+                    formData.append('image', file);
+                    
+                    onLoadingChange?.(true);
+                    try {
+                      const res = await fetch('/api/ocr', {
+                        method: 'POST',
+                        body: formData,
+                      });
+                      const data = await res.json();
+                      if (data.success) {
+                        setInput((prev: string) => prev + (prev ? '\n\n' : '') + '🖼️ Image Text:\n' + data.text);
+                      } else {
+                        // Fallback to base64 image
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          setInput((prev: string) => prev + (prev ? '\n' : '') + `[IMAGE:${reader.result}]`);
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    } catch (err) {
+                      // Fallback to base64
+                      const reader = new FileReader();
+                      reader.onload = () => {
+                        setInput((prev: string) => prev + (prev ? '\n' : '') + `[IMAGE:${reader.result}]`);
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                    onLoadingChange?.(false);
                   }
                 };
                 input.click();
               }}
               disabled={isLoading}
-              title="Add Image"
+              title="Read Image (OCR)"
               className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 hover:border-zinc-700 transition-all disabled:opacity-50"
             >
-              <Image className="w-4 h-4 text-zinc-400" />
+              <ScanText className="w-4 h-4 text-zinc-400" />
             </button>
           </div>
           
@@ -577,6 +602,7 @@ export default function ChatPage() {
   const [thinkingText, setThinkingText] = useState("Thinking...");
   const [user, setUser] = useState<{ name?: string; email?: string; avatar?: string; id?: string } | null>(null);
   const [selectedAgent, setSelectedAgent] = useState<AgentType>('general');
+  const [isOcrLoading, setIsOcrLoading] = useState(false);
 
   // Load user from localStorage on mount
   useEffect(() => {
@@ -829,7 +855,7 @@ export default function ChatPage() {
 
         {/* Input */}
         <div className="p-6 bg-zinc-950 border-t border-zinc-800">
-          <ChatInput input={input} setInput={setInput} onSubmit={handleSubmit} isLoading={isLoading} thinkingText={thinkingText} showThinking={true} selectedAgent={selectedAgent} onSelectAgent={setSelectedAgent} />
+          <ChatInput input={input} setInput={setInput} onSubmit={handleSubmit} isLoading={isLoading || isOcrLoading} thinkingText={thinkingText} showThinking={true} selectedAgent={selectedAgent} onSelectAgent={setSelectedAgent} onLoadingChange={setIsOcrLoading} />
         </div>
       </main>
     </div>
