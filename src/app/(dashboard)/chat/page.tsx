@@ -512,30 +512,6 @@ const ChatInput = ({ input, setInput, onSubmit, isLoading, thinkingText, showThi
                 </svg>
               )}
             </button>
-            <button
-              type="button"
-              onClick={() => {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = 'image/*';
-                input.onchange = async (e) => {
-                  const file = (e.target as HTMLInputElement).files?.[0];
-                  if (file) {
-                    const reader = new FileReader();
-                    reader.onload = () => {
-                      setInput((prev: string) => prev + (prev ? '\n' : '') + `[IMAGE:${reader.result}]`);
-                    };
-                    reader.readAsDataURL(file);
-                  }
-                };
-                input.click();
-              }}
-              disabled={isLoading}
-              title="Add Image"
-              className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 hover:border-zinc-700 transition-all disabled:opacity-50"
-            >
-              <Image className="w-4 h-4 text-zinc-400" />
-            </button>
           </div>
           
           <div className="flex-1">
