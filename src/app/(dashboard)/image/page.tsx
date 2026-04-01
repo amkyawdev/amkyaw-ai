@@ -57,7 +57,7 @@ export default function ImagePage() {
     if (!prompt.trim() || isLoading) return;
 
     if (!isPremium && limits.image <= 0) {
-      setError("Image generation limit reached! Please upgrade to premium.");
+      setError("ပုံဖန်တီးခွင့် ပါပါ. မှတ်ပါ. ပါပါ ဂရုစိုက်ပါ။");
       return;
     }
 
@@ -103,7 +103,7 @@ export default function ImagePage() {
       }
     } catch (err) {
       console.error("Failed to generate image:", err);
-      setError("Failed to generate image. Please try again.");
+      setError("ပုံဖန်တီးရာမှာ အမှားဖြစ်ပါ။ ပြန်လုပ်ပါ။");
     } finally {
       setIsLoading(false);
     }
@@ -316,12 +316,12 @@ export default function ImagePage() {
                     <ImageIcon className="text-orange-500/50" size={32} />
                   </div>
                 </div>
-                <p className="text-zinc-400 font-medium animate-pulse">Creating your masterpiece...</p>
+                <p className="text-zinc-400 font-medium animate-pulse">ပါဝင်ပတ်သက် ဖန်တီးနေပါတယ်...</p>
                 <div className="flex items-center gap-2 text-zinc-500 text-sm">
                   <Zap size={14} />
-                  <span>Style: {IMAGE_STYLES.find(s => s.id === selectedStyle)?.name}</span>
+                  <span>ပုံစံ: {IMAGE_STYLES.find(s => s.id === selectedStyle)?.name}</span>
                   <span>•</span>
-                  <span>Ratio: {selectedRatio}</span>
+                  <span>အချိန်းအား: {selectedRatio}</span>
                 </div>
               </motion.div>
             ) : image ? (
@@ -343,21 +343,21 @@ export default function ImagePage() {
                     className="p-4 bg-white text-black rounded-full hover:scale-110 transition-transform flex items-center gap-2 font-bold"
                   >
                     <Download size={20} />
-                    <span>Download</span>
+                    <span>ဒေါင်းလုဒ်</span>
                   </button>
                   <button
                     onClick={handleRegenerate}
                     className="p-4 bg-orange-500 text-white rounded-full hover:scale-110 transition-transform flex items-center gap-2 font-bold"
                   >
                     <RotateCcw size={20} />
-                    <span>Regenerate</span>
+                    <span>ပြန်လုပ်</span>
                   </button>
                   <button
                     onClick={handleClear}
                     className="p-4 bg-zinc-800 text-white rounded-full hover:scale-110 transition-transform flex items-center gap-2 font-bold"
                   >
                     <X size={20} />
-                    <span>Clear</span>
+                    <span>ရှင်းလင်း</span>
                   </button>
                 </div>
                 {/* Image Info Badge */}
