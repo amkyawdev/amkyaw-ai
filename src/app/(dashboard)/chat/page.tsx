@@ -400,7 +400,7 @@ const ChatInput = ({ input, setInput, onSubmit, isLoading, thinkingText, showThi
   }, [input, isLoading]);
 
   return (
-    <div className="p-4 border-t border-border/50 bg-background/95 backdrop-blur-xl">
+    <div className="p-2 md:p-4 border-t border-border/50 bg-background/95 backdrop-blur-xl">
       <div className="max-w-4xl mx-auto">
         {/* Thinking indicator in input area */}
         {showThinking && isLoading && (
@@ -493,7 +493,7 @@ const ChatInput = ({ input, setInput, onSubmit, isLoading, thinkingText, showThi
           </AnimatePresence>
         )}
         
-        <form onSubmit={onSubmit} className="max-w-4xl mx-auto flex gap-2 items-end">
+        <form onSubmit={onSubmit} className="max-w-4xl mx-auto flex gap-2 md:gap-3 items-end pb-2 md:pb-4">
           {/* Small upload buttons */}
           <div className="flex gap-1">
             <button
@@ -518,11 +518,11 @@ const ChatInput = ({ input, setInput, onSubmit, isLoading, thinkingText, showThi
             <textarea value={input} onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onSubmit(e); } }}
               placeholder="Message Amkyaw AI..."
-              className="w-full px-5 py-4 rounded-2xl glass border border-border/50 focus:border-orange-500/50 resize-none min-h-[56px] max-h-[200px] text-sm bg-transparent"
+              className="w-full px-4 py-3 md:py-4 rounded-2xl glass border border-border/50 focus:border-orange-500/50 resize-none min-h-[48px] md:min-h-[56px] max-h-[150px] md:max-h-[200px] text-sm bg-zinc-900/80 backdrop-blur-sm"
               disabled={isLoading} rows={1} />
           </div>
           <motion.button type="submit" disabled={!input.trim() || isLoading}
-            className={cn("px-5 py-4 rounded-2xl font-medium transition-all flex items-center justify-center min-w-[100px]",
+            className={cn("px-4 md:px-5 py-3 md:py-4 rounded-2xl font-medium transition-all flex items-center justify-center min-w-[70px] md:min-w-[100px]",
               input.trim() && !isLoading ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white" : "bg-muted/50 text-muted-foreground cursor-not-allowed")}
             whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
             <AnimatePresence mode="wait">
