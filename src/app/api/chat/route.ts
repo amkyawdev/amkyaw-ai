@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { callGroq, GROQ_MODELS, GroqModelType, BURMESE_SYSTEM_PROMPT, isValidResponse } from '@/lib/groq';
-import { callWithFallback, isZAIConfigured, isStabilityConfigured, isOllamaConfigured, isAlibabaConfigured, AGENTS, AgentType } from '@/lib/ai-providers';
+import { callWithFallback, AGENTS, AgentType } from '@/lib/ai-providers';
+import { isHFConfigured } from '@/lib/huggingface';
 
 export const runtime = 'nodejs';
 
@@ -60,9 +61,7 @@ export async function POST(request: NextRequest) {
     // Get available providers
     const availableProviders = {
       groq: true,
-      zai: isZAIConfigured(),
-      ollama: isOllamaConfigured(),
-      alibaba: isAlibabaConfigured(),
+      huggingface: true, // Always available for fallback
     };
 
     const modelKey = model as GroqModelType;
@@ -116,45 +115,20 @@ export async function POST(request: NextRequest) {
       if (isPoorResponse(response)) {
         lastError = 'Groq: ' + (response || 'empty response');
         
-        // 2. Try ZAI if configured
-        if (!response && isZAIConfigured()) {
+        // 2. Try HuggingFace if configured
+        if (!response) {
           try {
-            const zaiResult = await callWithFallback(messages, 'zai');
-            if (zaiResult.success && zaiResult.response && !isPoorResponse(zaiResult.response)) {
-              response = zaiResult.response;
-              provider = zaiResult.provider || 'ZAI';
+            const { callWithFallback } = await import('@/lib/ai-providers');
+            const hfResult = await callWithFallback(messages, 'huggingface');
+            if (hfResult.success && hfResult.response && !isPoorResponse(hfResult.response)) {
+              response = hfResult.response;
+              provider = hfResult.provider || 'HuggingFace';
               lastError = '';
             }
-          } catch (e: any) { lastError += ', ZAI failed'; }
+          } catch (e: any) { lastError += ', HuggingFace failed'; }
         }
         
-        // 3. Try Ollama if configured
-        if (isPoorResponse(response) && isOllamaConfigured()) {
-          try {
-            const { callOllama } = await import('@/lib/ai-providers');
-            const ollamaResult = await callOllama(messages, 'llama3');
-            if (ollamaResult.success && ollamaResult.response && !isPoorResponse(ollamaResult.response)) {
-              response = ollamaResult.response;
-              provider = 'Ollama (Llama 3)';
-              lastError = '';
-            }
-          } catch (e: any) { lastError += ', Ollama failed'; }
-        }
-        
-        // 4. Try Alibaba if configured
-        if (isPoorResponse(response) && isAlibabaConfigured()) {
-          try {
-            const { callAlibaba } = await import('@/lib/ai-providers');
-            const alibabaResult = await callAlibaba(messages, 'qwen-plus');
-            if (alibabaResult.success && alibabaResult.response && !isPoorResponse(alibabaResult.response)) {
-              response = alibabaResult.response;
-              provider = 'Alibaba (Qwen Plus)';
-              lastError = '';
-            }
-          } catch (e: any) { lastError += ', Alibaba failed'; }
-        }
-        
-        // 5. Try Groq with different model
+        // 3. Try Groq with different model
         if (isPoorResponse(response)) {
           try {
             const altModel = modelKey === 'llama-3.3-70b' ? 'mixtral-8x7b' : 'llama-3.3-70b';
@@ -192,10 +166,7 @@ export async function POST(request: NextRequest) {
       chatId,
       availableProviders: {
         groq: true,
-        zai: isZAIConfigured(),
-        ollama: isOllamaConfigured(),
-        alibaba: isAlibabaConfigured(),
-        stability: isStabilityConfigured(),
+        huggingface: isHFConfigured(),
       },
     });
 
@@ -205,27 +176,25 @@ export async function POST(request: NextRequest) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     
     if (errorMessage.includes('GROQ_API_KEY') || errorMessage.includes('key')) {
-      // Try fallback to ZAI
-      if (isZAIConfigured()) {
+      // Try fallback to HuggingFace
+      if (isHFConfigured()) {
         try {
-          const { callWithFallback } = await import('@/lib/ai-providers');
-          const result = await callWithFallback([], 'zai');
+          const result = await callWithFallback([], 'huggingface');
           if (result.success && result.response) {
             return NextResponse.json({
               response: result.response,
-              model: 'glm-5',
-              provider: 'ZAI (fallback)',
+              model: 'hf-model',
+              provider: 'HuggingFace (fallback)',
               availableProviders: {
                 groq: false,
-                zai: true,
-                stability: isStabilityConfigured(),
+                huggingface: true,
               },
             });
           }
         } catch {}
       }
       return NextResponse.json(
-        { error: 'No AI provider configured. Please add GROQ_API_KEY or ZAI_API_KEY in environment variables.' },
+        { error: 'No AI provider configured. Please add GROQ_API_KEY or HUGGINGFACE_API_KEY in environment variables.' },
         { status: 503 }
       );
     }
