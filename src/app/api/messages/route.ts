@@ -18,10 +18,20 @@ export async function GET(request: NextRequest) {
   try {
     const db = await getDb();
     const { searchParams } = new URL(request.url);
-    const groupId = searchParams.get('group') || searchParams.get('group_id');
+    const groupParam = searchParams.get('group') || searchParams.get('group_id');
     
-    if (!groupId) {
-      return NextResponse.json({ error: 'Group ID required' }, { status: 400 });
+    if (!groupParam) {
+      return NextResponse.json({ error: 'Group required' }, { status: 400 });
+    }
+
+    // Get group ID from name (if not a number)
+    let groupId = parseInt(groupParam);
+    if (isNaN(groupId)) {
+      const groupResult = await db('SELECT id FROM chat_groups WHERE name = $1 LIMIT 1', [groupParam]);
+      if (groupResult.length === 0) {
+        return NextResponse.json({ messages: [] });
+      }
+      groupId = groupResult[0].id;
     }
 
     const result = await db(

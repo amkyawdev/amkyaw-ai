@@ -134,11 +134,15 @@ export default function PublicChatPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: input, group: currentGroup, username }),
       });
+      const data = await res.json();
+      console.log("Send response:", res.status, data);
       if (res.ok) {
         setInput("");
-        fetchMessages();
+        setTimeout(fetchMessages, 300);
+      } else {
+        console.error("Failed to send:", data);
       }
-    } catch (err) { console.error(err); }
+    } catch (err) { console.error("Send error:", err); }
     setSending(false);
   };
 
@@ -164,8 +168,8 @@ export default function PublicChatPage() {
 
   const handleJoinGroup = (groupName: string) => {
     if (currentGroup !== groupName) {
-      setPendingGroup(groupName);
-      setShowJoinConfirm(true);
+      setCurrentGroup(groupName);
+      setMessages([]);
     }
   };
 
