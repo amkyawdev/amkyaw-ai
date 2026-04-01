@@ -42,20 +42,6 @@ export function isBurmeseText(text: string): boolean {
   return /[\u1000-\u109F\uAA60-\uAA7F]/.test(text);
 }
 
-// Fix common Myanmar text issues
-export function fixMyanmarText(text: string): string {
-  // Fix common issues with Myanmar Unicode
-  return text
-    // Fix spacing around Myanmar characters
-    .replace(/([\u1000-\u109F\uAA60-\uAA7F])\s+([\u1000-\u109F\uAA60-\uAA7F])/g, '$1$2')
-    // Add space between Myanmar and English
-    .replace(/([a-zA-Z])([\u1000-\u109F\uAA60-\uAA7F])/g, '$1 $2')
-    .replace(/([\u1000-\u109F\uAA60-\uAA7F])([a-zA-Z])/g, '$1 $2')
-    // Fix common character issues
-    .replace(/္္/g, '္') // Double medial consonant
-    .trim();
-}
-
 // Detect user intent from message
 export type IntentType = 'chat' | 'code' | 'translate' | 'image' | 'default';
 

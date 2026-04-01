@@ -10,17 +10,17 @@ import {
 } from "lucide-react";
 
 const features = [
-  { icon: MessageSquare, title: "AI ချိတ်ဆက်", desc: "Llama 3.3 70B", color: "from-blue-500 to-cyan-500", href: "/chat" },
-  { icon: Code, title: "ကုဒ်အေးစစ်တန့်", desc: "ကုဒ်ရေးပါ ပါ။", color: "from-purple-500 to-pink-500", href: "/chat" },
-  { icon: Globe, title: "ဘာသာပြန်", desc: "အင်္ဂလိပ် ↔ မြန်မာ", color: "from-green-500 to-emerald-500", href: "/chat" },
-  { icon: Image, title: "ပုံဖန်တီး", desc: "FLUX.1 AI", color: "from-orange-500 to-amber-500", href: "/chat" },
+  { icon: MessageSquare, title: "AI Chat", desc: "Llama 3.3 70B", color: "from-blue-500 to-cyan-500", href: "/chat" },
+  { icon: Code, title: "Code Assistant", desc: "Write & debug code", color: "from-purple-500 to-pink-500", href: "/chat" },
+  { icon: Globe, title: "Translation", desc: "English ↔ Burmese", color: "from-green-500 to-emerald-500", href: "/chat" },
+  { icon: Image, title: "Image Gen", desc: "FLUX.1 AI", color: "from-orange-500 to-amber-500", href: "/chat" },
 ];
 
 const navItems = [
-  { icon: Bot, label: "AI ချိတ်ဆက်", href: "/chat" },
-  { icon: Hash, label: "ပါဝင်ပတ်သက်", href: "/public-chat" },
-  { icon: Users, label: "အကြောင်းအရာ", href: "/about" },
-  { icon: MessageSquare, label: "သတင်းအရေအတွက်", href: "/docs" },
+  { icon: Bot, label: "AI Chat", href: "/chat" },
+  { icon: Hash, label: "Public Chat", href: "/public-chat" },
+  { icon: Users, label: "About", href: "/about" },
+  { icon: MessageSquare, label: "Docs", href: "/docs" },
 ];
 
 interface User {
@@ -95,10 +95,10 @@ export default function Home() {
               </div>
             ) : (
               <>
-                <Link href="/login" className="px-4 py-2 text-sm font-medium text-zinc-400 hover:text-orange-500">ဝင်ရန်</Link>
-                <Link href="/register" className="px-4 py-2 text-sm font-medium text-zinc-400 hover:text-orange-500">မှတ်ပါ</Link>
+                <Link href="/login" className="px-4 py-2 text-sm font-medium text-zinc-400 hover:text-orange-500">Login</Link>
+                <Link href="/register" className="px-4 py-2 text-sm font-medium text-zinc-400 hover:text-orange-500">Register</Link>
                 <button onClick={handleGetStarted} className="px-4 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm font-medium">
-                  စတင်ရန်
+                  Get Started
                 </button>
               </>
             )}

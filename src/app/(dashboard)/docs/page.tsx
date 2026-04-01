@@ -5,10 +5,10 @@ import { motion } from "framer-motion";
 
 export default function DocsPage() {
   const guides = [
-    { icon: Zap, title: "စတင်ရန်", desc: "Amkyaw AI ပလက်ဖောင်း အခြေခံများ သင်ပါ။" },
-    { icon: MessageSquare, title: "AI ချိတ်ဆက် သတ်မှတ်ချက်", desc: "ပါဝင်ပတ်သက် ပါပါ. သတ်မှတ်ချက်များ နှင့် ဖွင့်ဆိုချက်များ" },
-    { icon: ImageIcon, title: "ပုံဖန်တီး", desc: "အရည်အသွေးမြင့်ပုံများ ဖန်တီးပါ။" },
-    { icon: Shield, title: "လုံခြုံမှု နှင့် ပါပါ. နည်း", desc: "သင့်ဒေတာနှင့် ပါပါ. များကို ကာကွယ်ပါ။" },
+    { icon: Zap, title: "Getting Started", desc: "Learn the basics of Amkyaw AI Platform" },
+    { icon: MessageSquare, title: "AI Chat Guide", desc: "Tips for better prompts and conversation" },
+    { icon: ImageIcon, title: "Image Generation", desc: "How to generate high-quality images" },
+    { icon: Shield, title: "Security & Privacy", desc: "How we protect your data and privacy" },
   ];
 
   return (

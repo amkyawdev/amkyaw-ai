@@ -12,10 +12,10 @@ import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/authStore';
 
 const navItems = [
-  { href: '/', label: 'ပါဝင်ပတ်သက်', icon: Home },
-  { href: '/chat', label: 'ချိတ်ဆက်', icon: MessageSquare },
-  { href: '/docs', label: 'သတင်းအရေအတွက်', icon: BookOpen },
-  { href: '/settings', label: 'ပြင်ဆင်ခြင်း', icon: Settings },
+  { href: '/', label: 'Home', icon: Home },
+  { href: '/chat', label: 'Chat', icon: MessageSquare },
+  { href: '/docs', label: 'Docs', icon: BookOpen },
+  { href: '/settings', label: 'Settings', icon: Settings },
 ];
 
 export default function Navbar() {

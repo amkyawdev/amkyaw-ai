@@ -22,7 +22,7 @@ export default function ResetPasswordPage() {
         setIsLoading(false);
       }, 1000);
     } else {
-      setError("အီးမေးလ် ထည့်ပါ");
+      setError("Please enter your email");
       setIsLoading(false);
     }
   };
@@ -56,7 +56,7 @@ export default function ResetPasswordPage() {
               animate={{ opacity: 1, x: 0 }}
               className="text-5xl font-bold leading-tight"
             >
-              Reset your <span className="text-orange-500">စကားဝှက်</span>.
+              Reset your <span className="text-orange-500">Password</span>.
             </motion.h2>
 
             <div className="space-y-8">
@@ -98,10 +98,10 @@ export default function ResetPasswordPage() {
               <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
                 <CheckCircle size={40} className="text-green-500" />
               </div>
-              <h1 className="text-3xl font-bold mb-2">အီးမေးလ် စစ်ဆေးပါ</h1>
-              <p className="text-zinc-500 mb-8">သင့်အီးမေးလ်သို့ စကားဝှက် ပြန်လုပ်တဲ့ ညွှန်ကြားချက်များ ပါးဝဲးပါပါ။ {email}</p>
+              <h1 className="text-3xl font-bold mb-2">Check Your Email</h1>
+              <p className="text-zinc-500 mb-8">We've sent password reset instructions to {email}</p>
               <Link href="/login" className="text-orange-500 hover:underline font-bold">
-                ဝင်ရန် ပြန်သွားရန်
+                Back to Login
               </Link>
             </div>
           ) : (
@@ -112,13 +112,13 @@ export default function ResetPasswordPage() {
                     <Bot className="w-5 h-5 text-white" />
                   </div>
                 </Link>
-                <h1 className="text-3xl font-bold">စကားဝှက် ပါဝင်ပတ်သက်</h1>
-                <p className="text-zinc-500 mt-2">စကားဝှက် ပြန်လုပ်တဲ့ ညွှန်ကြားချက်များ လက်ခံရန် အီးမေးလ် ထည့်ပါ</p>
+                <h1 className="text-3xl font-bold">Reset Password</h1>
+                <p className="text-zinc-500 mt-2">Enter your email to receive reset instructions</p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-zinc-400">အီးမေးလ်</label>
+                  <label className="text-sm font-bold text-zinc-400">Email Address</label>
                   <div className="relative">
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
                     <input
@@ -151,22 +151,22 @@ export default function ResetPasswordPage() {
                     <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }} className="w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
                   ) : (
                     <>
-                      ပါးဝဲးပါ <ArrowRight size={18} />
+                      Send Reset Link <ArrowRight size={18} />
                     </>
                   )}
                 </button>
               </form>
 
               <div className="mt-6 text-center text-zinc-500">
-                စကားဝှက် သိပါပါ?{" "}
+                Remember your password?{" "}
                 <Link href="/login" className="text-orange-500 hover:underline font-bold">
-                  ဝင်ရန်
+                  Sign in
                 </Link>
               </div>
 
               <div className="mt-8 text-center">
                 <Link href="/" className="text-zinc-500 hover:text-white text-sm flex items-center justify-center gap-2">
-                  ← ပါဝင်ပတ်သက် ပါ
+                  ← Back to Home
                 </Link>
               </div>
             </>
