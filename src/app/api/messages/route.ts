@@ -45,13 +45,29 @@ export async function POST(request: NextRequest) {
   try {
     const db = await getDb();
     const body = await request.json();
-    const { group_id, content } = body;
+    const group_id = body.group_id || body.group;
+    const content = body.content;
     
     if (!group_id || !content) {
       return NextResponse.json({ error: 'Group ID and content required' }, { status: 400 });
     }
 
-    const username = request.headers.get('x-username') || 'Anonymous';
+    const username = body.username || request.headers.get('x-username') || 'Anonymous';
+
+    // Get group ID from group name
+    let groupResult = await db('SELECT id FROM chat_groups WHERE name = $1 LIMIT 1', [group_id]);
+    let groupId;
+    
+    if (groupResult.length === 0) {
+      // Create group if it doesn't exist
+      const newGroup = await db(
+        'INSERT INTO chat_groups (name, description) VALUES ($1, $2) RETURNING id',
+        [group_id, 'Auto-created group']
+      );
+      groupId = newGroup[0].id;
+    } else {
+      groupId = groupResult[0].id;
+    }
 
     let userResult = await db('SELECT id FROM users WHERE username = $1 LIMIT 1', [username]);
     let userId;
@@ -68,7 +84,7 @@ export async function POST(request: NextRequest) {
 
     const result = await db(
       'INSERT INTO messages (group_id, user_id, content) VALUES ($1, $2, $3) RETURNING id, content, created_at',
-      [group_id, userId, content]
+      [groupId, userId, content]
     );
 
     const msg = result[0];
