@@ -324,6 +324,80 @@ const ChatInput = ({ input, setInput, onSubmit, isLoading, thinkingText, showThi
   onSelectAgent?: (agent: AgentType) => void;
 }) => {
   const [showAgentDropdown, setShowAgentDropdown] = useState(false);
+  const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
+  const [isFetchingUrl, setIsFetchingUrl] = useState(false);
+
+  // Handle URL upload
+  const handleUrlUpload = async () => {
+    const url = prompt("Enter website URL or YouTube link:");
+    if (!url) return;
+    
+    setIsFetchingUrl(true);
+    try {
+      const response = await fetch('/api/web-fetch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // Append fetched content to input
+        const prefix = data.type === 'youtube' ? '📺 YouTube Video:\n' : `📄 ${data.title || 'Website'}:\n`;
+        setInput(prev => prev + (prev ? '\n\n' : '') + prefix + data.content);
+      } else {
+        alert(data.error || 'Failed to fetch URL');
+      }
+    } catch (error) {
+      alert('Failed to fetch URL');
+    }
+    setIsFetchingUrl(false);
+  };
+
+  // Type animation states
+  const [buttonText, setButtonText] = useState("Send");
+  const [isTyping, setIsTyping] = useState(false);
+
+  // Update button text based on input
+  useEffect(() => {
+    if (isLoading) {
+      setButtonText("Thinking...");
+      return;
+    }
+
+    const lowerInput = input.toLowerCase();
+    let newText = "Send";
+    
+    // Check for code-related keywords
+    if (lowerInput.includes('code') || lowerInput.includes('python') || lowerInput.includes('javascript') || 
+        lowerInput.includes('function') || lowerInput.includes('class') || lowerInput.includes('program')) {
+      newText = "Code";
+    }
+    // Check for search keywords
+    else if (lowerInput.includes('search') || lowerInput.includes('find') || lowerInput.includes('what is') || 
+             lowerInput.includes('who is') || lowerInput.includes('how to')) {
+      newText = "Search";
+    }
+    // Check for image generation keywords
+    else if (lowerInput.includes('draw') || lowerInput.includes('generate image') || lowerInput.includes('create image') || 
+             lowerInput.includes('picture') || lowerInput.includes('art')) {
+      newText = "Create";
+    }
+    // Default to Send
+    else {
+      newText = "Send";
+    }
+
+    if (newText !== buttonText) {
+      setIsTyping(true);
+      setTimeout(() => {
+        setButtonText(newText);
+        setIsTyping(false);
+      }, 150);
+    }
+  }, [input, isLoading]);
+
   return (
     <div className="p-4 border-t border-border/50 bg-background/95 backdrop-blur-xl">
       <div className="max-w-4xl mx-auto">
@@ -418,19 +492,77 @@ const ChatInput = ({ input, setInput, onSubmit, isLoading, thinkingText, showThi
           </AnimatePresence>
         )}
         
-        <form onSubmit={onSubmit} className="max-w-4xl mx-auto flex gap-3 items-end">
+        <form onSubmit={onSubmit} className="max-w-4xl mx-auto flex gap-2 items-end">
+          {/* Small upload buttons */}
+          <div className="flex gap-1">
+            <button
+              type="button"
+              onClick={handleUrlUpload}
+              disabled={isLoading || isFetchingUrl}
+              title="Add Link"
+              className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 hover:border-zinc-700 transition-all disabled:opacity-50"
+            >
+              {isFetchingUrl ? (
+                <RefreshCw className="w-4 h-4 text-zinc-400 animate-spin" />
+              ) : (
+                <svg className="w-4 h-4 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                </svg>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*';
+                input.onchange = async (e) => {
+                  const file = (e.target as HTMLInputElement).files?.[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                      setInput(prev => prev + (prev ? '\n' : '') + `[IMAGE:${reader.result}]`);
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                };
+                input.click();
+              }}
+              disabled={isLoading}
+              title="Add Image"
+              className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 hover:border-zinc-700 transition-all disabled:opacity-50"
+            >
+              <Image className="w-4 h-4 text-zinc-400" />
+            </button>
+          </div>
+          
           <div className="flex-1">
             <textarea value={input} onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onSubmit(e); } }}
               placeholder="Message Amkyaw AI..."
-              className="w-full px-5 py-4 rounded-2xl glass border border-border/50 focus:border-orange-500/50 resize-none min-h-[56px] max-h-[200px] text-sm bg-black/30"
+              className="w-full px-5 py-4 rounded-2xl glass border border-border/50 focus:border-orange-500/50 resize-none min-h-[56px] max-h-[200px] text-sm bg-transparent"
               disabled={isLoading} rows={1} />
           </div>
           <motion.button type="submit" disabled={!input.trim() || isLoading}
-            className={cn("p-4 rounded-2xl font-medium transition-all flex items-center justify-center",
+            className={cn("px-5 py-4 rounded-2xl font-medium transition-all flex items-center justify-center min-w-[100px]",
               input.trim() && !isLoading ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white" : "bg-muted/50 text-muted-foreground cursor-not-allowed")}
-            whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            {isLoading ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <AnimatePresence mode="wait">
+              {isLoading ? (
+                <RefreshCw className="w-4 h-4 animate-spin" key="loading" />
+              ) : (
+                <motion.span
+                  key={buttonText}
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -5 }}
+                  className="text-sm"
+                >
+                  {buttonText}
+                </motion.span>
+              )}
+            </AnimatePresence>
           </motion.button>
         </form>
       </div>

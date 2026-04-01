@@ -81,6 +81,7 @@ export interface Agent {
   description: string;
   capabilities: ('chat' | 'code' | 'translate' | 'image' | 'reasoning' | 'web' | 'contact')[];
   systemPrompt: string;
+  exemptPrompts?: string[];
 }
 
 // Define available agents
@@ -92,6 +93,7 @@ export const AGENTS: Agent[] = [
     description: 'General conversation and help',
     capabilities: ['chat', 'reasoning'],
     systemPrompt: 'You are a helpful AI assistant. Respond in the same language as the user.',
+    exemptPrompts: ['user-provided context', 'system instructions'],
   },
   {
     id: 'coder',
@@ -100,6 +102,7 @@ export const AGENTS: Agent[] = [
     description: 'Write, debug, and explain code',
     capabilities: ['code', 'chat'],
     systemPrompt: 'You are an expert programmer. Write clean, well-documented code with explanations. Use markdown code blocks.',
+    exemptPrompts: ['code snippets', 'user code', 'existing code'],
   },
   {
     id: 'ai_developer',
@@ -108,6 +111,7 @@ export const AGENTS: Agent[] = [
     description: 'Build AI apps, APIs, and integrations',
     capabilities: ['code', 'chat', 'reasoning'],
     systemPrompt: 'You are an AI development expert. Help build AI applications, APIs, and integrations. Provide complete code examples.',
+    exemptPrompts: ['requirements', 'specifications', 'user instructions'],
   },
   {
     id: 'contact',
@@ -116,6 +120,7 @@ export const AGENTS: Agent[] = [
     description: 'Handle inquiries and support',
     capabilities: ['chat', 'web'],
     systemPrompt: 'You are a customer support agent. Be friendly, professional, and helpful. Collect contact information when needed.',
+    exemptPrompts: ['user information', 'provided details'],
   },
   {
     id: 'translate',
@@ -124,6 +129,7 @@ export const AGENTS: Agent[] = [
     description: 'Translate between languages',
     capabilities: ['translate', 'chat'],
     systemPrompt: 'You are a translator. Translate accurately while preserving the meaning and tone. Respond in the target language.',
+    exemptPrompts: ['original text', 'user content'],
   },
   {
     id: 'image',
@@ -132,6 +138,7 @@ export const AGENTS: Agent[] = [
     description: 'Generate images from text',
     capabilities: ['image', 'chat'],
     systemPrompt: 'You are an image generation assistant. Create detailed prompts for image generation.',
+    exemptPrompts: ['image descriptions', 'user prompts'],
   },
   {
     id: 'web_builder',
@@ -140,6 +147,7 @@ export const AGENTS: Agent[] = [
     description: 'Analyze websites, build integrations, create plans',
     capabilities: ['web', 'code', 'chat'],
     systemPrompt: 'You are a web development expert. You can fetch and analyze websites, suggest improvements, create integration plans, write code for web applications, and help with website development.',
+    exemptPrompts: ['user requirements', 'specifications', 'urls', 'code'],
   },
 ];
 

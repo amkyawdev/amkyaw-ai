@@ -28,11 +28,9 @@ export default function Navbar() {
       {/* Desktop Navbar - Smaller */}
       <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-border/50">
         <div className="max-w-7xl mx-auto px-3 h-12 flex items-center justify-between">
-          {/* Logo - Smaller */}
+          {/* Logo - Using favicon */}
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-white" />
-            </div>
+            <img src="/favicon.svg" alt="Amkyaw AI" className="w-8 h-8 rounded-lg" />
             <span className="text-lg font-bold hidden sm:block">Amkyaw AI</span>
           </Link>
 

@@ -70,10 +70,26 @@ export async function POST(request: NextRequest) {
     }
 
     if (!imageUrl) {
-      return NextResponse.json(
-        { error: 'Image generation failed' }, 
-        { status: 500 }
-      );
+      // Provide detailed error messages
+      const errors: string[] = [];
+      
+      if (!isStabilityConfigured() && !isHFConfigured()) {
+        return NextResponse.json({
+          error: 'Image generation service is not configured. Please add STABILITY_API_KEY or HUGGINGFACE_API_KEY in environment variables.',
+          code: 'NO_API_CONFIGURED',
+          solution: 'Contact the administrator to configure image generation API keys.'
+        }, { status: 503 });
+      }
+      
+      return NextResponse.json({
+        error: 'Image generation failed. Both providers returned errors.',
+        code: 'GENERATION_FAILED',
+        providerStatus: {
+          stability: isStabilityConfigured() ? 'configured' : 'not configured',
+          huggingface: isHFConfigured() ? 'configured' : 'not configured'
+        },
+        suggestion: 'Please try again later or contact support.'
+      }, { status: 500 });
     }
 
     return NextResponse.json({
