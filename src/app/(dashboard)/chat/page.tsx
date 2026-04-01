@@ -10,10 +10,8 @@ import { cn } from "@/lib/utils";
 import { useChatStore, Message } from "@/stores/chatStore";
 import MarkdownMessage from "@/components/chat/MarkdownMessage";
 import Link from "next/link";
-import { detectIntent, getThinkingText, routeAI } from "@/lib/groq";
+import { detectIntent, getThinkingText, routeAI, GROQ_MODELS } from "@/lib/groq";
 import { AGENTS, Agent, AgentType } from "@/lib/ai-providers";
-
-const GROQ_MODEL = { name: "llama-3.3-70b-versatile", displayName: "Llama 3.3 70B" };
 
 // Map icon names to components
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -313,7 +311,7 @@ const ChatMessage = ({ message, onCopy, isCopied }: { message: Message; onCopy: 
   );
 };
 
-const ChatInput = ({ input, setInput, onSubmit, isLoading, thinkingText, showThinking, selectedAgent, onSelectAgent, }: { 
+const ChatInput = ({ input, setInput, onSubmit, isLoading, thinkingText, showThinking, selectedAgent, onSelectAgent, selectedModel, onSelectModel }: { 
   input: string; 
   setInput: React.Dispatch<React.SetStateAction<string>>; 
   onSubmit: (e: React.FormEvent) => void; 
@@ -322,6 +320,8 @@ const ChatInput = ({ input, setInput, onSubmit, isLoading, thinkingText, showThi
   showThinking?: boolean;
   selectedAgent?: AgentType;
   onSelectAgent?: (agent: AgentType) => void;
+  selectedModel?: 'llama-3.3-70b' | 'llama-3.1-8b-instant';
+  onSelectModel?: (model: 'llama-3.3-70b' | 'llama-3.1-8b-instant') => void;
   
 }) => {
   const [showAgentDropdown, setShowAgentDropdown] = useState(false);
@@ -493,6 +493,37 @@ const ChatInput = ({ input, setInput, onSubmit, isLoading, thinkingText, showThi
           </AnimatePresence>
         )}
         
+        {/* Model Selector - Small buttons above input */}
+        {selectedModel && onSelectModel && (
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-xs text-zinc-500">Model:</span>
+            <button
+              type="button"
+              onClick={() => onSelectModel('llama-3.3-70b')}
+              className={cn(
+                "px-2 py-1 rounded-md text-xs font-medium transition-all",
+                selectedModel === 'llama-3.3-70b'
+                  ? "bg-orange-500/20 text-orange-400 border border-orange-500/30"
+                  : "bg-zinc-900 text-zinc-400 border border-zinc-800 hover:bg-zinc-800"
+              )}
+            >
+              Llama 3.3 70B
+            </button>
+            <button
+              type="button"
+              onClick={() => onSelectModel('llama-3.1-8b-instant')}
+              className={cn(
+                "px-2 py-1 rounded-md text-xs font-medium transition-all",
+                selectedModel === 'llama-3.1-8b-instant'
+                  ? "bg-orange-500/20 text-orange-400 border border-orange-500/30"
+                  : "bg-zinc-900 text-zinc-400 border border-zinc-800 hover:bg-zinc-800"
+              )}
+            >
+              Llama 3.1 8B
+            </button>
+          </div>
+        )}
+        
         <form onSubmit={onSubmit} className="max-w-4xl mx-auto flex gap-2 md:gap-3 items-end pb-2 md:pb-4">
           {/* Small upload buttons */}
           <div className="flex gap-1">
@@ -554,6 +585,7 @@ export default function ChatPage() {
   const [thinkingText, setThinkingText] = useState("Thinking...");
   const [user, setUser] = useState<{ name?: string; email?: string; avatar?: string; id?: string } | null>(null);
   const [selectedAgent, setSelectedAgent] = useState<AgentType>('general');
+  const [selectedModel, setSelectedModel] = useState<'llama-3.3-70b' | 'llama-3.1-8b-instant'>('llama-3.3-70b');
   
 
   // Load user from localStorage on mount
@@ -667,7 +699,7 @@ export default function ChatPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ 
             prompt: msgInput, 
-            model: "llama-3.3-70b",
+            model: selectedModel,
             agent: selectedAgent
           })
         });
@@ -773,7 +805,7 @@ export default function ChatPage() {
             {/* Model Badge */}
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800">
               <Sparkles className="w-4 h-4 text-orange-500" />
-              <span className="text-sm font-medium text-zinc-300">{GROQ_MODEL.displayName}</span>
+              <span className="text-sm font-medium text-zinc-300">{GROQ_MODELS[selectedModel]?.displayName || 'Llama 3.3 70B'}</span>
             </div>
             {/* User Avatar - only show when logged in */}
             {user && (
@@ -807,7 +839,7 @@ export default function ChatPage() {
 
         {/* Input */}
         <div className="p-6 bg-zinc-950 border-t border-zinc-800">
-          <ChatInput input={input} setInput={setInput} onSubmit={handleSubmit} isLoading={isLoading} thinkingText={thinkingText} showThinking={true} selectedAgent={selectedAgent} onSelectAgent={setSelectedAgent}  />
+          <ChatInput input={input} setInput={setInput} onSubmit={handleSubmit} isLoading={isLoading} thinkingText={thinkingText} showThinking={true} selectedAgent={selectedAgent} onSelectAgent={setSelectedAgent} selectedModel={selectedModel} onSelectModel={setSelectedModel} />
         </div>
       </main>
     </div>

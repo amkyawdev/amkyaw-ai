@@ -32,6 +32,12 @@ export const GROQ_MODELS = {
     description: 'Most capable - Best for all tasks',
     maxTokens: 32768,
   },
+  'llama-3.1-8b-instant': {
+    name: 'llama-3.1-8b-instant',
+    displayName: 'Llama 3.1 8B',
+    description: 'Fast - Quick responses',
+    maxTokens: 8192,
+  },
 } as const;
 
 export type GroqModelType = keyof typeof GROQ_MODELS;
