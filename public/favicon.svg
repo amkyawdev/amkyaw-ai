@@ -1,10 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <defs>
-    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#f97316"/>
-      <stop offset="100%" style="stop-color:#ea580c"/>
-    </linearGradient>
-  </defs>
-  <rect width="32" height="32" rx="6" fill="url(#grad)"/>
-  <text x="16" y="22" text-anchor="middle" font-family="Arial" font-size="18" font-weight="bold" fill="white">A</text>
+<svg width="500" height="500" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="250" cy="250" r="240" fill="#FFB347" stroke="#E0E0E0" stroke-width="5"/>
+  
+  <circle cx="250" cy="200" r="70" fill="none" stroke="white" stroke-width="4"/>
+  
+  <g transform="translate(215, 160) scale(0.7)" stroke="white" stroke-width="6" fill="none">
+    <path d="M50,10 C30,10 15,30 15,60 C15,90 30,110 50,110 C70,110 85,90 85,60 C85,30 70,10 50,10 Z" />
+    <rect x="40" y="45" width="20" height="20" rx="2" stroke-width="4"/>
+    <circle cx="50" cy="55" r="4" fill="white"/>
+    <line x1="15" y1="60" x2="5" y2="60" />
+    <line x1="85" y1="60" x2="95" y2="60" />
+    <line x1="50" y1="110" x2="50" y2="130" />
+    <line x1="40" y1="130" x2="60" y2="130" />
+  </g>
+
+
+  <text x="50%" y="360" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="52" fill="white" letter-spacing="2">AMKYAW AI</text>
+  
+  <text x="50%" y="395" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white" opacity="0.8" letter-spacing="1">DRIVE PROGRESS WITH INTELLIGENT SYSTEMS</text>
 </svg>
