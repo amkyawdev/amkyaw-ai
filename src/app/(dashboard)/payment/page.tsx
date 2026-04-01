@@ -282,33 +282,33 @@ export default function PaymentPage() {
             >
               <div className="p-8 bg-zinc-900/50 backdrop-blur-xl border border-zinc-800 rounded-[40px] space-y-6">
                 <div className="text-center space-y-2">
-                  <h3 className="text-2xl font-bold text-white">Transfer Details</h3>
-                  <p className="text-zinc-500">Send payment to the account below</p>
+                  <h3 className="text-2xl font-bold text-white">ငွေလွှဲအသောင်အယာက်</h3>
+                  <p className="text-zinc-500">အောက်ပါအကောင့်သို့ ငွေလွှဲပါ</p>
                 </div>
 
                 {paymentMethods.filter(pm => pm.id === method).map((pm) => (
                   <div key={pm.id} className="p-6 bg-zinc-950/50 rounded-2xl space-y-4 border border-zinc-800">
                     <div className="flex items-center justify-between">
-                      <span className="text-zinc-500 text-sm">Account Name</span>
+                      <span className="text-zinc-500 text-sm">အကောင့်အမည်</span>
                       <span className="text-white font-bold">{pm.owner}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-zinc-500 text-sm">Phone Number</span>
+                      <span className="text-zinc-500 text-sm">ဖုန်းနံပါတ်</span>
                       <span className="text-orange-500 font-bold">{pm.account}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-zinc-500 text-sm">Amount</span>
-                      <span className="text-white font-bold">{selectedPlan ? selectedPlan.priceDisplay : '5,000'} Ks</span>
+                      <span className="text-zinc-500 text-sm">ပါပါ</span>
+                      <span className="text-white font-bold">{selectedPlan ? selectedPlan.priceDisplay : '5,000'} ကျပ်</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-zinc-500 text-sm">Plan</span>
-                      <span className="text-orange-400 font-bold">{selectedPlan?.name || 'Monthly'} ({selectedPlan?.duration || '၁ လန်း'})</span>
+                      <span className="text-zinc-500 text-sm">ပါန်းစန်း</span>
+                      <span className="text-orange-400 font-bold">{selectedPlan?.name || 'လစဉ်'} ({selectedPlan?.duration || '၁ လ'})</span>
                     </div>
                   </div>
                 ))}
 
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-zinc-400">Upload Payment Screenshot</label>
+                  <label className="text-sm font-bold text-zinc-400">ငွေပါဆာ ပုံတင်ရန်</label>
                   <div className="relative border-2 border-dashed border-zinc-800 rounded-2xl p-8 text-center hover:border-orange-500/50 transition-all">
                     <input type="file" accept="image/*" onChange={handleFileChange} className="absolute inset-0 opacity-0 cursor-pointer" />
                     {screenshotUrl ? (
@@ -316,7 +316,7 @@ export default function PaymentPage() {
                     ) : (
                       <div className="space-y-2">
                         <Upload size={32} className="mx-auto text-zinc-600" />
-                        <p className="text-zinc-500 text-sm">Click to upload screenshot</p>
+                        <p className="text-zinc-500 text-sm">ပုံတင်ရန် နှိပ်ပါ</p>
                       </div>
                     )}
                   </div>
@@ -324,14 +324,14 @@ export default function PaymentPage() {
 
                 <div className="flex gap-4">
                   <button onClick={() => setStep(1)} className="flex-1 py-4 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-2xl transition-all">
-                    Back
+                    ပြန်သွားရန်
                   </button>
                   <button 
                     onClick={handlePaymentSubmit} 
                     disabled={!screenshotUrl || isLoading}
                     className="flex-1 py-4 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-bold rounded-2xl transition-all flex items-center justify-center gap-2"
                   >
-                    {isLoading ? <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }}><Loader2 size={20} /></motion.div> : "Submit Payment"}
+                    {isLoading ? <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }}><Loader2 size={20} /></motion.div> : "ငွေပါဆာ ပါးဝဲး"}
                   </button>
                 </div>
               </div>
@@ -350,11 +350,11 @@ export default function PaymentPage() {
                   <CheckCircle size={48} className="text-green-500" />
                 </div>
                 <div className="space-y-2">
-                  <h3 className="text-3xl font-black text-white">Payment Submitted!</h3>
-                  <p className="text-zinc-500">Your payment is pending approval. We'll notify you once verified.</p>
+                  <h3 className="text-3xl font-black text-white">ငွေပါဆာ ပါးဝဲးပါပါ!</h3>
+                  <p className="text-zinc-500">သင့်ငွေပါဆာ စိစစ်နေပါတယ်။ အတည်ပြုလုပ်ပါလို့ သတင်းပါပါပါ။</p>
                 </div>
                 <button onClick={() => { setStep(1); setScreenshotUrl(null); }} className="px-8 py-4 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-2xl transition-all">
-                  Done
+                  ပါဝင်ပတ်သက်
                 </button>
               </div>
             </motion.div>

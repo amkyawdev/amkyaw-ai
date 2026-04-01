@@ -5,9 +5,9 @@ import { motion } from "framer-motion";
 
 export default function AboutPage() {
   const features = [
-    { icon: Zap, title: "Ultra Fast", desc: "Real-time processing with low latency" },
-    { icon: Shield, title: "Secure", desc: "Your data is protected and encrypted" },
-    { icon: Cpu, title: "Advanced AI", desc: "Powered by the latest LLM models" },
+    { icon: Zap, title: "အလွန်မြန်", desc: "နှေးကွာမှုနည်းပါပါ အချိန်နှောင့်အယာက် လုပ်ပါ။" },
+    { icon: Shield, title: "လုံခြုံပါ", desc: "သင့်ဒေတာများ ကာကွယ်ပါ။ အီန်ကရိုပ့်ပါ။" },
+    { icon: Cpu, title: "အဆင့်မြင့် AI", desc: "နောက်ဆုံး LLM မော်ဒယ်များနဲ့ လုပ်ပါ။" },
   ];
 
   return (

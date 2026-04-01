@@ -113,13 +113,13 @@ export default function AdminPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter admin password"
+              placeholder="အကောင့်စကားဝှက် ထည့်ပါ"
               className="w-full p-4 rounded-xl bg-zinc-950 border border-zinc-800 text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-orange-500/50"
               onKeyDown={(e) => e.key === "Enter" && handleLogin()}
             />
             {error && <p className="text-red-500 text-sm mt-3">{error}</p>}
             <button onClick={handleLogin} className="w-full mt-4 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl transition-all">
-              Access Console
+              ဝင်ရန်
             </button>
           </div>
         </div>
@@ -196,7 +196,7 @@ export default function AdminPage() {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search users or amounts..."
+            placeholder="အသုံးပါသူများ ရှာရန်..."
             className="w-full pl-12 pr-4 py-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-orange-500/50"
           />
         </div>

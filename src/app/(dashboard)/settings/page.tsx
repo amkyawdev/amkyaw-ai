@@ -127,7 +127,7 @@ export default function SettingsPage() {
               </button>
             </div>
 
-            <p className="text-sm text-zinc-500">Enter your own API keys. Leave empty to use the default keys.</p>
+            <p className="text-sm text-zinc-500">သင့်အလိုက် API keys ထည့်ပါ။ ဗလာထားပါပါ ပါဝင်ပတ်သက် key များသုံးပါ။</p>
 
             <div className="space-y-4">
               {[
@@ -160,7 +160,7 @@ export default function SettingsPage() {
 
             <button onClick={saveKeys} className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl flex items-center justify-center gap-2">
               <Save size={18} />
-              Save API Keys
+              သိမ်းပါ
             </button>
           </motion.div>
         </div>

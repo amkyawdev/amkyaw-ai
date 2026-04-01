@@ -422,7 +422,7 @@ const ChatInput = ({ input, setInput, onSubmit, isLoading, thinkingText, showThi
           <div className="flex-1">
             <textarea value={input} onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onSubmit(e); } }}
-              placeholder="Message Amkyaw AI..."
+              placeholder="Amkyaw AI သို့ စာပါ..."
               className="w-full px-5 py-4 rounded-2xl glass border border-border/50 focus:border-orange-500/50 resize-none min-h-[56px] max-h-[200px] text-sm bg-black/30"
               disabled={isLoading} rows={1} />
           </div>

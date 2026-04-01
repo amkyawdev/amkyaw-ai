@@ -347,7 +347,7 @@ export default function PublicChatPage() {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder={`Message #${currentGroup}...`}
+            placeholder={`#${currentGroup} မှာ စာပါ...`}
             className="flex-1 px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-orange-500/50"
           />
           <button
@@ -390,16 +390,16 @@ export default function PublicChatPage() {
                     type="text"
                     value={newGroupName}
                     onChange={(e) => setNewGroupName(e.target.value)}
-                    placeholder="Enter group name..."
+                    placeholder="ဂရုပ်အမည် ထည့်ပါ..."
                     className="w-full mt-1 px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-orange-500/50"
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-bold text-zinc-400">Description (optional)</label>
+                  <label className="text-sm font-bold text-zinc-400">ဖော်ပါ (မလိုပါပါ)</label>
                   <textarea
                     value={newGroupDescription}
                     onChange={(e) => setNewGroupDescription(e.target.value)}
-                    placeholder="What's this group about?"
+                    placeholder="ဂရုပ်အကြောင်း ရေးပါ..."
                     rows={3}
                     className="w-full mt-1 px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-orange-500/50 resize-none"
                   />
@@ -409,7 +409,7 @@ export default function PublicChatPage() {
                   disabled={!newGroupName.trim()}
                   className="w-full py-3 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-bold rounded-xl flex items-center justify-center gap-2"
                 >
-                  Create Group <ArrowRight size={18} />
+                  ဂရုပ်ဖန်တီးရန် <ArrowRight size={18} />
                 </button>
               </div>
             </motion.div>

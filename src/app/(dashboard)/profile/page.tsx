@@ -185,7 +185,7 @@ export default function ProfilePage() {
               value={profile.bio}
               onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
               className="w-full p-3 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-300 resize-none h-24"
-              placeholder="Write something about yourself..."
+              placeholder="သင့်အကြောင်း ရေးပါ..."
             />
           ) : (
             <p className="text-zinc-400">{profile.bio}</p>
@@ -195,7 +195,7 @@ export default function ProfilePage() {
         {/* Social Links Section */}
         <div className="p-6 bg-zinc-900 border border-zinc-800 rounded-2xl space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="font-bold text-white text-lg">Social Links</h3>
+            <h3 className="font-bold text-white text-lg">ဆိုင်းလင့်ခ်</h3>
             <button onClick={() => isEditing ? handleSave() : setIsEditing(true)} className="p-2 bg-orange-500 hover:bg-orange-600 rounded-lg transition-all">
               {isEditing ? <Save size={16} /> : <Edit2 size={16} />}
             </button>
@@ -217,7 +217,7 @@ export default function ProfilePage() {
                   {socialLinks.website}
                 </a>
               ) : (
-                <span className="flex-1 text-zinc-600">Not set</span>
+                <span className="flex-1 text-zinc-600">မထည်သွင်းပါ</span>
               )}
             </div>
             {/* TikTok */}
@@ -236,7 +236,7 @@ export default function ProfilePage() {
                   @{socialLinks.tiktok.replace('@', '')}
                 </a>
               ) : (
-                <span className="flex-1 text-zinc-600">Not set</span>
+                <span className="flex-1 text-zinc-600">မထည်သွင်းပါ</span>
               )}
             </div>
             {/* Facebook */}
@@ -255,7 +255,7 @@ export default function ProfilePage() {
                   {socialLinks.facebook}
                 </a>
               ) : (
-                <span className="flex-1 text-zinc-600">Not set</span>
+                <span className="flex-1 text-zinc-600">မထည်သွင်းပါ</span>
               )}
             </div>
           </div>
