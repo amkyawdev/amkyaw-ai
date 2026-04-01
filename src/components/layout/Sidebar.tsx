@@ -10,6 +10,7 @@ import {
   LogIn
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useChatStore } from "@/stores/chatStore";
 
 // Types
 interface User {
@@ -185,6 +186,18 @@ export function Sidebar() {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const { user, isPremium, isAdmin, limits, logout, useFeature } = useUsage();
+  const { chats, currentChat, setCurrentChat, loadChatsFromDb } = useChatStore();
+  const [isLoadingChats, setIsLoadingChats] = useState(false);
+
+  // Load chats from DB on mount
+  useEffect(() => {
+    const userData = localStorage.getItem("user");
+    if (userData) {
+      const user = JSON.parse(userData);
+      setIsLoadingChats(true);
+      loadChatsFromDb(String(user.id)).finally(() => setIsLoadingChats(false));
+    }
+  }, []);
 
   // Add admin menu for admin user
   const allMenuGroups = isAdmin 
@@ -242,6 +255,32 @@ export function Sidebar() {
             <Plus size={18} className="text-orange-500 group-hover:rotate-90 transition-transform" />
             <span className="text-sm font-bold">New Conversation</span>
           </button>
+
+          {/* Chat History */}
+          {chats.length > 0 && (
+            <div className="space-y-2">
+              <h3 className="px-4 text-[10px] font-bold text-zinc-600 uppercase tracking-[0.2em]">
+                Recent Chats
+              </h3>
+              <div className="space-y-1 max-h-48 overflow-y-auto">
+                {chats.map((chat) => (
+                  <button
+                    key={chat.id}
+                    onClick={() => handleNavigation(`/chat?chatId=${chat.id}`)}
+                    className={cn(
+                      "w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-all text-xs text-left",
+                      currentChat?.id === chat.id
+                        ? "bg-orange-500/20 text-white border border-orange-500/30"
+                        : "text-zinc-500 hover:bg-zinc-900 hover:text-zinc-200 border border-transparent"
+                    )}
+                  >
+                    <MessageSquare size={14} className={currentChat?.id === chat.id ? "text-orange-500" : "text-zinc-600"} />
+                    <span className="truncate flex-1">{chat.title}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Menu Groups */}
           {allMenuGroups.map((group, idx) => (
