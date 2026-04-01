@@ -29,44 +29,64 @@ export async function POST(request: NextRequest) {
 
     let imageUrl = '';
     let provider = '';
+    let lastError = '';
 
     // Try Stability AI first (often faster)
     if (isStabilityConfigured()) {
-      const stabilityResult = await callStabilityImage(
-        prompt,
-        'blurry, low quality, distorted, deformed, bad anatomy'
-      );
-      
-      if (stabilityResult.success && stabilityResult.imageUrl) {
-        imageUrl = stabilityResult.imageUrl;
-        provider = 'Stability AI (SDXL)';
+      try {
+        const stabilityResult = await callStabilityImage(
+          prompt,
+          'blurry, low quality, distorted, deformed, bad anatomy'
+        );
+        
+        if (stabilityResult.success && stabilityResult.imageUrl) {
+          imageUrl = stabilityResult.imageUrl;
+          provider = 'Stability AI (SDXL)';
+        } else {
+          lastError = stabilityResult.error || 'Stability failed';
+        }
+      } catch (e: any) {
+        lastError = 'Stability: ' + e.message;
       }
     }
 
     // Fallback to HuggingFace if Stability fails or not configured
     if (!imageUrl && isHFConfigured()) {
-      const hfResult = await generateImage(prompt, {
-        seed,
-        width: size.width,
-        height: size.height,
-      });
+      try {
+        const hfResult = await generateImage(prompt, {
+          seed,
+          width: size.width,
+          height: size.height,
+        });
 
-      if (hfResult.error) {
-        // If both fail, return error
-        if (!isStabilityConfigured()) {
-          return NextResponse.json(
-            { error: 'No image API configured' }, 
-            { status: 503 }
-          );
+        if (hfResult.error) {
+          // If HF also fails, try one more time with different settings
+          if (!provider) {
+            const retryResult = await generateImage(prompt, {
+              seed: seed || Math.floor(Math.random() * 10000),
+              width: 512,
+              height: 512,
+            });
+            if (!retryResult.error && retryResult.imageUrl) {
+              imageUrl = retryResult.imageUrl;
+              provider = 'HuggingFace (FLUX)';
+            } else {
+              lastError += ', HF: ' + (retryResult.error || 'failed');
+            }
+          }
+          if (!imageUrl) {
+            return NextResponse.json(
+              { error: 'Image generation failed. Please try again.' },
+              { status: 500 }
+            );
+          }
+        } else {
+          imageUrl = hfResult.imageUrl || '';
+          provider = 'HuggingFace (FLUX)';
         }
-        return NextResponse.json(
-          { error: hfResult.error },
-          { status: 500 }
-        );
+      } catch (e: any) {
+        lastError += ', HF: ' + e.message;
       }
-
-      imageUrl = hfResult.imageUrl || '';
-      provider = 'HuggingFace (FLUX)';
     }
 
     if (!imageUrl) {

@@ -86,6 +86,23 @@ export async function POST(request: NextRequest) {
 
     let response = '';
     let provider = 'Groq';
+    let lastError = '';
+
+    // Helper to check if response is valid and good quality
+    const isPoorResponse = (text: string): boolean => {
+      if (!text || text.trim().length === 0) return true;
+      // Too short (likely an error message)
+      if (text.trim().length < 10) return true;
+      // Contains common error indicators
+      const lower = text.toLowerCase();
+      if (lower.includes('error') || lower.includes('failed') || 
+          lower.includes('not found') || lower.includes('unable to') ||
+          lower.includes('could not') || lower.includes('exception')) {
+        // But allow legitimate short responses like "Yes", "No", "OK"
+        if (text.trim().length < 5) return true;
+      }
+      return false;
+    };
 
     // Try each provider in order until one succeeds (auto rotation)
     try {
@@ -95,39 +112,65 @@ export async function POST(request: NextRequest) {
       response = groqResult.choices?.[0]?.message?.content ?? '';
       provider = 'Groq';
       
-      // If Groq fails, try other providers
-      if (!response || !isValidResponse(response)) {
+      // If Groq fails or gives poor response, try other providers
+      if (isPoorResponse(response)) {
+        lastError = 'Groq: ' + (response || 'empty response');
+        
         // 2. Try ZAI if configured
-        if (isZAIConfigured()) {
-          const zaiResult = await callWithFallback(messages, 'zai');
-          if (zaiResult.success && zaiResult.response) {
-            response = zaiResult.response;
-            provider = zaiResult.provider || 'ZAI';
-          }
+        if (!response && isZAIConfigured()) {
+          try {
+            const zaiResult = await callWithFallback(messages, 'zai');
+            if (zaiResult.success && zaiResult.response && !isPoorResponse(zaiResult.response)) {
+              response = zaiResult.response;
+              provider = zaiResult.provider || 'ZAI';
+              lastError = '';
+            }
+          } catch (e: any) { lastError += ', ZAI failed'; }
         }
         
         // 3. Try Ollama if configured
-        if (!response && isOllamaConfigured()) {
-          const { callOllama } = await import('@/lib/ai-providers');
-          const ollamaResult = await callOllama(messages, 'llama3');
-          if (ollamaResult.success && ollamaResult.response) {
-            response = ollamaResult.response;
-            provider = 'Ollama (Llama 3)';
-          }
+        if (isPoorResponse(response) && isOllamaConfigured()) {
+          try {
+            const { callOllama } = await import('@/lib/ai-providers');
+            const ollamaResult = await callOllama(messages, 'llama3');
+            if (ollamaResult.success && ollamaResult.response && !isPoorResponse(ollamaResult.response)) {
+              response = ollamaResult.response;
+              provider = 'Ollama (Llama 3)';
+              lastError = '';
+            }
+          } catch (e: any) { lastError += ', Ollama failed'; }
         }
         
         // 4. Try Alibaba if configured
-        if (!response && isAlibabaConfigured()) {
-          const { callAlibaba } = await import('@/lib/ai-providers');
-          const alibabaResult = await callAlibaba(messages, 'qwen-plus');
-          if (alibabaResult.success && alibabaResult.response) {
-            response = alibabaResult.response;
-            provider = 'Alibaba (Qwen Plus)';
-          }
+        if (isPoorResponse(response) && isAlibabaConfigured()) {
+          try {
+            const { callAlibaba } = await import('@/lib/ai-providers');
+            const alibabaResult = await callAlibaba(messages, 'qwen-plus');
+            if (alibabaResult.success && alibabaResult.response && !isPoorResponse(alibabaResult.response)) {
+              response = alibabaResult.response;
+              provider = 'Alibaba (Qwen Plus)';
+              lastError = '';
+            }
+          } catch (e: any) { lastError += ', Alibaba failed'; }
+        }
+        
+        // 5. Try Groq with different model
+        if (isPoorResponse(response)) {
+          try {
+            const altModel = modelKey === 'llama-3.3-70b' ? 'mixtral-8x7b' : 'llama-3.3-70b';
+            const altGroqResult = await callGroq(messages, GROQ_MODELS[altModel as GroqModelType].name, temperature, topP);
+            const altResponse = altGroqResult.choices?.[0]?.message?.content ?? '';
+            if (!isPoorResponse(altResponse)) {
+              response = altResponse;
+              provider = `Groq (${altModel})`;
+              lastError = '';
+            }
+          } catch (e: any) { lastError += ', Alt Groq failed'; }
         }
       }
     } catch (error) {
       console.error('Provider chain error:', error);
+      lastError = String(error);
       // If primary fails, try fallback chain
       const fallbackResult = await callWithFallback(messages, 'groq');
       if (fallbackResult.success && fallbackResult.response) {
@@ -137,7 +180,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate response
-    if (!isValidResponse(response)) {
+    if (isPoorResponse(response)) {
       response = 'Sorry, I could not generate a response. Please try again.';
     }
 
