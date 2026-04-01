@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
 
     if (!prompt) {
       return NextResponse.json(
-        { error: 'Prompt is required', errorMy: 'ပြန်ကြားချက်ထည့်ပါ။' },
+        { error: 'Prompt is required' }, 
         { status: 400 }
       );
     }
@@ -55,12 +55,12 @@ export async function POST(request: NextRequest) {
         // If both fail, return error
         if (!isStabilityConfigured()) {
           return NextResponse.json(
-            { error: 'No image API configured', errorMy: 'ပုံထုပ်ဖို့ API မရှိပါ။ Admin ကို ဆက်သွယ်ပါ။' },
+            { error: 'No image API configured' }, 
             { status: 503 }
           );
         }
         return NextResponse.json(
-          { error: hfResult.error, errorMy: hfResult.errorMy || 'ပုံထုပ်ရာတွင် အမှားဖြစ်ပါ။' },
+          { error: hfResult.error },
           { status: 500 }
         );
       }
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
 
     if (!imageUrl) {
       return NextResponse.json(
-        { error: 'Image generation failed', errorMy: 'ပုံထုပ်ရာတွင် အမှားဖြစ်ပါ။' },
+        { error: 'Image generation failed' }, 
         { status: 500 }
       );
     }
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Image API Error:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Unknown error', errorMy: 'ပုံထုပ်ရာတွင် အမှားဖြစ်ပါ။' },
+      { error: error instanceof Error ? error.message : 'Unknown error' }, 
       { status: 500 }
     );
   }

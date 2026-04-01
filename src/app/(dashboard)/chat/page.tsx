@@ -216,7 +216,7 @@ const WelcomeScreen = ({ onSelect }: { onSelect: (text: string) => void }) => (
         {[
           { icon: "💬", text: "Chat", action: "Hello!" },
           { icon: "💻", text: "Write Code", action: "Write a Python function" },
-          { icon: "🌐", text: "Translate", action: "Translate to English: မင်္ဂလာပါ" },
+          { icon: "🌐", text: "Translate", action: "Translate to English: Hello" },
           { icon: "📝", text: "Summarize", action: "Summarize this:" },
         ].map((item) => (
           <button key={item.text} onClick={() => onSelect(item.action)}
@@ -486,7 +486,7 @@ export default function ChatPage() {
       // Guest mode - limit to 3 messages
       const guestChats = parseInt(sessionStorage.getItem("guest_chats") || "0");
       if (guestChats >= 3) {
-        alert("၃ ကြိမ်သာခွင့်ပါ။ အကောင့်အရင်ဖွင့်ပါ။");
+        alert("Guest limit reached. Please login to continue.");
         window.location.href = "/login";
         return;
       }

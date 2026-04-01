@@ -85,7 +85,7 @@ export default function ImagePage() {
       const data = await res.json();
       
       if (data.error) {
-        setError(data.errorMy || data.error);
+        setError(data.error);
       } else {
         const newImage = data.imageUrl || data.image;
         setImage(newImage);

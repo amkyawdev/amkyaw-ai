@@ -440,20 +440,20 @@ export default function PublicChatPage() {
                 </div>
                 <h3 className="text-xl font-bold text-white">Join Group?</h3>
                 <p className="text-zinc-400">
-                  သင့်ကို <span className="text-orange-500 font-bold">#{pendingGroup}</span> အုပ်ချိုက်သို့ ပါဝင်လိုပါသလား?
+                  Would you like to join <span className="text-orange-500 font-bold">#{pendingGroup}</span>?
                 </p>
                 <div className="flex gap-3 pt-2">
                   <button
                     onClick={() => setShowJoinConfirm(false)}
                     className="flex-1 py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-medium rounded-xl transition-all"
                   >
-                    မလုပ်ပါ
+                    No
                   </button>
                   <button
                     onClick={confirmJoinGroup}
                     className="flex-1 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl transition-all"
                   >
-                    ပါဝင်ပါ
+                    Yes
                   </button>
                 </div>
               </div>
@@ -518,13 +518,13 @@ export default function PublicChatPage() {
                   onClick={() => setShowUserProfile(false)}
                   className="flex-1 py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-medium rounded-xl transition-all"
                 >
-                  ပိတ်ပါ
+                  Close
                 </button>
                 <button
                   onClick={handleStartPrivateChat}
                   className="flex-1 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl transition-all"
                 >
-                  စကားပါးပါး
+                  Start Chat
                 </button>
               </div>
             </motion.div>
@@ -555,16 +555,16 @@ export default function PublicChatPage() {
                 </div>
                 <h3 className="text-xl font-bold text-white">Private Chat</h3>
                 <p className="text-zinc-400">
-                  <span className="text-orange-500 font-bold">@{privateChatUser}</span> နဲ့ နှစ်ယောက်ထဲစကားပါးပါး
+                  <span className="text-orange-500 font-bold">@{privateChatUser}</span>?
                 </p>
-                <p className="text-zinc-500 text-sm">ဤကိစ္စအတွက် database table အသစ်ဖန်တီးရန် လိုပါပါ။</p>
+                <p className="text-zinc-500 text-sm">This will create a new database table for private chat.</p>
               </div>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowPrivateChat(false)}
                   className="flex-1 py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-medium rounded-xl transition-all"
                 >
-                  ပိတ်ပါ
+                  Close
                 </button>
                 <button
                   onClick={() => {
@@ -573,7 +573,7 @@ export default function PublicChatPage() {
                   }}
                   className="flex-1 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl transition-all"
                 >
-                  စကားစမည်။
+                  Start Chat
                 </button>
               </div>
             </motion.div>

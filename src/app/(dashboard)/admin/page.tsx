@@ -139,7 +139,7 @@ export default function AdminPage() {
               <span>System Authority</span>
             </div>
             <h2 className="text-4xl font-extrabold text-white tracking-tight">Admin Console</h2>
-            <p className="text-orange-500 font-bold text-xs uppercase tracking-widest">စီမံခန့်ခွဲမှု ဒိုင်ခွက်</p>
+            <p className="text-orange-500 font-bold text-xs uppercase tracking-widest">Admin Panel</p>
             <p className="text-zinc-500 max-w-md">Comprehensive control over users, transactions, and platform-wide security protocols.</p>
           </div>
 

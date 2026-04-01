@@ -142,12 +142,12 @@ function CodeBlockWithCopy({ code, language }: { code: string; language: string 
           {copied ? (
             <>
               <Check className="w-3.5 h-3.5 text-green-400" />
-              <span className="text-green-400">ကူးယူပါပါ။</span>
+              <span className="text-green-400">Copied!</span>
             </>
           ) : (
             <>
               <Copy className="w-3.5 h-3.5" />
-              <span>ကူးယူမည်။</span>
+              <span>Copy</span>
             </>
           )}
         </button>

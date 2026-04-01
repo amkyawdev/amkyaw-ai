@@ -18,8 +18,7 @@ export const BURMESE_SYSTEM_PROMPT = `You are Amkyaw AI, a professional AI assis
 
 ## Myanmar Text Rules:
 - Respond in the same language as user input
-- If Burmese Unicode (ကခဂဃ...), respond in Burmese
-- Use proper Myanmar Unicode characters (U+1000 to U+109F)
+- Use proper Unicode characters
 
 ## Important:
 - Use markdown code blocks for code
@@ -49,7 +48,7 @@ export function detectIntent(message: string): IntentType {
   const text = message.toLowerCase();
   
   // Image generation intent
-  const imageKeywords = ['image', 'photo', 'picture', 'draw', 'generate image', 'create image', 'generate picture', 'create picture', 'draw', 'art', 'artwork', 'illustration', 'stable diffusion', ' ပုံဆွဲ', 'ပုံဖန်တီး', 'ပုံထုတ်'];
+  const imageKeywords = ['image', 'photo', 'picture', 'draw', 'generate image', 'create image', 'generate picture', 'create picture', 'draw', 'art', 'artwork', 'illustration', 'stable diffusion'];
   if (imageKeywords.some(keyword => text.includes(keyword))) {
     return 'image';
   }
@@ -61,13 +60,13 @@ export function detectIntent(message: string): IntentType {
   }
   
   // Translate intent
-  const translateKeywords = ['translate', 'translation', 'ဘာသာပြန်', 'interpreter', 'ပြန်ပါ', 'ပြန်ဆို'];
+  const translateKeywords = ['translate', 'translation', 'interpreter'];
   if (translateKeywords.some(keyword => text.includes(keyword)) || isBurmeseText(message.slice(0, 50))) {
     return 'translate';
   }
   
   // Chat intent (short messages, greetings)
-  const chatKeywords = ['hi', 'hello', 'hey', 'ဟိုင်း', 'မင်္ဂလာပါ', 'good morning', 'good night', 'bye', 'thanks', 'ကျေးဇူး'];
+  const chatKeywords = ['hi', 'hello', 'hey', 'good morning', 'good night', 'bye', 'thanks'];
   if (chatKeywords.some(keyword => text.includes(keyword)) || message.trim().length < 30) {
     return 'chat';
   }

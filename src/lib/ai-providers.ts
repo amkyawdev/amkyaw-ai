@@ -77,10 +77,8 @@ export async function analyzeWebsite(url: string): Promise<{ success: boolean; d
 export interface Agent {
   id: AgentType;
   name: string;
-  nameMy: string;
   icon: string;
   description: string;
-  descriptionMy: string;
   capabilities: ('chat' | 'code' | 'translate' | 'image' | 'reasoning' | 'web' | 'contact')[];
   systemPrompt: string;
 }
@@ -90,70 +88,56 @@ export const AGENTS: Agent[] = [
   {
     id: 'general',
     name: 'General',
-    nameMy: 'ယေဘူယျ အကူညီပါး',
     icon: 'sparkles',
     description: 'General conversation and help',
-    descriptionMy: 'ယေဘူယျ စကားပြောခြင်းနဲ့ အကူညီ',
     capabilities: ['chat', 'reasoning'],
     systemPrompt: 'You are a helpful AI assistant. Respond in the same language as the user.',
   },
   {
     id: 'coder',
     name: 'Coder',
-    nameMy: 'ကုဒ်ရေးသူ',
     icon: 'code',
     description: 'Write, debug, and explain code',
-    descriptionMy: 'ကုဒ်ရေးခြင်း၊ ပြင်ဆင်ခြင်းနဲ့ ရှင်းပါးခြင်း',
     capabilities: ['code', 'chat'],
     systemPrompt: 'You are an expert programmer. Write clean, well-documented code with explanations. Use markdown code blocks.',
   },
   {
     id: 'ai_developer',
     name: 'AI Dev',
-    nameMy: 'AI ဖန်တီးသူ',
     icon: 'cpu',
     description: 'Build AI apps, APIs, and integrations',
-    descriptionMy: 'AI အပလီကေးရှင်း၊ API နဲ့ ပါဝင်မှုများ ဖန်တီးခြင်း',
     capabilities: ['code', 'chat', 'reasoning'],
     systemPrompt: 'You are an AI development expert. Help build AI applications, APIs, and integrations. Provide complete code examples.',
   },
   {
     id: 'contact',
     name: 'Contact',
-    nameMy: 'ဆက်သွယ်ရေးသူ',
     icon: 'phone',
     description: 'Handle inquiries and support',
-    descriptionMy: 'မေးခွန်းများ ဖြေကြားခြင်းနဲ့ ပါးစပ်ဆက်သွယ်ခြင်း',
     capabilities: ['chat', 'web'],
     systemPrompt: 'You are a customer support agent. Be friendly, professional, and helpful. Collect contact information when needed.',
   },
   {
     id: 'translate',
     name: 'Translate',
-    nameMy: 'ဘာသာပြန်သူ',
     icon: 'languages',
     description: 'Translate between languages',
-    descriptionMy: 'ဘာသာစကားများ ပြန်လည်ပါးရှင်းခြင်း',
     capabilities: ['translate', 'chat'],
     systemPrompt: 'You are a translator. Translate accurately while preserving the meaning and tone. Respond in the target language.',
   },
   {
     id: 'image',
     name: 'Image',
-    nameMy: 'ပုံဆွဲသူ',
     icon: 'image',
     description: 'Generate images from text',
-    descriptionMy: 'စာသားများကနေ ပုံများ ဖန်တီးခြင်း',
     capabilities: ['image', 'chat'],
     systemPrompt: 'You are an image generation assistant. Create detailed prompts for image generation.',
   },
   {
     id: 'web_builder',
     name: 'Web',
-    nameMy: 'ဝက်ဘ်ဆိုက်ဖန်တီးသူ',
     icon: 'globe',
     description: 'Analyze websites, build integrations, create plans',
-    descriptionMy: 'ဝက်ဘ်ဆိုက်များ ခွဲခြမ်းခြင်း၊ ပါဝင်မှုများ ဖန်တီးခြင်း၊ အစီစဉ်များ ရေးခြင်း',
     capabilities: ['web', 'code', 'chat'],
     systemPrompt: 'You are a web development expert. You can fetch and analyze websites, suggest improvements, create integration plans, write code for web applications, and help with website development.',
   },
@@ -437,7 +421,7 @@ function getEnhancedSystemPrompt(): string {
 
 ## Response Guidelines:
 - Be conversational and friendly in Myanmar language
-- When asked "What AI are you?" or "ဘာ AI လဲ", respond "နောက်ဆုံးစားပါး မှာ Amkyaw AI ဖြစ်ပါတယ်။"
+- When asked "What AI are you?", respond "I am Amkyaw AI"
 - When asked about capabilities, list all what you can do in an organized way
 - Keep responses natural and human-like
 

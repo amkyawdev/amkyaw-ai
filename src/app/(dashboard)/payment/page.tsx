@@ -10,27 +10,27 @@ const PRICING_PLANS = [
   {
     id: "monthly",
     name: "Monthly",
-    duration: "၁ လန်း",
+    duration: "1 Month",
     price: 5000,
-    priceDisplay: "၅,ဝဝဝ",
+    priceDisplay: "5,000",
     features: ["Unlimited Chat", "4K Image Generation", "Priority Support"],
     popular: false,
   },
   {
     id: "6months",
     name: "6 Months",
-    duration: "၆ လ",
+    duration: "6 Months",
     price: 25000,
-    priceDisplay: "၂၅,ဝဝဝ",
+    priceDisplay: "25,000",
     features: ["Everything in Monthly", "2 Months Free", "Early Access"],
     popular: true,
   },
   {
     id: "yearly",
     name: "Yearly",
-    duration: "၁ နှစ်",
+    duration: "1 Year",
     price: 50000,
-    priceDisplay: "၅၀,ဝဝဝ",
+    priceDisplay: "50,000",
     features: ["Everything in 6 Months", "4 Months Free", "Exclusive Features"],
     popular: false,
   },
@@ -129,7 +129,7 @@ export default function PaymentPage() {
             transition={{ delay: 0.2 }}
             className="text-orange-500 font-bold text-sm uppercase tracking-widest"
           >
-            ပရီမီယံ အဆင့်မြှင့်တင်ပါ
+            Upgrade to Premium
           </motion.p>
           <motion.p
             initial={{ opacity: 0, y: -20 }}
@@ -175,7 +175,7 @@ export default function PaymentPage() {
             >
               <div className="text-center">
                 <h3 className="text-2xl font-bold text-white mb-2">Choose Your Plan</h3>
-                <p className="text-zinc-500">သင့်အတွက် အသင့်တားမွတ်တဲ့ ပါးပါးကို ရွေးပါ။</p>
+                <p className="text-zinc-500">Choose the perfect plan for you</p>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
@@ -190,7 +190,7 @@ export default function PaymentPage() {
                   >
                     {plan.popular && (
                       <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-orange-500 text-white text-xs font-bold rounded-full">
-                        အလိုအပ်ဆုံး
+                        Best Value
                       </div>
                     )}
                     <div className="text-center space-y-2">
@@ -199,7 +199,7 @@ export default function PaymentPage() {
                     </div>
                     <div className="text-center">
                       <span className="text-3xl md:text-4xl font-black text-orange-500">{plan.priceDisplay}</span>
-                      <span className="text-zinc-500 text-sm"> ကျပ်</span>
+                      <span className="text-zinc-500 text-sm"> Ks</span>
                     </div>
                     <div className="space-y-2 pt-4 border-t border-zinc-800">
                       {plan.features.map((feature, i) => (
@@ -213,7 +213,7 @@ export default function PaymentPage() {
                       "w-full py-3 rounded-xl font-bold transition-all",
                       plan.popular ? "bg-orange-500 text-white hover:bg-orange-600" : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
                     )}>
-                      ရွေးမည်။
+                      Select
                     </div>
                   </button>
                 ))}
@@ -233,18 +233,18 @@ export default function PaymentPage() {
               {/* Selected Plan Summary */}
               <div className="p-4 bg-orange-500/10 border border-orange-500/20 rounded-2xl flex items-center justify-between max-w-md mx-auto">
                 <div>
-                  <p className="text-zinc-400 text-sm">ရွေးလိုက်တဲ့ ပါးပါး</p>
+                  <p className="text-zinc-400 text-sm">Selected Plan</p>
                   <p className="text-white font-bold">{selectedPlan.name} ({selectedPlan.duration})</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-zinc-400 text-sm">ပါးပါးတန်ဖိုး</p>
-                  <p className="text-orange-500 font-bold text-xl">{selectedPlan.priceDisplay} ကျပ်</p>
+                  <p className="text-zinc-400 text-sm">Plan Price</p>
+                  <p className="text-orange-500 font-bold text-xl">{selectedPlan.priceDisplay} Ks</p>
                 </div>
               </div>
 
               <div className="text-center space-y-2">
-                <h3 className="text-2xl font-bold text-white">ငွေပါးနည်းရွေးပါ</h3>
-                <p className="text-zinc-500">သင့်အရန်ကုန်လိုက်ပါ။</p>
+                <h3 className="text-2xl font-bold text-white">Select Payment Method</h3>
+                <p className="text-zinc-500">Thank you for your purchase!</p>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
@@ -263,7 +263,7 @@ export default function PaymentPage() {
                       <p className="text-zinc-500 text-sm">Fast and secure transfer via the official {pm.name} application.</p>
                     </div>
                     <div className="flex items-center justify-between text-zinc-500 group-hover:text-white pt-4 border-t border-zinc-800/50">
-                      <span className="text-xs font-bold uppercase tracking-wider">ရွေးမည်။</span>
+                      <span className="text-xs font-bold uppercase tracking-wider">Select</span>
                       <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />
                     </div>
                   </button>
@@ -302,7 +302,7 @@ export default function PaymentPage() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-zinc-500 text-sm">Plan</span>
-                      <span className="text-orange-400 font-bold">{selectedPlan?.name || 'Monthly'} ({selectedPlan?.duration || '၁ လန်း'})</span>
+                      <span className="text-orange-400 font-bold">{selectedPlan?.name || 'Monthly'} ( {selectedPlan?.duration || '1 Month'})</span>
                     </div>
                   </div>
                 ))}

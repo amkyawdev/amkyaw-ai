@@ -13,7 +13,7 @@ export interface ImageGenerationOptions {
 export interface HuggingFaceResponse {
   imageUrl?: string;
   error?: string;
-  errorMy?: string; // Myanmar error message
+  
 }
 
 export async function generateImage(prompt: string, options: ImageGenerationOptions = {}): Promise<HuggingFaceResponse> {
@@ -21,8 +21,7 @@ export async function generateImage(prompt: string, options: ImageGenerationOpti
   
   if (!apiKey) {
     return { 
-      error: 'HUGGINGFACE_API_KEY not configured', 
-      errorMy: 'AI ပါ်မှာ ပုံထုပ်ဖို့ ခွင့်မရှိပါ။ Admin ကို ဆက်သွယ်ပါ။' 
+      error: 'HUGGINGFACE_API_KEY not configured'
     };
   }
 
@@ -55,30 +54,26 @@ export async function generateImage(prompt: string, options: ImageGenerationOpti
     // Handle different status codes
     if (response.status === 410) {
       return { 
-        error: 'Model deprecated - trying fallback', 
-        errorMy: 'စိတ်မရှိပါနဲ့၊ Update တွင်းပါမယ်။ နောက်ထပ် ကြိုးစားပါ။' 
+        error: 'Model deprecated - trying fallback'
       };
     }
     
     if (response.status === 429) {
       return { 
-        error: 'Rate limit exceeded', 
-        errorMy: 'Limited ပြည့်ပါပြီ။ နောက်ရက်မှ ပြန်ကြိုးစားပါ။' 
+        error: 'Rate limit exceeded'
       };
     }
 
     if (response.status === 503) {
       return { 
-        error: 'Service unavailable', 
-        errorMy: 'ဝန်ဆောည်က မရှိပါ။ နောက်မှ ပြန်ကြိုးစားပါ။' 
+        error: 'Service unavailable'
       };
     }
     
     if (!response.ok) {
       const errorText = await response.text();
       return { 
-        error: `HF API Error: ${response.status}`, 
-        errorMy: 'ပုံထုပ်ရာတွင် အမှားဖြစ်ပါ။ နောက်မှ ပြန်ကြိုးစားပါ။' 
+        error: `HF API Error: ${response.status}`
       };
     }
 
@@ -87,8 +82,7 @@ export async function generateImage(prompt: string, options: ImageGenerationOpti
     if (!contentType.includes('image')) {
       const errorText = await response.text();
       return { 
-        error: `Expected image but got: ${errorText.slice(0, 100)}`, 
-        errorMy: 'ပုံပါ်လာတာ မဟုတ်ပါ။ နောက်မှ ပြန်ကြိုးစားပါ။' 
+        error: `Expected image but got: ${errorText.slice(0, 100)}`
       };
     }
 
@@ -101,7 +95,6 @@ export async function generateImage(prompt: string, options: ImageGenerationOpti
   } catch (error) {
     return { 
       error: error instanceof Error ? error.message : 'Unknown error', 
-      errorMy: 'ပုံထုပ်ရာတွင် အမှားဖြစ်ပါ။ နောက်မှ ပြန်ကြိုးစားပါ။' 
     };
   }
 }
@@ -144,7 +137,6 @@ async function generateWithFallback(prompt: string, apiKey: string): Promise<Hug
   
   return { 
     error: 'All image models unavailable', 
-    errorMy: 'ပုံထုပ်ဖို့ ဆာဗာ မရှိပါ။ နောက်ရက်မှ ပြန်ကြိုးစားပါ။' 
   };
 }
 
