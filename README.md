@@ -1,5 +1,7 @@
 # 🤖 Amkyaw AI Power Platform
 
+<img src="https://raw.githubusercontent.com/amkyawdev/amkyaw-ai/main/public/favicon.svg" width="80" height="80" align="left" style="margin-right: 16px; border-radius: 12px;"/>
+
 A powerful AI chat platform built with Next.js, featuring multi-AI routing with Groq and HuggingFace integration, plus public community chat.
 
 ![Next.js](https://img.shields.io/badge/Next.js-14-black) ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue) ![License](https://img.shields.io/badge/License-MIT-green)
