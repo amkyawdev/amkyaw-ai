@@ -443,7 +443,7 @@ export default function ChatPage() {
   const [showSidebar, setShowSidebar] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [thinkingText, setThinkingText] = useState("Thinking...");
-  const [user, setUser] = useState<{ name?: string; email?: string; avatar?: string } | null>(null);
+  const [user, setUser] = useState<{ name?: string; email?: string; avatar?: string; id?: string } | null>(null);
   const [selectedAgent, setSelectedAgent] = useState<AgentType>('general');
 
   // Load user from localStorage on mount
@@ -454,6 +454,7 @@ export default function ChatPage() {
         const parsed = JSON.parse(storedUser);
         // Support both avatar and profile_picture field names
         setUser({
+          id: parsed.id,
           name: parsed.username,
           email: parsed.email,
           avatar: parsed.avatar || parsed.profile_picture
@@ -463,9 +464,25 @@ export default function ChatPage() {
       }
     }
   }, []);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  const { chats, currentChat, isLoading, error, createChat, setCurrentChat, addMessage, updateMessage, deleteChat, clearError, setLoading } = useChatStore();
+  const { chats, currentChat, isLoading, error, createChat, setCurrentChat, addMessage, updateMessage, deleteChat, clearError, setLoading, loadChatsFromDb, setUserId, loadChatMessages } = useChatStore();
+
+  // Load chats from database when user is loaded
+  useEffect(() => {
+    if (user?.id) {
+      setUserId(user.id);
+      loadChatsFromDb(user.id);
+    }
+  }, [user?.id]);
+
+  // Load messages when chat is selected
+  useEffect(() => {
+    if (currentChat?.id) {
+      loadChatMessages(currentChat.id);
+    }
+  }, [currentChat?.id]);
 
   const scrollToBottom = useCallback(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), []);
   useEffect(() => { scrollToBottom(); }, [currentChat?.messages, scrollToBottom]);
