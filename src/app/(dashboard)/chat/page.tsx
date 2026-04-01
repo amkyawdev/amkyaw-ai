@@ -421,108 +421,111 @@ const ChatInput = ({ input, setInput, onSubmit, isLoading, thinkingText, showThi
           </motion.div>
         )}
         
-        {/* Agent Selector - Above input box */}
-        {selectedAgent && onSelectAgent && (
-          <AnimatePresence>
-            <motion.div 
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="relative mb-3"
-            >
-              {/* Main button showing current agent */}
-              <button
-                type="button"
-                onClick={() => setShowAgentDropdown(!showAgentDropdown)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg glass border border-border/50 hover:border-orange-500/30 transition-all"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-orange-400" />
-                <span className="text-xs font-medium text-zinc-300">AI Agent</span>
-                <motion.div
-                  animate={{ rotate: showAgentDropdown ? 180 : 0 }}
-                  className="w-3 h-3 text-zinc-500"
+        {/* Agent & Model Selector - Same row above input */}
+        {(selectedAgent && onSelectAgent) || (selectedModel && onSelectModel) ? (
+          <div className="flex items-center gap-3 mb-3">
+            {/* Agent Selector */}
+            {selectedAgent && onSelectAgent && (
+              <AnimatePresence>
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="relative"
                 >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M6 9l6 6 6-6" />
-                  </svg>
+                  <button
+                    type="button"
+                    onClick={() => setShowAgentDropdown(!showAgentDropdown)}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg glass border border-border/50 hover:border-orange-500/30 transition-all"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-orange-400" />
+                    <span className="text-xs font-medium text-zinc-300">AI Agent</span>
+                    <motion.div
+                      animate={{ rotate: showAgentDropdown ? 180 : 0 }}
+                      className="w-3 h-3 text-zinc-500"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M6 9l6 6 6-6" />
+                      </svg>
+                    </motion.div>
+                  </button>
+                  
+                  {/* Animated dropdown */}
+                  {showAgentDropdown && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute bottom-full left-0 mb-2 py-2 rounded-xl glass border border-border/50 shadow-xl overflow-hidden z-50"
+                    >
+                      {AGENTS.map((agent, index) => {
+                        const IconComponent = iconMap[agent.icon] || Sparkles;
+                        return (
+                          <motion.button
+                            key={agent.id}
+                            type="button"
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.05 }}
+                            onClick={() => {
+                              onSelectAgent(agent.id);
+                              setShowAgentDropdown(false);
+                            }}
+                            className={cn(
+                              "w-full flex items-center gap-3 px-4 py-2.5 text-left transition-all",
+                              selectedAgent === agent.id
+                                ? "bg-orange-500/20 text-orange-400"
+                                : "hover:bg-white/5 text-zinc-300"
+                            )}
+                          >
+                            <IconComponent className={cn("w-4 h-4", selectedAgent === agent.id ? "text-orange-400" : "text-zinc-500")} />
+                            <span className="text-sm">{agent.name}</span>
+                            {selectedAgent === agent.id && (
+                              <motion.div 
+                                initial={{ scale: 0 }} 
+                                animate={{ scale: 1 }}
+                                className="ml-auto w-1.5 h-1.5 bg-orange-500 rounded-full" 
+                              />
+                            )}
+                          </motion.button>
+                        );
+                      })}
+                    </motion.div>
+                  )}
                 </motion.div>
-              </button>
-              
-              {/* Animated dropdown */}
-              {showAgentDropdown && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  className="absolute bottom-full left-0 mb-2 py-2 rounded-xl glass border border-border/50 shadow-xl overflow-hidden z-50"
+              </AnimatePresence>
+            )}
+            
+            {/* Model Selector */}
+            {selectedModel && onSelectModel && (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => onSelectModel('llama-3.3-70b')}
+                  className={cn(
+                    "px-2 py-1 rounded-md text-xs font-medium transition-all",
+                    selectedModel === 'llama-3.3-70b'
+                      ? "bg-orange-500/20 text-orange-400 border border-orange-500/30"
+                      : "bg-zinc-900 text-zinc-400 border border-zinc-800 hover:bg-zinc-800"
+                  )}
                 >
-                  {AGENTS.map((agent, index) => {
-                    const IconComponent = iconMap[agent.icon] || Sparkles;
-                    return (
-                      <motion.button
-                        key={agent.id}
-                        type="button"
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.05 }}
-                        onClick={() => {
-                          onSelectAgent(agent.id);
-                          setShowAgentDropdown(false);
-                        }}
-                        className={cn(
-                          "w-full flex items-center gap-3 px-4 py-2.5 text-left transition-all",
-                          selectedAgent === agent.id
-                            ? "bg-orange-500/20 text-orange-400"
-                            : "hover:bg-white/5 text-zinc-300"
-                        )}
-                      >
-                        <IconComponent className={cn("w-4 h-4", selectedAgent === agent.id ? "text-orange-400" : "text-zinc-500")} />
-                        <span className="text-sm">{agent.name}</span>
-                        {selectedAgent === agent.id && (
-                          <motion.div 
-                            initial={{ scale: 0 }} 
-                            animate={{ scale: 1 }}
-                            className="ml-auto w-1.5 h-1.5 bg-orange-500 rounded-full" 
-                          />
-                        )}
-                      </motion.button>
-                    );
-                  })}
-                </motion.div>
-              )}
-            </motion.div>
-          </AnimatePresence>
-        )}
-        
-        {/* Model Selector - Small buttons above input */}
-        {selectedModel && onSelectModel && (
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-xs text-zinc-500">Model:</span>
-            <button
-              type="button"
-              onClick={() => onSelectModel('llama-3.3-70b')}
-              className={cn(
-                "px-2 py-1 rounded-md text-xs font-medium transition-all",
-                selectedModel === 'llama-3.3-70b'
-                  ? "bg-orange-500/20 text-orange-400 border border-orange-500/30"
-                  : "bg-zinc-900 text-zinc-400 border border-zinc-800 hover:bg-zinc-800"
-              )}
-            >
-              Llama 3.3 70B
-            </button>
-            <button
-              type="button"
-              onClick={() => onSelectModel('llama-3.1-8b-instant')}
-              className={cn(
-                "px-2 py-1 rounded-md text-xs font-medium transition-all",
-                selectedModel === 'llama-3.1-8b-instant'
-                  ? "bg-orange-500/20 text-orange-400 border border-orange-500/30"
-                  : "bg-zinc-900 text-zinc-400 border border-zinc-800 hover:bg-zinc-800"
-              )}
-            >
-              Llama 3.1 8B
-            </button>
+                  Llama 3.3 70B
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onSelectModel('llama-3.1-8b-instant')}
+                  className={cn(
+                    "px-2 py-1 rounded-md text-xs font-medium transition-all",
+                    selectedModel === 'llama-3.1-8b-instant'
+                      ? "bg-orange-500/20 text-orange-400 border border-orange-500/30"
+                      : "bg-zinc-900 text-zinc-400 border border-zinc-800 hover:bg-zinc-800"
+                  )}
+                >
+                  Llama 3.1 8B
+                </button>
+              </div>
+            )}
           </div>
-        )}
+        ) : null}
         
         <form onSubmit={onSubmit} className="max-w-4xl mx-auto flex gap-2 md:gap-3 items-end pb-2 md:pb-4">
           {/* Small upload buttons */}
