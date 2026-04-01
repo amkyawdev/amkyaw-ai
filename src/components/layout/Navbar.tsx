@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { 
   Home, MessageSquare, History, Settings, 
-  Sparkles, User, Menu, X, BookOpen, LogIn
+  Sparkles, User, Menu, X, BookOpen, LogIn, Shield
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -14,6 +14,7 @@ import { useAuthStore } from '@/stores/authStore';
 const navItems = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/chat', label: 'Chat', icon: MessageSquare },
+  { href: '/admin/chat', label: 'Admin', icon: Shield, admin: true },
   { href: '/docs', label: 'Docs', icon: BookOpen },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
