@@ -43,7 +43,7 @@ const UsageContext = createContext<UsageContextType>({
   user: null,
   isPremium: false,
   isAdmin: false,
-  limits: { chat: 30, image: 5 },
+  limits: { chat: 999999, image: 999999, isUnlimited: true },
   login: () => {},
   logout: () => {},
   useFeature: () => true,
@@ -55,7 +55,7 @@ export const useUsage = () => useContext(UsageContext);
 // Provider
 export function UsageProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [limits, setLimits] = useState<Limits>({ chat: 30, image: 5 });
+  const [limits, setLimits] = useState<Limits>({ chat: 999999, image: 999999, isUnlimited: true });
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
@@ -74,14 +74,14 @@ export function UsageProvider({ children }: { children: React.ReactNode }) {
         if (storedLimits) {
           setLimits(JSON.parse(storedLimits));
         } else {
-          setLimits({ chat: 30, image: 5 });
-          localStorage.setItem("limits", JSON.stringify({ chat: 30, image: 5 }));
+          setLimits({ chat: 999999, image: 999999, isUnlimited: true });
+          localStorage.setItem("limits", JSON.stringify({ chat: 999999, image: 999999, isUnlimited: true }));
         }
       }
     } else {
       // Not logged in - demo mode
-      setLimits({ chat: 30, image: 5 });
-      localStorage.setItem("limits", JSON.stringify({ chat: 30, image: 5 }));
+      setLimits({ chat: 999999, image: 999999, isUnlimited: true });
+      localStorage.setItem("limits", JSON.stringify({ chat: 999999, image: 999999, isUnlimited: true }));
     }
   }, []);
 
@@ -95,8 +95,8 @@ export function UsageProvider({ children }: { children: React.ReactNode }) {
       setLimits({ chat: 999999, image: 999999, isUnlimited: true });
     } else {
       setIsAdmin(false);
-      setLimits({ chat: 30, image: 5 });
-      localStorage.setItem("limits", JSON.stringify({ chat: 30, image: 5 }));
+      setLimits({ chat: 999999, image: 999999, isUnlimited: true });
+      localStorage.setItem("limits", JSON.stringify({ chat: 999999, image: 999999, isUnlimited: true }));
     }
   };
 
@@ -105,8 +105,8 @@ export function UsageProvider({ children }: { children: React.ReactNode }) {
     setIsAdmin(false);
     localStorage.removeItem("user");
     // Reset to demo mode
-    setLimits({ chat: 30, image: 5 });
-    localStorage.setItem("limits", JSON.stringify({ chat: 30, image: 5 }));
+    setLimits({ chat: 999999, image: 999999, isUnlimited: true });
+    localStorage.setItem("limits", JSON.stringify({ chat: 999999, image: 999999, isUnlimited: true }));
   };
 
   const useFeature = (feature: string): boolean => {
