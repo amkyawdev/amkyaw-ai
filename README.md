@@ -29,6 +29,17 @@ A powerful AI chat platform built with Next.js, featuring multi-AI routing with 
 - Create new chat groups
 - Real-time messaging
 
+## 📸 Screenshots
+
+### Home Page
+![Home Page](https://raw.githubusercontent.com/amkyawdev/amkyaw-ai/main/screenshots/home.png)
+
+### AI Chat
+![AI Chat](https://raw.githubusercontent.com/amkyawdev/amkyaw-ai/main/screenshots/chat.png)
+
+### Public Chat
+![Public Chat](https://raw.githubusercontent.com/amkyawdev/amkyaw-ai/main/screenshots/public-chat.png)
+
 ## 🚀 Tech Stack
 
 - **Framework:** Next.js 14 (App Router)
