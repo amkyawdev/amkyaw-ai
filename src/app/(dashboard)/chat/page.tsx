@@ -327,6 +327,7 @@ const ChatInput = ({ input, setInput, onSubmit, isLoading, thinkingText, showThi
   const [showAgentDropdown, setShowAgentDropdown] = useState(false);
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
   const [isFetchingUrl, setIsFetchingUrl] = useState(false);
+  const MAX_CHARS = 4000; // API limit အတွက် ထားပါတယ်
 
   // Handle URL upload
   const handleUrlUpload = async () => {
@@ -550,10 +551,20 @@ const ChatInput = ({ input, setInput, onSubmit, isLoading, thinkingText, showThi
           
           <div className="flex-1">
             <textarea value={input} onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onSubmit(e); } }}
-              placeholder="Message Amkyaw AI..."
+              onKeyDown={(e) => { 
+                if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { 
+                  e.preventDefault(); onSubmit(e); // တစ်ပါးဖြင်း Enter - Ctrl/Cmd+Enter
+                } else if (e.key === "Enter" && !e.shiftKey) { 
+                  e.preventDefault(); onSubmit(e); 
+                } 
+              }}
+              placeholder="Message Amkyaw AI... (Ctrl+Enter to send)"
               className="w-full px-4 py-3 md:py-4 rounded-2xl glass border border-border/50 focus:border-orange-500/50 resize-none min-h-[48px] md:min-h-[56px] max-h-[150px] md:max-h-[200px] text-sm bg-zinc-900/80 backdrop-blur-sm"
               disabled={isLoading} rows={1} />
+            {/* Character count indicator */}
+            <div className={cn("text-xs text-right px-1 -mt-1", input.length > MAX_CHARS ? "text-red-400" : "text-zinc-500")}>
+              {input.length}/{MAX_CHARS}
+            </div>
           </div>
           <motion.button type="submit" disabled={!input.trim() || isLoading}
             className={cn("px-4 md:px-5 py-3 md:py-4 rounded-2xl font-medium transition-all flex items-center justify-center min-w-[70px] md:min-w-[100px]",
@@ -611,6 +622,8 @@ export default function ChatPage() {
   }, []);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const [userScrolledUp, setUserScrolledUp] = useState(false);
   
   const { chats, currentChat, isLoading, error, createChat, setCurrentChat, addMessage, updateMessage, deleteChat, clearError, setLoading, loadChatsFromDb, setUserId, loadChatMessages } = useChatStore();
 
@@ -629,7 +642,21 @@ export default function ChatPage() {
     }
   }, [currentChat?.id]);
 
-  const scrollToBottom = useCallback(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), []);
+  // Smart auto-scroll: အသုံးပါးသာ အောက်ပိုင်းကို scroll လုပ်ထားပါအောက်ပိုင်းဆီပြန်သွားပါတယ်
+  const scrollToBottom = useCallback(() => {
+    if (!userScrolledUp && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [userScrolledUp]);
+  
+  // Detect if user scrolled up manually
+  const handleScroll = useCallback(() => {
+    if (!messagesContainerRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+    const isAtBottom = scrollHeight - scrollTop - clientHeight < 100;
+    setUserScrolledUp(!isAtBottom);
+  }, []);
+  
   useEffect(() => { scrollToBottom(); }, [currentChat?.messages, scrollToBottom]);
 
   const handleCopy = async (content: string, id: string) => {
@@ -637,10 +664,36 @@ export default function ChatPage() {
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
   };
+  
+  // ပြန်လုပ်ချင်း ပါ၀င်မှုအတွက် retry လုပ်နိုင်ပါတယ်
+  const handleRetry = async (messageId: string) => {
+    const message = currentChat?.messages.find(m => m.id === messageId);
+    if (!message || message.role !== 'user') return;
+    
+    // Find the user message that caused the error
+    const chatMessages = currentChat?.messages || [];
+    const userMsgIndex = chatMessages.findIndex(m => m.id === messageId);
+    if (userMsgIndex <= 0) return;
+    
+    const userMsg = chatMessages[userMsgIndex];
+    const prevMessages = chatMessages.slice(0, userMsgIndex);
+    
+    setInput(userMsg.content);
+    // Delete the error message and subsequent messages
+    const chatId = currentChat?.id;
+    if (!chatId) return;
+  };
 
+  const MAX_CHARS = 4000;
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Validation - ပါးဝင်မှုစစ်ဆေးခြင်း
     if (!input.trim() || isLoading) return;
+    if (input.length > MAX_CHARS) {
+      alert(`Input too long. Maximum ${MAX_CHARS} characters allowed.`);
+      return;
+    }
 
     // Check for login
     const storedUser = localStorage.getItem("user");
@@ -820,7 +873,11 @@ export default function ChatPage() {
         </header>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-4 py-8 space-y-6 scrollbar-thin scrollbar-thumb-zinc-800">
+        <div 
+          ref={messagesContainerRef}
+          onScroll={handleScroll}
+          className="flex-1 overflow-y-auto px-4 py-8 space-y-6 scrollbar-thin scrollbar-thumb-zinc-800"
+        >
           {!currentChat || currentChat.messages.length === 0 ? (
             <WelcomeScreen onSelect={(text) => setInput(text)} />
           ) : (
