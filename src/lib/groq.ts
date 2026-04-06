@@ -107,26 +107,36 @@ export function isValidResponse(response: string): boolean {
 export async function callGroq(
   messages: { role: string; content: string }[],
   model: string = 'llama-3.3-70b-versatile',
-  temperature: number = 0.2,
-  topP: number = 0.8
+  temperature: number = 0.5,
+  topP: number = 0.9
 ) {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) throw new Error('GROQ_API_KEY is not defined');
 
+  // System Message ကို အမြဲတမ်း ထိပ်ဆုံးမှာ ထားပါ
   const systemMessage = { role: 'system', content: BURMESE_SYSTEM_PROMPT };
-  const allMessages = [systemMessage, ...messages];
+  
+  // History အရှည်ကြီးဖြစ်နေရင် နောက်ဆုံး message ၁၀ ခုကနေ ၁၅ ခုလောက်ပဲ ဖြတ်ယူတာမျိုး (Token ချွေတာရန်) လုပ်သင့်ပါတယ်
+  const conversationContext = messages.slice(-15); 
+  const allMessages = [systemMessage, ...conversationContext];
 
   const response = await fetch(GROQ_ENDPOINT, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({ model, messages: allMessages, temperature, top_p: topP, max_tokens: 2048 }),
+    headers: { 
+      'Content-Type': 'application/json', 
+      'Authorization': `Bearer ${apiKey}` 
+    },
+    body: JSON.stringify({ 
+      model, 
+      messages: allMessages, 
+      temperature, 
+      top_p: topP, 
+      max_tokens: 2048,
+      stream: false // လိုအပ်ရင် stream true လုပ်နိုင်ပါတယ်
+    }),
   });
 
-  if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`Groq API error: ${response.status}`);
-  }
-
+  if (!response.ok) throw new Error(`Groq API error: ${response.status}`);
   return response.json();
 }
 
