@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { callGroq, GROQ_MODELS, GroqModelType, BURMESE_SYSTEM_PROMPT, isValidResponse } from '@/lib/groq';
-import { callWithFallback, AGENTS, AgentType } from '@/lib/ai-providers';
+import { callGroq, GROQ_MODELS, GroqModelType, BURMESE_SYSTEM_PROMPT, isValidResponse, callGroqStream } from '@/lib/groq';
+import { callWithFallback, AGENTS, AgentType, callZAIStreaming } from '@/lib/ai-providers';
 import { isHFConfigured } from '@/lib/huggingface';
 
 export const runtime = 'nodejs';

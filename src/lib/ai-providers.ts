@@ -214,6 +214,43 @@ export async function callZAI(
   }
 }
 
+// Streaming version of callZAI
+export async function callZAIStreaming(
+  messages: { role: string; content: string }[],
+  model: string = 'glm-5'
+): Promise<ReadableStream | null> {
+  const apiKey = process.env.ZAI_API_KEY;
+  
+  if (!apiKey) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(ZAI_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        messages,
+        temperature: 0.7,
+        max_tokens: 2048,
+        stream: true,
+      }),
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return response.body as ReadableStream;
+  } catch (error) {
+    return null;
+  }
+}
+
 // Call Stability AI for image generation (optimized for speed)
 export async function callStabilityImage(
   prompt: string,

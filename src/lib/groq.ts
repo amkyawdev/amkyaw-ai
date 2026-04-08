@@ -152,3 +152,38 @@ export async function getGroqResponse(
   }
   return response;
 }
+
+// Streaming version of callGroq
+export async function callGroqStream(
+  messages: { role: string; content: string }[],
+  model: string = 'llama-3.3-70b-versatile',
+  temperature: number = 0.5,
+  topP: number = 0.9
+): Promise<ReadableStream> {
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) throw new Error('GROQ_API_KEY is not defined');
+
+  const systemMessage = { role: 'system', content: BURMESE_SYSTEM_PROMPT };
+  const conversationContext = messages.slice(-15);
+  const allMessages = [systemMessage, ...conversationContext];
+
+  const response = await fetch(GROQ_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model,
+      messages: allMessages,
+      temperature,
+      top_p: topP,
+      max_tokens: 2048,
+      stream: true
+    }),
+  });
+
+  if (!response.ok) throw new Error(`Groq API error: ${response.status}`);
+
+  return response.body as ReadableStream;
+}
