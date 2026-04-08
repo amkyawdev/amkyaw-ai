@@ -316,38 +316,7 @@ export function Sidebar() {
 
         {/* Footer */}
         <div className="p-4 border-t border-zinc-900/50 space-y-4 bg-zinc-950/50">
-          {/* Usage Stats - Only for non-admin */}
-          {!isAdmin && (
-            <div className="px-4 py-4 bg-gradient-to-br from-orange-500/10 to-transparent rounded-2xl border border-orange-500/10 space-y-3">
-              <div className="flex items-center gap-2 text-orange-500">
-                <Zap size={14} fill="currentColor" />
-                <span className="text-[10px] font-bold uppercase">Demo Mode</span>
-              </div>
-              <div className="space-y-2">
-                <div className="space-y-1">
-                  <div className="flex justify-between text-[10px]">
-                    <span className="text-zinc-500">Chat</span>
-                    <span className="text-zinc-300">{limits.chat}/30</span>
-                  </div>
-                  <div className="w-full h-1 bg-zinc-900 rounded-full">
-                    <div className="h-full bg-orange-500" style={{ width: `${(limits.chat / 30) * 100}%` }} />
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-[10px]">
-                    <span className="text-zinc-500">Images</span>
-                    <span className="text-zinc-300">{limits.image}/5</span>
-                  </div>
-                  <div className="w-full h-1 bg-zinc-900 rounded-full">
-                    <div className="h-full bg-orange-500" style={{ width: `${(limits.image / 5) * 100}%` }} />
-                  </div>
-                </div>
-              </div>
-              <button onClick={() => handleNavigation("/payment")} className="w-full py-2.5 bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-bold uppercase rounded-xl">
-                Upgrade to Pro
-              </button>
-            </div>
-          )}
+          {/* Settings & Logout */}
 
           {/* Admin Badge */}
           {isAdmin && (
