@@ -282,10 +282,11 @@ export default function SrtTranscriptPage() {
     setSegments(reindexed);
   };
 
-  const handleAddSegment = () => {
+  // Add new segment with optional start time
+  const addNewSegment = (startTime?: number) => {
     const newId = segments.length > 0 ? Math.max(...segments.map(s => s.id)) + 1 : 1;
     const lastSegment = segments[segments.length - 1];
-    const newStart = lastSegment ? lastSegment.endTime : 0;
+    const newStart = startTime !== undefined ? startTime : (lastSegment ? lastSegment.endTime : 0);
     const newSegment: Segment = {
       id: newId,
       start: formatSRTTime(newStart),
@@ -298,6 +299,27 @@ export default function SrtTranscriptPage() {
     setSegments([...segments, newSegment]);
     setEditMode(newId);
     setEditText("");
+    setCurrentSegmentId(newId);
+  };
+
+  // Add segment at end (for header button)
+  const handleAddSegment = () => {
+    addNewSegment();
+  };
+
+  // Update segment time
+  const handleUpdateSegmentTime = (segmentId: number, field: 'start' | 'end', value: string) => {
+    const seconds = parseTimeToSeconds(value);
+    setSegments(prev => prev.map(s => {
+      if (s.id === segmentId) {
+        return {
+          ...s,
+          [field]: value,
+          [field === 'start' ? 'startTime' : 'endTime']: seconds
+        };
+      }
+      return s;
+    }));
   };
 
   const handleExportSRT = () => {
@@ -335,6 +357,11 @@ export default function SrtTranscriptPage() {
     setIsPlaying(false);
   };
 
+  // Add segment at current video time
+  const handleAddSegmentAtCurrentTime = () => {
+    addNewSegment(currentTime);
+  };
+
   const currentSegment = segments.find(s => s.id === currentSegmentId);
 
   return (
@@ -353,6 +380,16 @@ export default function SrtTranscriptPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {/* Add segment at current time button */}
+            <button
+              onClick={handleAddSegmentAtCurrentTime}
+              disabled={!videoUrl}
+              className="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 disabled:bg-zinc-900 disabled:text-zinc-600 text-zinc-300 text-sm font-medium rounded-xl flex items-center gap-2"
+              title="Add segment at current video time"
+            >
+              <Plus size={14} />
+              <span>Add Here</span>
+            </button>
             {/* Model Selector */}
             <div className="flex items-center gap-1 px-1 py-1 bg-zinc-900 rounded-lg border border-zinc-800">
               <button
@@ -602,9 +639,26 @@ export default function SrtTranscriptPage() {
 
                       {/* Content */}
                       <div className="flex-1 min-w-0">
+                        {/* Editable Time Fields */}
+                        <div className="flex items-center gap-2 mb-2" onClick={e => e.stopPropagation()}>
+                          <button
+                            onClick={() => handleSeek(segment.startTime)}
+                            className="text-xs font-mono text-cyan-400 hover:text-cyan-300 bg-cyan-500/10 px-1.5 py-0.5 rounded"
+                          >
+                            ▶ {segment.start}
+                          </button>
+                          <span className="text-xs text-zinc-600">→</span>
+                          <input
+                            type="text"
+                            value={segment.end}
+                            onChange={(e) => handleUpdateSegmentTime(segment.id, 'end', e.target.value)}
+                            className="text-xs font-mono text-zinc-400 bg-zinc-800/50 px-1.5 py-0.5 rounded w-24 focus:outline-none focus:ring-1 focus:ring-violet-500"
+                          />
+                        </div>
+                        
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-xs text-zinc-500">
-                            {segment.start} - {segment.end}
+                            Duration: {(segment.endTime - segment.startTime).toFixed(1)}s
                           </span>
                           <div className="flex items-center gap-1">
                             {segment.translatedText && (
