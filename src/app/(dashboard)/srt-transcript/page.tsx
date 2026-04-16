@@ -465,8 +465,12 @@ export default function SrtTranscriptPage() {
                     className="hidden"
                   />
                   <Upload size={32} className="text-zinc-500 mb-2" />
-                  <p className="text-sm text-zinc-400">Upload Video</p>
-                  <p className="text-xs text-zinc-500 mt-1">MP4, MKV, WebM</p>
+                  <p className="text-sm text-zinc-400">1. Upload Video</p>
+                  <p className="text-xs text-zinc-600 mt-1">MP4, MKV, WebM</p>
+                </div>
+                
+                <div className="text-center text-xs text-zinc-500 py-1">
+                  → Then upload SRT below
                 </div>
                 
                 <div className="flex items-center gap-2">
@@ -487,8 +491,8 @@ export default function SrtTranscriptPage() {
                     className="hidden"
                   />
                   <FileJson size={24} className="text-zinc-500 mb-2" />
-                  <p className="text-sm text-zinc-400">Upload SRT Only</p>
-                  <p className="text-xs text-zinc-500 mt-1">.srt format</p>
+                  <p className="text-sm text-zinc-400">2. Upload SRT</p>
+                  <p className="text-xs text-zinc-600 mt-1">.srt subtitle file</p>
                 </div>
               </div>
             ) : (
@@ -545,9 +549,9 @@ export default function SrtTranscriptPage() {
                   
                   {/* Upload SRT for this video */}
                   <div className="pt-2 border-t border-zinc-800">
-                    <label className="flex items-center justify-center gap-2 px-3 py-2 bg-zinc-800/50 hover:bg-zinc-800 rounded-lg cursor-pointer transition-colors">
+                    <label className="flex items-center justify-center gap-2 px-3 py-2 bg-violet-500/10 hover:bg-violet-500/20 rounded-lg cursor-pointer transition-colors border border-violet-500/30">
                       <FileJson size={14} className="text-violet-400" />
-                      <span className="text-xs text-zinc-400">Upload SRT for this video</span>
+                      <span className="text-xs text-violet-300 font-medium">2. Upload SRT File</span>
                       <input
                         type="file"
                         accept=".srt"
