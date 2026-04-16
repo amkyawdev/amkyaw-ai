@@ -3,9 +3,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
-  Upload, Languages, Save, Clock, FileText, Download, X, Check,
-  Loader2, Sparkles, GripVertical, Trash2, Plus, ChevronUp, ChevronDown, 
-  FileJson, Copy, Bot, Zap
+  Upload, Languages, Clock, FileText, Download, X, Check,
+  Loader2, Sparkles, Trash2, Plus, ChevronUp, ChevronDown, 
+  FileJson, Copy, Bot, Zap, Play, Pause, Volume2, VolumeX, Maximize
 } from "lucide-react";
 
 interface Segment {
@@ -19,6 +19,15 @@ interface Segment {
 }
 
 export default function SrtTranscriptPage() {
+  // Video state
+  const [videoUrl, setVideoUrl] = useState<string>("");
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1);
+  
+  // SRT state
   const [segments, setSegments] = useState<Segment[]>([]);
   const [currentSegmentId, setCurrentSegmentId] = useState<number | null>(null);
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -29,7 +38,9 @@ export default function SrtTranscriptPage() {
   const [fileName, setFileName] = useState<string>("");
   const [selectedModel, setSelectedModel] = useState<'llama-3.3-70b' | 'mixtral-8x7b-32768'>('mixtral-8x7b-32768');
   
+  const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const srtInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Parse SRT file content
@@ -91,8 +102,19 @@ export default function SrtTranscriptPage() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Handle file upload
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle video file upload
+  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith('video/')) {
+      setVideoFile(file);
+      setVideoUrl(URL.createObjectURL(file));
+      setFileName(file.name.replace(/\.[^/.]+$/, ''));
+      setSegments([]);
+    }
+  };
+
+  // Handle SRT file upload
+  const handleSrtUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && file.name.endsWith('.srt')) {
       setFileName(file.name.replace('.srt', ''));
@@ -109,8 +131,48 @@ export default function SrtTranscriptPage() {
     }
   };
 
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
+  // Video controls
+  const togglePlayPause = () => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const handleTimeUpdate = () => {
+    if (videoRef.current) {
+      setCurrentTime(videoRef.current.currentTime);
+      
+      // Find current segment
+      const segment = segments.find(
+        s => videoRef.current!.currentTime >= s.startTime && videoRef.current!.currentTime <= s.endTime
+      );
+      if (segment && segment.id !== currentSegmentId) {
+        setCurrentSegmentId(segment.id);
+      }
+    }
+  };
+
+  const handleLoadedMetadata = () => {
+    if (videoRef.current) {
+      setDuration(videoRef.current.duration);
+    }
+  };
+
+  const handleSeek = (time: number) => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = time;
+      setCurrentTime(time);
+    }
+  };
+
+  const handleSegmentClick = (segment: Segment) => {
+    handleSeek(segment.startTime);
+    setCurrentSegmentId(segment.id);
   };
 
   // Auto-scroll to current segment
@@ -123,18 +185,12 @@ export default function SrtTranscriptPage() {
     }
   }, [currentSegmentId]);
 
-  // Handle segment click
-  const handleSegmentClick = (segment: Segment) => {
-    setCurrentSegmentId(segment.id);
-  };
-
-  // Handle translate single segment using Chat API with model selection
+  // Translate function using Chat API
   const handleTranslateText = async (segmentId: number, text: string) => {
     if (!text.trim()) return;
     
     setIsSaving(true);
     try {
-      // Use Chat API for translation with selected model
       const prompt = `Translate the following English text to Burmese (Myanmar) language. Just provide the translation, nothing else:\n\n${text}`;
       
       const res = await fetch("/api/chat", {
@@ -171,7 +227,7 @@ export default function SrtTranscriptPage() {
     for (const segment of segments) {
       if (!segment.translatedText && segment.text) {
         await handleTranslateText(segment.id, segment.text);
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
     setIsTranscribing(false);
@@ -212,7 +268,6 @@ export default function SrtTranscriptPage() {
     const temp = newSegments[index - 1];
     newSegments[index - 1] = newSegments[index];
     newSegments[index] = temp;
-    // Re-index
     const reindexed = newSegments.map((s, i) => ({ ...s, id: i + 1 }));
     setSegments(reindexed);
   };
@@ -223,12 +278,10 @@ export default function SrtTranscriptPage() {
     const temp = newSegments[index];
     newSegments[index] = newSegments[index + 1];
     newSegments[index + 1] = temp;
-    // Re-index
     const reindexed = newSegments.map((s, i) => ({ ...s, id: i + 1 }));
     setSegments(reindexed);
   };
 
-  // Add new segment
   const handleAddSegment = () => {
     const newId = segments.length > 0 ? Math.max(...segments.map(s => s.id)) + 1 : 1;
     const lastSegment = segments[segments.length - 1];
@@ -247,7 +300,6 @@ export default function SrtTranscriptPage() {
     setEditText("");
   };
 
-  // Export SRT file
   const handleExportSRT = () => {
     let srtContent = "";
     segments.forEach((segment, index) => {
@@ -264,7 +316,6 @@ export default function SrtTranscriptPage() {
     link.click();
   };
 
-  // Copy all translations
   const handleCopyAll = () => {
     const allText = segments
       .map(s => s.translatedText || s.text)
@@ -273,6 +324,15 @@ export default function SrtTranscriptPage() {
     navigator.clipboard.writeText(allText);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleClearVideo = () => {
+    setVideoUrl("");
+    setVideoFile(null);
+    setSegments([]);
+    setCurrentTime(0);
+    setDuration(0);
+    setIsPlaying(false);
   };
 
   const currentSegment = segments.find(s => s.id === currentSegmentId);
@@ -289,7 +349,7 @@ export default function SrtTranscriptPage() {
             </div>
             <div>
               <h2 className="text-xl font-bold text-white">SRT Editor</h2>
-              <p className="text-xs text-zinc-500">Upload SRT file to edit translations</p>
+              <p className="text-xs text-zinc-500">Upload video + SRT file to edit</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -351,41 +411,98 @@ export default function SrtTranscriptPage() {
         </div>
 
         <div className="flex flex-1 gap-4 overflow-hidden">
-          {/* Left Panel - Preview & Actions */}
+          {/* Left Panel - Video Player */}
           <div className="w-1/3 space-y-4 flex-shrink-0">
-            {!fileName ? (
-              <div 
-                onClick={handleUploadClick}
-                className="relative h-48 bg-zinc-900/50 border-2 border-dashed border-zinc-800 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-cyan-500/50 transition-colors"
-              >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".srt"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                />
-                <Upload size={32} className="text-zinc-500 mb-2" />
-                <p className="text-sm text-zinc-400">Upload SRT File</p>
-                <p className="text-xs text-zinc-500 mt-1">.srt format only</p>
-              </div>
-            ) : (
-              <div className="bg-zinc-900/50 rounded-xl p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <FileJson size={16} className="text-cyan-400" />
-                    <span className="text-sm font-medium text-white">{fileName}.srt</span>
-                  </div>
-                  <button
-                    onClick={() => { setFileName(""); setSegments([]); }}
-                    className="p-1 hover:bg-zinc-800 rounded"
-                  >
-                    <X size={14} className="text-zinc-500" />
-                  </button>
+            {/* Video Upload/Player */}
+            {!videoUrl ? (
+              <div className="space-y-3">
+                <div 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="relative h-40 bg-zinc-900/50 border-2 border-dashed border-zinc-800 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-cyan-500/50 transition-colors"
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="video/*"
+                    onChange={handleVideoUpload}
+                    className="hidden"
+                  />
+                  <Upload size={32} className="text-zinc-500 mb-2" />
+                  <p className="text-sm text-zinc-400">Upload Video</p>
+                  <p className="text-xs text-zinc-500 mt-1">MP4, MKV, WebM</p>
                 </div>
                 
-                <div className="text-xs text-zinc-500">
-                  {segments.length} segments • {formatTime(segments[segments.length - 1]?.endTime || 0)} duration
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-px bg-zinc-800"></div>
+                  <span className="text-xs text-zinc-500">OR</span>
+                  <div className="flex-1 h-px bg-zinc-800"></div>
+                </div>
+                
+                <div 
+                  onClick={() => srtInputRef.current?.click()}
+                  className="relative h-32 bg-zinc-900/50 border-2 border-dashed border-zinc-800 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-violet-500/50 transition-colors"
+                >
+                  <input
+                    ref={srtInputRef}
+                    type="file"
+                    accept=".srt"
+                    onChange={handleSrtUpload}
+                    className="hidden"
+                  />
+                  <FileJson size={24} className="text-zinc-500 mb-2" />
+                  <p className="text-sm text-zinc-400">Upload SRT Only</p>
+                  <p className="text-xs text-zinc-500 mt-1">.srt format</p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {/* Video Player */}
+                <div className="relative bg-black rounded-xl overflow-hidden">
+                  <video
+                    ref={videoRef}
+                    src={videoUrl}
+                    className="w-full aspect-video"
+                    onTimeUpdate={handleTimeUpdate}
+                    onLoadedMetadata={handleLoadedMetadata}
+                    onPlay={() => setIsPlaying(true)}
+                    onPause={() => setIsPlaying(false)}
+                  />
+                  
+                  {/* Video Controls */}
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
+                    <div className="flex items-center gap-3">
+                      <button onClick={togglePlayPause} className="text-white hover:text-cyan-400">
+                        {isPlaying ? <Pause size={20} /> : <Play size={20} />}
+                      </button>
+                      <div className="flex-1">
+                        <input
+                          type="range"
+                          min="0"
+                          max={duration || 100}
+                          value={currentTime}
+                          onChange={(e) => handleSeek(parseFloat(e.target.value))}
+                          className="w-full h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                        />
+                      </div>
+                      <span className="text-xs text-white whitespace-nowrap">
+                        {formatTime(currentTime)} / {formatTime(duration)}
+                      </span>
+                      <button onClick={handleClearVideo} className="text-zinc-400 hover:text-red-400">
+                        <X size={16} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* File Info */}
+                <div className="bg-zinc-900/50 rounded-xl p-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FileText size={16} className="text-cyan-400" />
+                    <span className="text-sm text-white truncate">{fileName}</span>
+                  </div>
+                  <span className="text-xs text-zinc-500">
+                    {segments.length} segments
+                  </span>
                 </div>
               </div>
             )}
@@ -407,13 +524,11 @@ export default function SrtTranscriptPage() {
                   </button>
                 </div>
                 
-                {/* Original Text */}
                 <div>
                   <p className="text-xs text-zinc-500 mb-1">Original:</p>
                   <p className="text-sm text-zinc-300">{currentSegment.text}</p>
                 </div>
                 
-                {/* Translated Text */}
                 {currentSegment.translatedText && (
                   <div className="pt-2 border-t border-zinc-800">
                     <p className="text-xs text-violet-500 mb-1">Myanmar:</p>
@@ -446,8 +561,9 @@ export default function SrtTranscriptPage() {
             >
               {segments.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-zinc-500">
-                  <FileJson size={32} strokeWidth={1} />
-                  <p className="text-sm mt-2">Upload SRT file to edit</p>
+                  <FileJson size={48} strokeWidth={1} />
+                  <p className="text-sm mt-3">Upload video + SRT file</p>
+                  <p className="text-xs text-zinc-600 mt-1">to start editing</p>
                 </div>
               ) : (
                 segments.map((segment, index) => (
@@ -474,6 +590,7 @@ export default function SrtTranscriptPage() {
                         >
                           <ChevronUp size={14} />
                         </button>
+                        <span className="text-xs text-zinc-600 font-mono w-4 text-center">{segment.id}</span>
                         <button 
                           onClick={(e) => { e.stopPropagation(); handleMoveDown(index); }}
                           disabled={index === segments.length - 1}
