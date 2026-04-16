@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { 
-  MessageSquare, Image as ImageIcon, Users, CreditCard, ShieldCheck, 
+  MessageSquare, Youtube, Users, CreditCard, ShieldCheck, 
   Settings, LogOut, Plus, Zap, User, Info, HelpCircle, Menu, X, 
   LogIn
 } from "lucide-react";
@@ -155,7 +155,7 @@ const menuGroups = [
     title: "Core Features",
     items: [
       { id: "/chat", label: "AI Chat", icon: MessageSquare },
-      { id: "/image", label: "Image Generator", icon: ImageIcon },
+      { id: "/transcript", label: "YouTube Transcript", icon: Youtube },
     ]
   },
   {
