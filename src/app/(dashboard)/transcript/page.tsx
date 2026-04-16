@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Youtube, Loader2, Sparkles, AlertCircle, X, Copy, Check, 
-  Download, Languages, FileText, Clock
+  Download, Languages, FileText, Clock, Clipboard
 } from "lucide-react";
 
 // YouTube video ID extraction
@@ -22,6 +22,8 @@ const extractVideoId = (url: string): string | null => {
 
 export default function TranscriptPage() {
   const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [pastedText, setPastedText] = useState("");
+  const [inputMode, setInputMode] = useState<'youtube' | 'text'>('youtube');
   const [transcript, setTranscript] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -122,10 +124,44 @@ export default function TranscriptPage() {
 
   const handleClear = () => {
     setYoutubeUrl("");
+    setPastedText("");
     setTranscript("");
     setVideoTitle("");
     setError(null);
     setIsTranslated(false);
+  };
+
+  const handleTranslatePastedText = async () => {
+    if (!pastedText.trim() || isLoading) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          text: pastedText,
+          targetLang: "my"
+        }),
+      });
+      
+      const data = await res.json();
+      
+      if (data.error) {
+        setError(data.error);
+      } else if (data.translatedText) {
+        setTranscript(data.translatedText);
+        setVideoTitle("Pasted Text");
+        setIsTranslated(true);
+      }
+    } catch (err) {
+      console.error("Translation failed:", err);
+      setError("Failed to translate text. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -148,37 +184,98 @@ export default function TranscriptPage() {
 
         {/* Input Form */}
         <form onSubmit={handleExtract} className="space-y-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500">
-                <Youtube size={20} />
-              </div>
-              <input
-                type="text"
-                value={youtubeUrl}
-                onChange={(e) => setYoutubeUrl(e.target.value)}
-                placeholder="Paste YouTube URL here (e.g., https://www.youtube.com/watch?v=...)"
-                className="w-full pl-12 pr-4 py-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-white placeholder-zinc-500 focus:border-red-500/50 focus:outline-none transition-colors"
-              />
-            </div>
+          {/* Tab Switcher */}
+          <div className="flex gap-2 p-1 bg-zinc-900 rounded-xl w-fit">
             <button
-              type="submit"
-              disabled={isLoading || !youtubeUrl.trim()}
-              className="px-8 py-4 bg-red-500 hover:bg-red-600 disabled:bg-zinc-800 disabled:text-zinc-500 text-white font-bold rounded-2xl transition-colors flex items-center gap-2"
+              type="button"
+              onClick={() => setInputMode('youtube')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                inputMode === 'youtube' 
+                  ? 'bg-red-500 text-white' 
+                  : 'text-zinc-400 hover:text-white'
+              }`}
             >
-              {isLoading ? (
-                <>
-                  <Loader2 size={18} className="animate-spin" />
-                  <span>Extracting...</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles size={18} />
-                  <span>Extract</span>
-                </>
-              )}
+              <Youtube size={16} className="inline mr-2" />
+              YouTube URL
+            </button>
+            <button
+              type="button"
+              onClick={() => setInputMode('text')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                inputMode === 'text' 
+                  ? 'bg-red-500 text-white' 
+                  : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              <Clipboard size={16} className="inline mr-2" />
+              Paste Text
             </button>
           </div>
+
+          {/* YouTube URL Input */}
+          {inputMode === 'youtube' && (
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1 relative">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500">
+                  <Youtube size={20} />
+                </div>
+                <input
+                  type="text"
+                  value={youtubeUrl}
+                  onChange={(e) => setYoutubeUrl(e.target.value)}
+                  placeholder="Paste YouTube URL here (e.g., https://www.youtube.com/watch?v=...)"
+                  className="w-full pl-12 pr-4 py-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-white placeholder-zinc-500 focus:border-red-500/50 focus:outline-none transition-colors"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={isLoading || !youtubeUrl.trim()}
+                className="px-8 py-4 bg-red-500 hover:bg-red-600 disabled:bg-zinc-800 disabled:text-zinc-500 text-white font-bold rounded-2xl transition-colors flex items-center gap-2"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    <span>Extracting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={18} />
+                    <span>Extract</span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+
+          {/* Paste Text Input */}
+          {inputMode === 'text' && (
+            <div className="space-y-4">
+              <textarea
+                value={pastedText}
+                onChange={(e) => setPastedText(e.target.value)}
+                placeholder="Paste any text here to translate to Myanmar..."
+                className="w-full h-40 p-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-white placeholder-zinc-500 focus:border-red-500/50 focus:outline-none transition-colors resize-none"
+              />
+              <button
+                type="button"
+                onClick={handleTranslatePastedText}
+                disabled={isLoading || !pastedText.trim()}
+                className="px-8 py-4 bg-orange-500 hover:bg-orange-600 disabled:bg-zinc-800 disabled:text-zinc-500 text-white font-bold rounded-2xl transition-colors flex items-center gap-2"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    <span>Translating...</span>
+                  </>
+                ) : (
+                  <>
+                    <Languages size={18} />
+                    <span>Translate to Myanmar</span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </form>
 
         {/* Error Message */}
