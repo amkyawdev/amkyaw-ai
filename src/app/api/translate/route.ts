@@ -1,23 +1,50 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// Simple translation function using LibreTranslate API (free and open source)
-// You can also use Google Translate, DeepL, etc.
+// Using LibreTranslate with open API instance
+// Try multiple instances for better reliability
+const LIBRE_TRANSLATE_URLS = [
+  "https://libretranslate.com/translate",
+  "https://translate.argosdeepl.com/translate", 
+  "https://translate.terraprint.co/translate"
+];
+
+async function translateWithLibreTranslate(text: string, targetLang: string): Promise<string> {
+  let lastError: Error | null = null;
+  
+  for (const url of LIBRE_TRANSLATE_URLS) {
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          q: text,
+          source: "en",
+          target: targetLang === "my" ? "my" : targetLang,
+          format: "text"
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.translatedText) {
+          return data.translatedText;
+        }
+      }
+    } catch (error) {
+      lastError = error as Error;
+      continue;
+    }
+  }
+  
+  throw lastError || new Error("All translation services failed");
+}
+
+// Main translation function
 async function translateText(text: string, targetLang: string): Promise<string> {
   try {
-    // Using MyMemory Translation API (free, no API key required)
-    // For production, you might want to use Google Translate API or DeepL
-    const response = await fetch(
-      `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|${targetLang}`
-    );
-    
-    const data = await response.json();
-    
-    if (data.responseStatus === 200) {
-      return data.responseData.translatedText;
-    }
-    
-    // Fallback: return original text if translation fails
-    return text;
+    return await translateWithLibreTranslate(text, targetLang === "my" ? "my" : targetLang);
   } catch (error) {
     console.error("Translation error:", error);
     return text;
