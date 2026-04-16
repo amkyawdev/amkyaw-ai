@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { 
   Upload, Languages, Save, Clock, FileText, Download, X, Check,
   Loader2, Sparkles, GripVertical, Trash2, Plus, ChevronUp, ChevronDown, 
-  FileJson, Copy, RefreshCw
+  FileJson, Copy, Bot, Zap
 } from "lucide-react";
 
 interface Segment {
@@ -27,6 +27,7 @@ export default function SrtTranscriptPage() {
   const [editMode, setEditMode] = useState<number | null>(null);
   const [editText, setEditText] = useState("");
   const [fileName, setFileName] = useState<string>("");
+  const [selectedModel, setSelectedModel] = useState<'llama-3.3-70b' | 'mixtral-8x7b-32768'>('mixtral-8x7b-32768');
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -127,27 +128,33 @@ export default function SrtTranscriptPage() {
     setCurrentSegmentId(segment.id);
   };
 
-  // Handle translate single segment
+  // Handle translate single segment using Chat API with model selection
   const handleTranslateText = async (segmentId: number, text: string) => {
     if (!text.trim()) return;
     
     setIsSaving(true);
     try {
-      const res = await fetch("/api/translate", {
+      // Use Chat API for translation with selected model
+      const prompt = `Translate the following English text to Burmese (Myanmar) language. Just provide the translation, nothing else:\n\n${text}`;
+      
+      const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          text,
-          targetLang: "my"
+          prompt,
+          model: selectedModel,
+          temperature: 0.2,
+          messages: []
         }),
       });
       
       const data = await res.json();
       
-      if (data.translatedText) {
+      if (data.message || data.response) {
+        const translatedText = data.message || data.response;
         setSegments(prev => prev.map(s => 
           s.id === segmentId 
-            ? { ...s, translatedText: data.translatedText }
+            ? { ...s, translatedText: translatedText }
             : s
         ));
       }
@@ -286,6 +293,33 @@ export default function SrtTranscriptPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {/* Model Selector */}
+            <div className="flex items-center gap-1 px-1 py-1 bg-zinc-900 rounded-lg border border-zinc-800">
+              <button
+                type="button"
+                onClick={() => setSelectedModel('llama-3.3-70b')}
+                className={`px-2 py-1 rounded-md text-xs font-medium transition-all flex items-center gap-1 ${
+                  selectedModel === 'llama-3.3-70b'
+                    ? "bg-orange-500/20 text-orange-400 border border-orange-500/30"
+                    : "text-zinc-400 hover:text-zinc-300"
+                }`}
+              >
+                <Bot size={10} />
+                Llama 70B
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedModel('mixtral-8x7b-32768')}
+                className={`px-2 py-1 rounded-md text-xs font-medium transition-all flex items-center gap-1 ${
+                  selectedModel === 'mixtral-8x7b-32768'
+                    ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30"
+                    : "text-zinc-400 hover:text-zinc-300"
+                }`}
+              >
+                <Zap size={10} />
+                Mixtral 8x7B
+              </button>
+            </div>
             <button
               onClick={handleAddSegment}
               className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-zinc-400"
