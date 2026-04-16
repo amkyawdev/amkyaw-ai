@@ -31,9 +31,10 @@ export async function POST(request: NextRequest) {
     // Get the absolute path to the transcribe script
     const scriptPath = `${process.cwd()}/scripts/transcribe.py`;
     
-    // Run the Python script
+    // Run the Python script - use full path for production
+    const pythonPath = process.env.PYTHON_PATH || "/usr/local/bin/python3";
     const { stdout, stderr } = await execAsync(
-      `python3 "${scriptPath}" "${youtubeUrl}"`,
+      `"${pythonPath}" "${scriptPath}" "${youtubeUrl}"`,
       { maxBuffer: 10 * 1024 * 1024 } // 10MB buffer for large transcripts
     );
 
