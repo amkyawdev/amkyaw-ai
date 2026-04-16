@@ -1,31 +1,24 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence, Reorder } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Play, Pause, Volume2, VolumeX, Maximize, Upload,
-  Languages, Save, Clock, FileText, Download, X, Check,
-  Loader2, Sparkles, GripVertical, Trash2, Plus, RefreshCw,
-  ChevronUp, ChevronDown
+  Upload, Languages, Save, Clock, FileText, Download, X, Check,
+  Loader2, Sparkles, GripVertical, Trash2, Plus, ChevronUp, ChevronDown, 
+  FileJson, Copy, RefreshCw
 } from "lucide-react";
 
 interface Segment {
   id: number;
-  start: number;
-  end: number;
-  originalText: string;
+  startTime: number;
+  endTime: number;
+  start: string;
+  end: string;
+  text: string;
   translatedText: string;
 }
 
 export default function SrtTranscriptPage() {
-  const [videoUrl, setVideoUrl] = useState<string>("");
-  const [videoFile, setVideoFile] = useState<File | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(1);
-  const [isMuted, setIsMuted] = useState(false);
-  
   const [segments, setSegments] = useState<Segment[]>([]);
   const [currentSegmentId, setCurrentSegmentId] = useState<number | null>(null);
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -33,22 +26,91 @@ export default function SrtTranscriptPage() {
   const [copied, setCopied] = useState(false);
   const [editMode, setEditMode] = useState<number | null>(null);
   const [editText, setEditText] = useState("");
+  const [fileName, setFileName] = useState<string>("");
   
-  const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Sample segments for demo
-  const sampleSegments: Segment[] = [
-    { id: 1, start: 0, end: 5, originalText: "Welcome to this tutorial on Python programming.", translatedText: "" },
-    { id: 2, start: 5, end: 10, originalText: "In this video, we will learn about variables and data types.", translatedText: "" },
-    { id: 3, start: 10, end: 15, originalText: "Let's start by understanding what a variable is.", translatedText: "" },
-    { id: 4, start: 15, end: 20, originalText: "A variable is like a container that stores data.", translatedText: "" },
-    { id: 5, start: 20, end: 25, originalText: "You can think of it as a labeled box.", translatedText: "" },
-    { id: 6, start: 25, end: 30, originalText: "Now let's see how to create a variable.", translatedText: "" },
-    { id: 7, start: 30, end: 35, originalText: "First, let's define a simple variable.", translatedText: "" },
-    { id: 8, start: 35, end: 40, originalText: "We use the equals sign to assign a value.", translatedText: "" },
-  ];
+  // Parse SRT file content
+  const parseSRT = (content: string): Segment[] => {
+    const blocks = content.trim().split(/\n\n+/);
+    const parsed: Segment[] = [];
+    
+    for (const block of blocks) {
+      const lines = block.split('\n');
+      if (lines.length >= 3) {
+        const id = parseInt(lines[0]);
+        const timeLine = lines[1];
+        const timeMatch = timeLine.match(
+          /(\d{2}:\d{2}:\d{2},\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2},\d{3})/
+        );
+        
+        if (timeMatch) {
+          parsed.push({
+            id,
+            start: timeMatch[1],
+            end: timeMatch[2],
+            startTime: parseTimeToSeconds(timeMatch[1]),
+            endTime: parseTimeToSeconds(timeMatch[2]),
+            text: lines.slice(2).join('\n'),
+            translatedText: ''
+          });
+        }
+      }
+    }
+    
+    return parsed;
+  };
+
+  // Parse time string to seconds
+  const parseTimeToSeconds = (timeStr: string): number => {
+    const parts = timeStr.split(':');
+    const hours = parseInt(parts[0]);
+    const minutes = parseInt(parts[1]);
+    const secondsParts = parts[2].split(',');
+    const seconds = parseInt(secondsParts[0]);
+    const ms = parseInt(secondsParts[1]);
+    
+    return hours * 3600 + minutes * 60 + seconds + ms / 1000;
+  };
+
+  // Convert seconds to SRT time format
+  const formatSRTTime = (seconds: number): string => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    const ms = Math.floor((seconds % 1) * 1000);
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')},${ms.toString().padStart(3, '0')}`;
+  };
+
+  // Format time for display
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Handle file upload
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.name.endsWith('.srt')) {
+      setFileName(file.name.replace('.srt', ''));
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const content = event.target?.result as string;
+        const parsed = parseSRT(content);
+        setSegments(parsed);
+        if (parsed.length > 0) {
+          setCurrentSegmentId(parsed[0].id);
+        }
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
 
   // Auto-scroll to current segment
   useEffect(() => {
@@ -60,62 +122,12 @@ export default function SrtTranscriptPage() {
     }
   }, [currentSegmentId]);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setVideoFile(file);
-      setVideoUrl(URL.createObjectURL(file));
-      setSegments(sampleSegments);
-    }
-  };
-
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const togglePlayPause = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play();
-      }
-      setIsPlaying(!isPlaying);
-    }
-  };
-
-  const handleTimeUpdate = () => {
-    if (videoRef.current) {
-      setCurrentTime(videoRef.current.currentTime);
-      
-      // Find current segment
-      const segment = segments.find(
-        s => videoRef.current!.currentTime >= s.start && videoRef.current!.currentTime <= s.end
-      );
-      if (segment) {
-        setCurrentSegmentId(segment.id);
-      }
-    }
-  };
-
-  const handleLoadedMetadata = () => {
-    if (videoRef.current) {
-      setDuration(videoRef.current.duration);
-    }
-  };
-
-  const handleSeek = (time: number) => {
-    if (videoRef.current) {
-      videoRef.current.currentTime = time;
-      setCurrentTime(time);
-    }
-  };
-
+  // Handle segment click
   const handleSegmentClick = (segment: Segment) => {
-    handleSeek(segment.start);
     setCurrentSegmentId(segment.id);
   };
 
+  // Handle translate single segment
   const handleTranslateText = async (segmentId: number, text: string) => {
     if (!text.trim()) return;
     
@@ -146,21 +158,22 @@ export default function SrtTranscriptPage() {
     }
   };
 
+  // Translate all segments
   const handleTranslateAll = async () => {
     setIsTranscribing(true);
     for (const segment of segments) {
-      if (!segment.translatedText && segment.originalText) {
-        await handleTranslateText(segment.id, segment.originalText);
-        // Small delay between requests
+      if (!segment.translatedText && segment.text) {
+        await handleTranslateText(segment.id, segment.text);
         await new Promise(resolve => setTimeout(resolve, 300));
       }
     }
     setIsTranscribing(false);
   };
 
+  // Edit functions
   const handleEditStart = (segment: Segment) => {
     setEditMode(segment.id);
-    setEditText(segment.translatedText || segment.originalText);
+    setEditText(segment.translatedText || segment.text);
   };
 
   const handleEditSave = (segmentId: number) => {
@@ -178,20 +191,6 @@ export default function SrtTranscriptPage() {
     setEditText("");
   };
 
-  const handleAddSegment = () => {
-    const newId = Math.max(...segments.map(s => s.id), 0) + 1;
-    const newSegment: Segment = {
-      id: newId,
-      start: duration,
-      end: duration + 5,
-      originalText: "",
-      translatedText: ""
-    };
-    setSegments([...segments, newSegment]);
-    setEditMode(newId);
-    setEditText("");
-  };
-
   const handleDeleteSegment = (segmentId: number) => {
     setSegments(prev => prev.filter(s => s.id !== segmentId));
     if (currentSegmentId === segmentId) {
@@ -199,19 +198,16 @@ export default function SrtTranscriptPage() {
     }
   };
 
-  const handleReorder = (newOrder: Segment[]) => {
-    // Re-assign IDs based on new order
-    const reindexed = newOrder.map((s, index) => ({ ...s, id: index + 1 }));
-    setSegments(reindexed);
-  };
-
+  // Reorder functions
   const handleMoveUp = (index: number) => {
     if (index === 0) return;
     const newSegments = [...segments];
     const temp = newSegments[index - 1];
     newSegments[index - 1] = newSegments[index];
     newSegments[index] = temp;
-    handleReorder(newSegments);
+    // Re-index
+    const reindexed = newSegments.map((s, i) => ({ ...s, id: i + 1 }));
+    setSegments(reindexed);
   };
 
   const handleMoveDown = (index: number) => {
@@ -220,42 +216,51 @@ export default function SrtTranscriptPage() {
     const temp = newSegments[index];
     newSegments[index] = newSegments[index + 1];
     newSegments[index + 1] = temp;
-    handleReorder(newSegments);
+    // Re-index
+    const reindexed = newSegments.map((s, i) => ({ ...s, id: i + 1 }));
+    setSegments(reindexed);
   };
 
+  // Add new segment
+  const handleAddSegment = () => {
+    const newId = segments.length > 0 ? Math.max(...segments.map(s => s.id)) + 1 : 1;
+    const lastSegment = segments[segments.length - 1];
+    const newStart = lastSegment ? lastSegment.endTime : 0;
+    const newSegment: Segment = {
+      id: newId,
+      start: formatSRTTime(newStart),
+      end: formatSRTTime(newStart + 5),
+      startTime: newStart,
+      endTime: newStart + 5,
+      text: "",
+      translatedText: ""
+    };
+    setSegments([...segments, newSegment]);
+    setEditMode(newId);
+    setEditText("");
+  };
+
+  // Export SRT file
   const handleExportSRT = () => {
     let srtContent = "";
     segments.forEach((segment, index) => {
-      const startTime = formatSRTTime(segment.start);
-      const endTime = formatSRTTime(segment.end);
-      const text = segment.translatedText || segment.originalText;
-      srtContent += `${index + 1}\n${startTime} --> ${endTime}\n${text}\n\n`;
+      const text = segment.translatedText || segment.text;
+      if (text) {
+        srtContent += `${index + 1}\n${segment.start} --> ${segment.end}\n${text}\n\n`;
+      }
     });
 
     const blob = new Blob([srtContent], { type: "text/plain" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = "translated_subtitle.srt";
+    link.download = `${fileName || 'translated'}_my.srt`;
     link.click();
   };
 
-  const formatSRTTime = (seconds: number): string => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = Math.floor(seconds % 60);
-    const ms = Math.floor((seconds % 1) * 1000);
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')},${ms.toString().padStart(3, '0')}`;
-  };
-
-  const formatTime = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
+  // Copy all translations
   const handleCopyAll = () => {
     const allText = segments
-      .map(s => s.translatedText || s.originalText)
+      .map(s => s.translatedText || s.text)
       .filter(Boolean)
       .join('\n');
     navigator.clipboard.writeText(allText);
@@ -273,11 +278,11 @@ export default function SrtTranscriptPage() {
         <div className="flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-violet-500 rounded-xl flex items-center justify-center">
-              <FileText size={20} className="text-white" />
+              <FileJson size={20} className="text-white" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-white">SRT Editor</h2>
-              <p className="text-xs text-zinc-500">Drag to reorder segments</p>
+              <p className="text-xs text-zinc-500">Upload SRT file to edit translations</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -306,15 +311,15 @@ export default function SrtTranscriptPage() {
               className="px-3 py-2 bg-violet-500 hover:bg-violet-600 disabled:bg-zinc-800 disabled:text-zinc-500 text-white text-sm font-medium rounded-xl flex items-center gap-2"
             >
               <Download size={14} />
-              <span>Export</span>
+              <span>Export SRT</span>
             </button>
           </div>
         </div>
 
         <div className="flex flex-1 gap-4 overflow-hidden">
-          {/* Video Player */}
+          {/* Left Panel - Preview & Actions */}
           <div className="w-1/3 space-y-4 flex-shrink-0">
-            {!videoUrl ? (
+            {!fileName ? (
               <div 
                 onClick={handleUploadClick}
                 className="relative h-48 bg-zinc-900/50 border-2 border-dashed border-zinc-800 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-cyan-500/50 transition-colors"
@@ -322,43 +327,32 @@ export default function SrtTranscriptPage() {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="video/*"
+                  accept=".srt"
                   onChange={handleFileUpload}
                   className="hidden"
                 />
                 <Upload size={32} className="text-zinc-500 mb-2" />
-                <p className="text-sm text-zinc-400">Upload Video</p>
+                <p className="text-sm text-zinc-400">Upload SRT File</p>
+                <p className="text-xs text-zinc-500 mt-1">.srt format only</p>
               </div>
             ) : (
-              <div className="relative bg-black rounded-xl overflow-hidden">
-                <video
-                  ref={videoRef}
-                  src={videoUrl}
-                  className="w-full"
-                  onTimeUpdate={handleTimeUpdate}
-                  onLoadedMetadata={handleLoadedMetadata}
-                  onPlay={() => setIsPlaying(true)}
-                  onPause={() => setIsPlaying(false)}
-                />
-                
-                {/* Controls */}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
+              <div className="bg-zinc-900/50 rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <button onClick={togglePlayPause} className="text-white">
-                      {isPlaying ? <Pause size={18} /> : <Play size={18} />}
-                    </button>
-                    <span className="text-xs text-white">
-                      {formatTime(currentTime)} / {formatTime(duration)}
-                    </span>
+                    <FileJson size={16} className="text-cyan-400" />
+                    <span className="text-sm font-medium text-white">{fileName}.srt</span>
                   </div>
+                  <button
+                    onClick={() => { setFileName(""); setSegments([]); }}
+                    className="p-1 hover:bg-zinc-800 rounded"
+                  >
+                    <X size={14} className="text-zinc-500" />
+                  </button>
                 </div>
-
-                <button
-                  onClick={() => { setVideoUrl(""); setVideoFile(null); setSegments([]); }}
-                  className="absolute top-2 right-2 p-1 bg-black/50 rounded-full text-white hover:bg-black/70"
-                >
-                  <X size={14} />
-                </button>
+                
+                <div className="text-xs text-zinc-500">
+                  {segments.length} segments • {formatTime(segments[segments.length - 1]?.endTime || 0)} duration
+                </div>
               </div>
             )}
 
@@ -367,10 +361,10 @@ export default function SrtTranscriptPage() {
               <div className="bg-zinc-900/50 rounded-xl p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-zinc-400">
-                    {formatTime(currentSegment.start)} - {formatTime(currentSegment.end)}
+                    {currentSegment.start} - {currentSegment.end}
                   </span>
                   <button
-                    onClick={() => handleTranslateText(currentSegment.id, currentSegment.originalText)}
+                    onClick={() => handleTranslateText(currentSegment.id, currentSegment.text)}
                     disabled={isSaving}
                     className="text-xs text-cyan-400 flex items-center gap-1 hover:text-cyan-300"
                   >
@@ -378,26 +372,36 @@ export default function SrtTranscriptPage() {
                     Translate
                   </button>
                 </div>
-                <p className="text-sm text-zinc-300">{currentSegment.originalText}</p>
+                
+                {/* Original Text */}
+                <div>
+                  <p className="text-xs text-zinc-500 mb-1">Original:</p>
+                  <p className="text-sm text-zinc-300">{currentSegment.text}</p>
+                </div>
+                
+                {/* Translated Text */}
                 {currentSegment.translatedText && (
-                  <p className="text-sm text-violet-400">{currentSegment.translatedText}</p>
+                  <div className="pt-2 border-t border-zinc-800">
+                    <p className="text-xs text-violet-500 mb-1">Myanmar:</p>
+                    <p className="text-sm text-violet-300">{currentSegment.translatedText}</p>
+                  </div>
                 )}
               </div>
             )}
           </div>
 
-          {/* Segments List - Reorderable */}
+          {/* Right Panel - Segments List */}
           <div className="flex-1 overflow-hidden flex flex-col">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-medium text-zinc-400 flex items-center gap-2">
                 <Clock size={14} />
-                SRT Segments ({segments.length})
+                Segments ({segments.length})
               </h3>
               <button
                 onClick={handleCopyAll}
                 className="text-xs text-zinc-500 hover:text-white flex items-center gap-1"
               >
-                {copied ? <Check size={12} className="text-green-500" /> : <Save size={12} />}
+                {copied ? <Check size={12} className="text-green-500" /> : <Copy size={12} />}
                 {copied ? "Copied" : "Copy All"}
               </button>
             </div>
@@ -408,112 +412,109 @@ export default function SrtTranscriptPage() {
             >
               {segments.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-zinc-500">
-                  <FileText size={32} strokeWidth={1} />
-                  <p className="text-sm mt-2">Upload video to see segments</p>
+                  <FileJson size={32} strokeWidth={1} />
+                  <p className="text-sm mt-2">Upload SRT file to edit</p>
                 </div>
               ) : (
-                <Reorder.Group axis="y" values={segments} onReorder={handleReorder} className="space-y-2">
-                  {segments.map((segment, index) => (
-                    <Reorder.Item
-                      key={segment.id}
-                      value={segment}
-                      id={`segment-${segment.id}`}
-                      className={`p-3 rounded-xl transition-all cursor-pointer ${
-                        currentSegmentId === segment.id
-                          ? "bg-cyan-500/20 border border-cyan-500/30"
-                          : "bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700"
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        {/* Drag Handle & Move Buttons */}
-                        <div className="flex flex-col items-center gap-1 pt-1">
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); handleMoveUp(index); }}
-                            disabled={index === 0}
-                            className="text-zinc-600 hover:text-zinc-400 disabled:opacity-30"
-                          >
-                            <ChevronUp size={14} />
-                          </button>
-                          <GripVertical size={14} className="text-zinc-600" />
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); handleMoveDown(index); }}
-                            disabled={index === segments.length - 1}
-                            className="text-zinc-600 hover:text-zinc-400 disabled:opacity-30"
-                          >
-                            <ChevronDown size={14} />
-                          </button>
-                        </div>
-
-                        {/* Content */}
-                        <div 
-                          onClick={() => handleSegmentClick(segment)}
-                          className="flex-1 min-w-0 cursor-pointer"
+                segments.map((segment, index) => (
+                  <motion.div
+                    key={segment.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.02 }}
+                    id={`segment-${segment.id}`}
+                    onClick={() => handleSegmentClick(segment)}
+                    className={`p-3 rounded-xl transition-all cursor-pointer ${
+                      currentSegmentId === segment.id
+                        ? "bg-cyan-500/20 border border-cyan-500/30"
+                        : "bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      {/* Move Buttons */}
+                      <div className="flex flex-col items-center gap-1 pt-0.5">
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); handleMoveUp(index); }}
+                          disabled={index === 0}
+                          className="text-zinc-600 hover:text-zinc-400 disabled:opacity-30"
                         >
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs text-zinc-500">
-                              {formatTime(segment.start)} - {formatTime(segment.end)}
-                            </span>
-                            <div className="flex items-center gap-1">
-                              {segment.translatedText && (
-                                <span className="text-xs text-violet-400">
-                                  <Sparkles size={10} />
-                                </span>
-                              )}
+                          <ChevronUp size={14} />
+                        </button>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); handleMoveDown(index); }}
+                          disabled={index === segments.length - 1}
+                          className="text-zinc-600 hover:text-zinc-400 disabled:opacity-30"
+                        >
+                          <ChevronDown size={14} />
+                        </button>
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs text-zinc-500">
+                            {segment.start} - {segment.end}
+                          </span>
+                          <div className="flex items-center gap-1">
+                            {segment.translatedText && (
+                              <span className="text-xs text-violet-400">
+                                <Sparkles size={10} />
+                              </span>
+                            )}
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleEditStart(segment); }}
+                              className="text-xs text-zinc-600 hover:text-zinc-400"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleDeleteSegment(segment.id); }}
+                              className="text-xs text-red-500/60 hover:text-red-500"
+                            >
+                              <Trash2 size={10} />
+                            </button>
+                          </div>
+                        </div>
+                        
+                        {editMode === segment.id ? (
+                          <div className="space-y-2" onClick={e => e.stopPropagation()}>
+                            <textarea
+                              value={editText}
+                              onChange={(e) => setEditText(e.target.value)}
+                              placeholder="Enter translation..."
+                              className="w-full h-20 p-2 bg-zinc-800 rounded-lg text-sm text-zinc-200 placeholder-zinc-500 focus:border-violet-500 focus:outline-none"
+                            />
+                            <div className="flex gap-2">
                               <button
-                                onClick={(e) => { e.stopPropagation(); handleEditStart(segment); }}
-                                className="text-xs text-zinc-600 hover:text-zinc-400"
+                                onClick={() => handleEditSave(segment.id)}
+                                className="px-2 py-1 bg-violet-500 hover:bg-violet-600 text-white text-xs rounded"
                               >
-                                Edit
+                                Save
                               </button>
                               <button
-                                onClick={(e) => { e.stopPropagation(); handleDeleteSegment(segment.id); }}
-                                className="text-xs text-red-500/60 hover:text-red-500"
+                                onClick={handleEditCancel}
+                                className="px-2 py-1 bg-zinc-700 hover:bg-zinc-600 text-zinc-300 text-xs rounded"
                               >
-                                <Trash2 size={10} />
+                                Cancel
                               </button>
                             </div>
                           </div>
-                          
-                          {editMode === segment.id ? (
-                            <div className="space-y-2" onClick={e => e.stopPropagation()}>
-                              <textarea
-                                value={editText}
-                                onChange={(e) => setEditText(e.target.value)}
-                                placeholder="Enter translation..."
-                                className="w-full h-20 p-2 bg-zinc-800 rounded-lg text-sm text-zinc-200 placeholder-zinc-500 focus:border-violet-500 focus:outline-none"
-                              />
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={() => handleEditSave(segment.id)}
-                                  className="px-2 py-1 bg-violet-500 hover:bg-violet-600 text-white text-xs rounded"
-                                >
-                                  Save
-                                </button>
-                                <button
-                                  onClick={handleEditCancel}
-                                  className="px-2 py-1 bg-zinc-700 hover:bg-zinc-600 text-zinc-300 text-xs rounded"
-                                >
-                                  Cancel
-                                </button>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="space-y-1">
-                              <p className="text-sm text-zinc-300 line-clamp-2">
-                                {segment.translatedText || segment.originalText || "(empty)"}
+                        ) : (
+                          <div className="space-y-1">
+                            <p className="text-sm text-zinc-300 line-clamp-2">
+                              {segment.text || "(empty)"}
+                            </p>
+                            {segment.translatedText && (
+                              <p className="text-xs text-violet-400 line-clamp-1">
+                                {segment.translatedText}
                               </p>
-                              {!segment.translatedText && (
-                                <p className="text-xs text-zinc-600 line-clamp-1">
-                                  {segment.originalText}
-                                </p>
-                              )}
-                            </div>
-                          )}
-                        </div>
+                            )}
+                          </div>
+                        )}
                       </div>
-                    </Reorder.Item>
-                  ))}
-                </Reorder.Group>
+                    </div>
+                  </motion.div>
+                ))
               )}
             </div>
           </div>
