@@ -532,14 +532,30 @@ export default function SrtTranscriptPage() {
                 </div>
 
                 {/* File Info */}
-                <div className="bg-zinc-900/50 rounded-xl p-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <FileText size={16} className="text-cyan-400" />
-                    <span className="text-sm text-white truncate">{fileName}</span>
+                <div className="bg-zinc-900/50 rounded-xl p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FileText size={16} className="text-cyan-400" />
+                      <span className="text-sm text-white truncate">{fileName}</span>
+                    </div>
+                    <span className="text-xs text-zinc-500">
+                      {segments.length} segments
+                    </span>
                   </div>
-                  <span className="text-xs text-zinc-500">
-                    {segments.length} segments
-                  </span>
+                  
+                  {/* Upload SRT for this video */}
+                  <div className="pt-2 border-t border-zinc-800">
+                    <label className="flex items-center justify-center gap-2 px-3 py-2 bg-zinc-800/50 hover:bg-zinc-800 rounded-lg cursor-pointer transition-colors">
+                      <FileJson size={14} className="text-violet-400" />
+                      <span className="text-xs text-zinc-400">Upload SRT for this video</span>
+                      <input
+                        type="file"
+                        accept=".srt"
+                        onChange={handleSrtUpload}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
                 </div>
               </div>
             )}
