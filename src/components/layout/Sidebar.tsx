@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import { 
   MessageSquare, Youtube, Users, CreditCard, ShieldCheck, 
   Settings, LogOut, Plus, Zap, User, Info, HelpCircle, Menu, X, 
-  LogIn
+  LogIn, FileText, Languages
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useChatStore } from "@/stores/chatStore";
@@ -155,7 +155,8 @@ const menuGroups = [
     title: "Core Features",
     items: [
       { id: "/chat", label: "AI Chat", icon: MessageSquare },
-      { id: "/transcript", label: "YouTube Transcript", icon: Youtube },
+      { id: "/transcript", label: "Translator", icon: Languages },
+      { id: "/srt-transcript", label: "SRT Editor", icon: FileText },
     ]
   },
   {
