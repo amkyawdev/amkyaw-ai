@@ -56,7 +56,7 @@ export default function SrtTranscriptPage() {
   const autoTranslate = async (segmentId: number, text: string, index: number) => {
     const model = index % 2 === 0 ? 'llama-3.3-70b' : 'mixtral-8x7b-32768';
     
-    const prompt = `Translate to Burmese (Myanmar): ${text}`;
+    const prompt = `Translate to BurmeseUnicode using Myanmar script: ${text}`;
     
     const res = await fetch("/api/chat", {
       method: "POST",
@@ -234,7 +234,7 @@ export default function SrtTranscriptPage() {
         ? (index || 0) % 2 === 0 ? 'llama-3.3-70b' : 'mixtral-8x7b-32768'
         : selectedModel;
       
-      const prompt = `Translate to Burmese (Myanmar): ${text}`;
+      const prompt = `Translate to BurmeseUnicode using Myanmar script: ${text}`;
       
       const res = await fetch("/api/chat", {
         method: "POST",
