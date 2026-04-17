@@ -32,6 +32,12 @@ export const GROQ_MODELS = {
     description: 'Fast & capable - Best for all tasks',
     maxTokens: 32768,
   },
+  'llama-3.1-405b-instant': {
+    name: 'llama-3.1-405b-instant',
+    displayName: 'Llama 3.1 405B',
+    description: 'Most capable model -Best for complex tasks',
+    maxTokens: 32768,
+  },
   'mixtral-8x7b-32768': {
     name: 'mixtral-8x7b-32768',
     displayName: 'Mixtral 8x7B',

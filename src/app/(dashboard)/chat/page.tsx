@@ -320,8 +320,8 @@ const ChatInput = ({ input, setInput, onSubmit, isLoading, thinkingText, showThi
   showThinking?: boolean;
   selectedAgent?: AgentType;
   onSelectAgent?: (agent: AgentType) => void;
-  selectedModel?: 'llama-3.3-70b-instant' | 'mixtral-8x7b-32768';
-  onSelectModel?: (model: 'llama-3.3-70b-instant' | 'mixtral-8x7b-32768') => void;
+  selectedModel?: 'llama-3.3-70b-instant' | 'llama-3.1-405b-instant' | 'mixtral-8x7b-32768';
+  onSelectModel?: (model: 'llama-3.3-70b-instant' | 'llama-3.1-405b-instant' | 'mixtral-8x7b-32768') => void;
   
 }) => {
   const [showAgentDropdown, setShowAgentDropdown] = useState(false);
@@ -513,6 +513,18 @@ const ChatInput = ({ input, setInput, onSubmit, isLoading, thinkingText, showThi
                 </button>
                 <button
                   type="button"
+                  onClick={() => onSelectModel('llama-3.1-405b-instant')}
+                  className={cn(
+                    "px-2 py-1 rounded-md text-xs font-medium transition-all",
+                    selectedModel === 'llama-3.1-405b-instant'
+                      ? "bg-purple-500/20 text-purple-400 border border-purple-500/30"
+                      : "bg-zinc-900 text-zinc-400 border border-zinc-800 hover:bg-zinc-800"
+                  )}
+                >
+                  Llama 405B
+                </button>
+                <button
+                  type="button"
                   onClick={() => onSelectModel('mixtral-8x7b-32768')}
                   className={cn(
                     "px-2 py-1 rounded-md text-xs font-medium transition-all",
@@ -599,7 +611,7 @@ export default function ChatPage() {
   const [thinkingText, setThinkingText] = useState("Thinking...");
   const [user, setUser] = useState<{ name?: string; email?: string; avatar?: string; id?: string } | null>(null);
   const [selectedAgent, setSelectedAgent] = useState<AgentType>('general');
-  const [selectedModel, setSelectedModel] = useState<'llama-3.3-70b-instant' | 'mixtral-8x7b-32768'>('llama-3.3-70b-instant');
+  const [selectedModel, setSelectedModel] = useState<'llama-3.3-70b-instant' | 'llama-3.1-405b-instant' | 'mixtral-8x7b-32768'>('llama-3.3-70b-instant');
   
 
   // Load user from localStorage on mount
