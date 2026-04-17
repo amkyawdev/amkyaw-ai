@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
     // Default to Groq streaming
     let stream: ReadableStream | null = null;
     let provider = 'Groq (Llama 3.3 70B Instant)';
-    const modelConfig = GROQ_MODELS[modelKey] || GROQ_MODELS['llama-3.3-70b-instant-instant'];
+    const modelConfig = GROQ_MODELS[modelKey] || GROQ_MODELS['llama-3.3-70b-instant'];
     stream = await callGroqStream(messages, modelConfig.name, temperature, topP);
 
     if (!stream) {

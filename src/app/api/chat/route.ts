@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
     // Try each provider in order until one succeeds (auto rotation)
     try {
       // 1. Try Groq first (primary - only provider)
-      const modelConfig = GROQ_MODELS[modelKey] || GROQ_MODELS['llama-3.3-70b-instant-instant'];
+      const modelConfig = GROQ_MODELS[modelKey] || GROQ_MODELS['llama-3.3-70b-instant'];
       const groqResult = await callGroq(messages, modelConfig.name, temperature, topP);
       response = groqResult.choices?.[0]?.message?.content ?? '';
       provider = 'Groq (Llama 3.3 70B Instant)';
@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
       lastError = String(error);
       // If primary fails, try again with different temperature
       try {
-        const groqResult = await callGroq(messages, GROQ_MODELS['llama-3.3-70b-instant-instant'].name, 0.3, 0.9);
+        const groqResult = await callGroq(messages, GROQ_MODELS['llama-3.3-70b-instant'].name, 0.3, 0.9);
         if (groqResult.choices?.[0]?.message?.content) {
           response = groqResult.choices[0].message.content;
           provider = 'Groq (Retry)';
