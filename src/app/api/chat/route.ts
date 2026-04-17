@@ -86,16 +86,11 @@ export async function POST(request: NextRequest) {
     let provider = 'Groq';
     let lastError = '';
 
-    // Helper to check if response is valid and good quality
+    // Helper to check if response is valid
     const isPoorResponse = (text: string): boolean => {
       if (!text || text.trim().length === 0) return true;
-      // Too short (likely an error message)
-      if (text.trim().length < 10) return true;
-      // Only flag error indicators if not actually an error message
-      const lower = text.toLowerCase();
-      if (lower.includes('error') && !lower.includes('no error')) {
-        return false; // Let error through to be handled
-      }
+      // Too short
+      if (text.trim().length < 3) return true;
       return false;
     };
 
@@ -162,13 +157,14 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Chat API Error:', error);
+      console.error('Chat API Error:', error);
 
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error('Error details:', errorMessage);
     
-    if (errorMessage.includes('GROQ_API_KEY') || errorMessage.includes('key')) {
+    if (errorMessage.includes('GROQ_API_KEY') || errorMessage.includes('not defined')) {
       return NextResponse.json(
-        { error: 'No AI provider configured. Please add GROQ_API_KEY in environment variables.' },
+        { error: 'GROQ_API_KEY not configured. Please add it in Vercel environment variables.' },
         { status: 503 }
       );
     }
