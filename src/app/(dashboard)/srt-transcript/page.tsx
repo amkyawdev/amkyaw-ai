@@ -37,6 +37,15 @@ export default function SrtTranscriptPage() {
   const [editText, setEditText] = useState("");
   const [fileName, setFileName] = useState<string>("");
   const [selectedModel, setSelectedModel] = useState<'llama-3.3-70b' | 'mixtral-8x7b-32768' | 'auto'>('auto');
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  
+  // Filtered segments based on search
+  const filteredSegments = searchQuery
+    ? segments.filter(s => 
+        s.text.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (s.translatedText && s.translatedText.toLowerCase().includes(searchQuery.toLowerCase()))
+      )
+    : segments;
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -425,45 +434,7 @@ export default function SrtTranscriptPage() {
               <Plus size={14} />
               <span>Add Here</span>
             </button>
-            {/* Model Selector */}
-            <div className="flex items-center gap-1 px-1 py-1 bg-zinc-900 rounded-lg border border-zinc-800">
-              <button
-                type="button"
-                onClick={() => setSelectedModel('auto')}
-                className={`px-2 py-1 rounded-md text-xs font-medium transition-all flex items-center gap-1 ${
-                  selectedModel === 'auto'
-                    ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                    : "text-zinc-400 hover:text-zinc-300"
-                }`}
-              >
-                <Zap size={10} />
-                Auto
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedModel('llama-3.3-70b')}
-                className={`px-2 py-1 rounded-md text-xs font-medium transition-all flex items-center gap-1 ${
-                  selectedModel === 'llama-3.3-70b'
-                    ? "bg-orange-500/20 text-orange-400 border border-orange-500/30"
-                    : "text-zinc-400 hover:text-zinc-300"
-                }`}
-              >
-                <Bot size={10} />
-                Llama 70B
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedModel('mixtral-8x7b-32768')}
-                className={`px-2 py-1 rounded-md text-xs font-medium transition-all flex items-center gap-1 ${
-                  selectedModel === 'mixtral-8x7b-32768'
-                    ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30"
-                    : "text-zinc-400 hover:text-zinc-300"
-                }`}
-              >
-                <Zap size={10} />
-                Mixtral 8x7B
-              </button>
-            </div>
+            {/* Translate All Button */}
             <button
               onClick={handleAddSegment}
               className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-zinc-400"
@@ -651,7 +622,7 @@ export default function SrtTranscriptPage() {
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-medium text-zinc-400 flex items-center gap-2">
                 <Clock size={14} />
-                Segments ({segments.length})
+                Segments ({searchQuery ? `${filteredSegments.length}/${segments.length}` : segments.length})
               </h3>
               <button
                 onClick={handleCopyAll}
@@ -661,6 +632,19 @@ export default function SrtTranscriptPage() {
                 {copied ? "Copied" : "Copy All"}
               </button>
             </div>
+            
+            {/* Search Input */}
+            {segments.length > 0 && (
+              <div className="mb-3">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search segments..."
+                  className="w-full px-3 py-2 bg-zinc-900/50 border border-zinc-800 rounded-lg text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-cyan-500"
+                />
+              </div>
+            )}
             
             <div 
               ref={scrollRef}
