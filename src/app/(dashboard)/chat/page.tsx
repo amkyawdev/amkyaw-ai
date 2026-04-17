@@ -320,8 +320,8 @@ const ChatInput = ({ input, setInput, onSubmit, isLoading, thinkingText, showThi
   showThinking?: boolean;
   selectedAgent?: AgentType;
   onSelectAgent?: (agent: AgentType) => void;
-  selectedModel?: 'llama-3.3-70b-instant' | 'mixtral-8x7b-32768' );
-  onSelectModel?: (model: 'llama-3.3-70b-instant' | 'mixtral-8x7b-32768' )) => void;
+  selectedModel?: 'llama-3.3-70b-instant' | 'mixtral-8x7b-32768';
+  onSelectModel?: (model: 'llama-3.3-70b-instant' | 'mixtral-8x7b-32768') => void;
   
 }) => {
   const [showAgentDropdown, setShowAgentDropdown] = useState(false);
@@ -599,7 +599,7 @@ export default function ChatPage() {
   const [thinkingText, setThinkingText] = useState("Thinking...");
   const [user, setUser] = useState<{ name?: string; email?: string; avatar?: string; id?: string } | null>(null);
   const [selectedAgent, setSelectedAgent] = useState<AgentType>('general');
-  const [selectedModel, setSelectedModel] = useState<'llama-3.3-70b-instant' | 'mixtral-8x7b-32768' )>('llama-3.3-70b-instant');
+  const [selectedModel, setSelectedModel] = useState<'llama-3.3-70b-instant' | 'mixtral-8x7b-32768'>('llama-3.3-70b-instant');
   
 
   // Load user from localStorage on mount
