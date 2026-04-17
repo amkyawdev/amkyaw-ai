@@ -91,23 +91,29 @@ export async function POST(request: NextRequest) {
       if (!text || text.trim().length === 0) return true;
       // Too short (likely an error message)
       if (text.trim().length < 10) return true;
-      // Contains common error indicators
+      // Only flag error indicators if not actually an error message
       const lower = text.toLowerCase();
-      if (lower.includes('error') || lower.includes('failed') || 
-          lower.includes('not found') || lower.includes('unable to') ||
-          lower.includes('could not') || lower.includes('exception')) {
-        // But allow legitimate short responses like "Yes", "No", "OK"
-        if (text.trim().length < 5) return true;
+      if (lower.includes('error') && !lower.includes('no error')) {
+        return false; // Let error through to be handled
       }
       return false;
     };
 
     // Try each provider in order until one succeeds (auto rotation)
     try {
+      // Check if API key is available
+      const apiKey = process.env.GROQ_API_KEY;
+      if (!apiKey) {
+        return NextResponse.json(
+          { error: 'GROQ_API_KEY not configured. Please add it in Vercel environment variables.' },
+          { status: 503 }
+        );
+      }
+      
       // 1. Try Groq first (primary - only provider)
       const modelConfig = GROQ_MODELS[modelKey] || GROQ_MODELS['llama-3.3-70b-instant'];
       const groqResult = await callGroq(messages, modelConfig.name, temperature, topP);
-      response = groqResult.choices?.[0]?.message?.content ?? '';
+      response = groqResult.choices?.[0]?.message?.content || '';
       provider = 'Groq (Llama 3.3 70B Instant)';
       
       // If Groq fails or gives poor response, try with alternative model
