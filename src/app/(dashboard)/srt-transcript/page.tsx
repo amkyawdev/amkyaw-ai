@@ -36,12 +36,41 @@ export default function SrtTranscriptPage() {
   const [editMode, setEditMode] = useState<number | null>(null);
   const [editText, setEditText] = useState("");
   const [fileName, setFileName] = useState<string>("");
-  const [selectedModel, setSelectedModel] = useState<'llama-3.3-70b' | 'mixtral-8x7b-32768'>('mixtral-8x7b-32768');
+  const [selectedModel, setSelectedModel] = useState<'llama-3.3-70b' | 'mixtral-8x7b-32768' | 'auto'>('auto');
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const srtInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Auto translation - alternates between Llama 70B and Mixtral 8x7B
+  const autoTranslate = async (segmentId: number, text: string, index: number) => {
+    const model = index % 2 === 0 ? 'llama-3.3-70b' : 'mixtral-8x7b-32768';
+    
+    const prompt = `Translate to Burmese (Myanmar): ${text}`;
+    
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        prompt,
+        model,
+        temperature: 0.2,
+        messages: []
+      }),
+    });
+    
+    const data = await res.json();
+    
+    if (data.message || data.response) {
+      const translatedText = data.message || data.response;
+      setSegments(prev => prev.map(s => 
+        s.id === segmentId 
+          ? { ...s, translatedText: translatedText }
+          : s
+      ));
+    }
+  };
 
   // Parse SRT file content
   const parseSRT = (content: string): Segment[] => {
@@ -186,19 +215,24 @@ export default function SrtTranscriptPage() {
   }, [currentSegmentId]);
 
   // Translate function using Chat API
-  const handleTranslateText = async (segmentId: number, text: string) => {
+  const handleTranslateText = async (segmentId: number, text: string, index?: number) => {
     if (!text.trim()) return;
     
     setIsSaving(true);
     try {
-      const prompt = `Translate the following English text to Burmese (Myanmar) language. Just provide the translation, nothing else:\n\n${text}`;
+      // Use auto translation if selected, otherwise use selected model
+      const modelToUse = selectedModel === 'auto' 
+        ? (index || 0) % 2 === 0 ? 'llama-3.3-70b' : 'mixtral-8x7b-32768'
+        : selectedModel;
+      
+      const prompt = `Translate to Burmese (Myanmar): ${text}`;
       
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           prompt,
-          model: selectedModel,
+          model: modelToUse,
           temperature: 0.2,
           messages: []
         }),
@@ -224,9 +258,10 @@ export default function SrtTranscriptPage() {
   // Translate all segments
   const handleTranslateAll = async () => {
     setIsTranscribing(true);
-    for (const segment of segments) {
+    for (let i = 0; i < segments.length; i++) {
+      const segment = segments[i];
       if (!segment.translatedText && segment.text) {
-        await handleTranslateText(segment.id, segment.text);
+        await handleTranslateText(segment.id, segment.text, i);
         await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
@@ -392,6 +427,18 @@ export default function SrtTranscriptPage() {
             </button>
             {/* Model Selector */}
             <div className="flex items-center gap-1 px-1 py-1 bg-zinc-900 rounded-lg border border-zinc-800">
+              <button
+                type="button"
+                onClick={() => setSelectedModel('auto')}
+                className={`px-2 py-1 rounded-md text-xs font-medium transition-all flex items-center gap-1 ${
+                  selectedModel === 'auto'
+                    ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                    : "text-zinc-400 hover:text-zinc-300"
+                }`}
+              >
+                <Zap size={10} />
+                Auto
+              </button>
               <button
                 type="button"
                 onClick={() => setSelectedModel('llama-3.3-70b')}
@@ -572,12 +619,15 @@ export default function SrtTranscriptPage() {
                     {currentSegment.start} - {currentSegment.end}
                   </span>
                   <button
-                    onClick={() => handleTranslateText(currentSegment.id, currentSegment.text)}
+                    onClick={() => {
+                      const idx = segments.findIndex(s => s.id === currentSegment.id);
+                      handleTranslateText(currentSegment.id, currentSegment.text, idx);
+                    }}
                     disabled={isSaving}
                     className="text-xs text-cyan-400 flex items-center gap-1 hover:text-cyan-300"
                   >
                     <Sparkles size={12} />
-                    Translate
+                    {selectedModel === 'auto' ? 'Auto Translate' : 'Translate'}
                   </button>
                 </div>
                 
