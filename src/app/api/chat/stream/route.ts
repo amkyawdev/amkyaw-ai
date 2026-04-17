@@ -1,6 +1,5 @@
 import { NextRequest } from 'next/server';
 import { callGroqStream } from '@/lib/groq';
-import { callZAIStreaming } from '@/lib/ai-providers';
 import { GROQ_MODELS, GroqModelType } from '@/lib/groq';
 import { AGENTS, AgentType } from '@/lib/ai-providers';
 
@@ -43,7 +42,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       prompt,
-      model = 'llama-3.3-70b',
+      model = 'llama-3.3-70b-instant',
       temperature = 0.2,
       topP = 0.8,
       messages: chatMessages,
@@ -77,28 +76,11 @@ export async function POST(request: NextRequest) {
       ? [systemMessage, ...chatMessages]
       : [systemMessage, userMessage];
 
-    // Determine which provider to use for streaming
+    // Default to Groq streaming
     let stream: ReadableStream | null = null;
-    let provider = 'Groq';
-
-    if (streamProvider === 'zai') {
-      // Try ZAI streaming first
-      const zaiStream = await callZAIStreaming(messages);
-      if (zaiStream) {
-        stream = zaiStream;
-        provider = 'ZAI (GLM-5)';
-      } else {
-        // Fallback to Groq if ZAI is not configured
-        const modelConfig = GROQ_MODELS[modelKey] || GROQ_MODELS['llama-3.3-70b'];
-        stream = await callGroqStream(messages, modelConfig.name, temperature, topP);
-        provider = 'Groq';
-      }
-    } else {
-      // Default to Groq streaming
-      const modelConfig = GROQ_MODELS[modelKey] || GROQ_MODELS['llama-3.3-70b'];
-      stream = await callGroqStream(messages, modelConfig.name, temperature, topP);
-      provider = 'Groq';
-    }
+    let provider = 'Groq (Llama 3.3 70B Instant)';
+    const modelConfig = GROQ_MODELS[modelKey] || GROQ_MODELS['llama-3.3-70b-instant-instant'];
+    stream = await callGroqStream(messages, modelConfig.name, temperature, topP);
 
     if (!stream) {
       return new Response(JSON.stringify({ error: 'No streaming provider available' }), {

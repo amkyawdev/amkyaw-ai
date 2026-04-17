@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { callGroq, GROQ_MODELS, GroqModelType, BURMESE_SYSTEM_PROMPT, isValidResponse, callGroqStream } from '@/lib/groq';
-import { callWithFallback, AGENTS, AgentType, callZAIStreaming } from '@/lib/ai-providers';
-import { isHFConfigured } from '@/lib/huggingface';
+import { callGroq, GROQ_MODELS, GroqModelType, isValidResponse } from '@/lib/groq';
+import { AGENTS, AgentType } from '@/lib/ai-providers';
 
 export const runtime = 'nodejs';
 
@@ -42,7 +41,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { 
       prompt, 
-      model = 'llama-3.3-70b', 
+      model = 'llama-3.3-70b-instant', 
       temperature = 0.2, 
       topP = 0.8,
       chatId,
@@ -105,52 +104,39 @@ export async function POST(request: NextRequest) {
 
     // Try each provider in order until one succeeds (auto rotation)
     try {
-      // 1. Try Groq first (primary)
-      const modelConfig = GROQ_MODELS[modelKey] || GROQ_MODELS['llama-3.3-70b'];
+      // 1. Try Groq first (primary - only provider)
+      const modelConfig = GROQ_MODELS[modelKey] || GROQ_MODELS['llama-3.3-70b-instant-instant'];
       const groqResult = await callGroq(messages, modelConfig.name, temperature, topP);
       response = groqResult.choices?.[0]?.message?.content ?? '';
-      provider = 'Groq';
+      provider = 'Groq (Llama 3.3 70B Instant)';
       
-      // If Groq fails or gives poor response, try other providers
+      // If Groq fails or gives poor response, try with alternative model
       if (isPoorResponse(response)) {
         lastError = 'Groq: ' + (response || 'empty response');
         
-        // 2. Try HuggingFace if configured
-        if (!response) {
-          try {
-            const { callWithFallback } = await import('@/lib/ai-providers');
-            const hfResult = await callWithFallback(messages, 'huggingface');
-            if (hfResult.success && hfResult.response && !isPoorResponse(hfResult.response)) {
-              response = hfResult.response;
-              provider = hfResult.provider || 'HuggingFace';
-              lastError = '';
-            }
-          } catch (e: any) { lastError += ', HuggingFace failed'; }
-        }
-        
-        // 3. Try Groq with different model
-        if (isPoorResponse(response)) {
-          try {
-            const altModel = modelKey === 'llama-3.3-70b' ? 'mixtral-8x7b' : 'llama-3.3-70b';
-            const altGroqResult = await callGroq(messages, GROQ_MODELS[altModel as GroqModelType].name, temperature, topP);
-            const altResponse = altGroqResult.choices?.[0]?.message?.content ?? '';
-            if (!isPoorResponse(altResponse)) {
-              response = altResponse;
-              provider = `Groq (${altModel})`;
-              lastError = '';
-            }
-          } catch (e: any) { lastError += ', Alt Groq failed'; }
-        }
+        // 2. Try with Mixtral model
+        try {
+          const altModel = 'mixtral-8x7b-32768';
+          const altGroqResult = await callGroq(messages, GROQ_MODELS[altModel as GroqModelType].name, temperature, topP);
+          const altResponse = altGroqResult.choices?.[0]?.message?.content ?? '';
+          if (!isPoorResponse(altResponse)) {
+            response = altResponse;
+            provider = 'Groq (Mixtral 8x7B)';
+            lastError = '';
+          }
+        } catch (e: any) { lastError += ', Alt Groq failed'; }
       }
     } catch (error) {
       console.error('Provider chain error:', error);
       lastError = String(error);
-      // If primary fails, try fallback chain
-      const fallbackResult = await callWithFallback(messages, 'groq');
-      if (fallbackResult.success && fallbackResult.response) {
-        response = fallbackResult.response;
-        provider = fallbackResult.provider || 'Fallback';
-      }
+      // If primary fails, try again with different temperature
+      try {
+        const groqResult = await callGroq(messages, GROQ_MODELS['llama-3.3-70b-instant-instant'].name, 0.3, 0.9);
+        if (groqResult.choices?.[0]?.message?.content) {
+          response = groqResult.choices[0].message.content;
+          provider = 'Groq (Retry)';
+        }
+      } catch {}
     }
 
     // Validate response
@@ -166,7 +152,6 @@ export async function POST(request: NextRequest) {
       chatId,
       availableProviders: {
         groq: true,
-        huggingface: isHFConfigured(),
       },
     });
 
@@ -176,25 +161,8 @@ export async function POST(request: NextRequest) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     
     if (errorMessage.includes('GROQ_API_KEY') || errorMessage.includes('key')) {
-      // Try fallback to HuggingFace
-      if (isHFConfigured()) {
-        try {
-          const result = await callWithFallback([], 'huggingface');
-          if (result.success && result.response) {
-            return NextResponse.json({
-              response: result.response,
-              model: 'hf-model',
-              provider: 'HuggingFace (fallback)',
-              availableProviders: {
-                groq: false,
-                huggingface: true,
-              },
-            });
-          }
-        } catch {}
-      }
       return NextResponse.json(
-        { error: 'No AI provider configured. Please add GROQ_API_KEY or HUGGINGFACE_API_KEY in environment variables.' },
+        { error: 'No AI provider configured. Please add GROQ_API_KEY in environment variables.' },
         { status: 503 }
       );
     }

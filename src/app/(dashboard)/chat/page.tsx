@@ -320,8 +320,8 @@ const ChatInput = ({ input, setInput, onSubmit, isLoading, thinkingText, showThi
   showThinking?: boolean;
   selectedAgent?: AgentType;
   onSelectAgent?: (agent: AgentType) => void;
-  selectedModel?: 'llama-3.3-70b' | 'mixtral-8x7b-32768' | 'llama-3.1-8b-instant';
-  onSelectModel?: (model: 'llama-3.3-70b' | 'mixtral-8x7b-32768' | 'llama-3.1-8b-instant') => void;
+  selectedModel?: 'llama-3.3-70b-instant' | 'mixtral-8x7b-32768' );
+  onSelectModel?: (model: 'llama-3.3-70b-instant' | 'mixtral-8x7b-32768' )) => void;
   
 }) => {
   const [showAgentDropdown, setShowAgentDropdown] = useState(false);
@@ -501,10 +501,10 @@ const ChatInput = ({ input, setInput, onSubmit, isLoading, thinkingText, showThi
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => onSelectModel('llama-3.3-70b')}
+                  onClick={() => onSelectModel('llama-3.3-70b-instant')}
                   className={cn(
                     "px-2 py-1 rounded-md text-xs font-medium transition-all",
-                    selectedModel === 'llama-3.3-70b'
+                    selectedModel === 'llama-3.3-70b-instant'
                       ? "bg-orange-500/20 text-orange-400 border border-orange-500/30"
                       : "bg-zinc-900 text-zinc-400 border border-zinc-800 hover:bg-zinc-800"
                   )}
@@ -522,18 +522,6 @@ const ChatInput = ({ input, setInput, onSubmit, isLoading, thinkingText, showThi
                   )}
                 >
                   Mixtral 8x7B
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onSelectModel('llama-3.1-8b-instant')}
-                  className={cn(
-                    "px-2 py-1 rounded-md text-xs font-medium transition-all",
-                    selectedModel === 'llama-3.1-8b-instant'
-                      ? "bg-violet-500/20 text-violet-400 border border-violet-500/30"
-                      : "bg-zinc-900 text-zinc-400 border border-zinc-800 hover:bg-zinc-800"
-                  )}
-                >
-                  Llama 8B
                 </button>
               </div>
             )}
@@ -611,7 +599,7 @@ export default function ChatPage() {
   const [thinkingText, setThinkingText] = useState("Thinking...");
   const [user, setUser] = useState<{ name?: string; email?: string; avatar?: string; id?: string } | null>(null);
   const [selectedAgent, setSelectedAgent] = useState<AgentType>('general');
-  const [selectedModel, setSelectedModel] = useState<'llama-3.3-70b' | 'mixtral-8x7b-32768' | 'llama-3.1-8b-instant'>('llama-3.3-70b');
+  const [selectedModel, setSelectedModel] = useState<'llama-3.3-70b-instant' | 'mixtral-8x7b-32768' )>('llama-3.3-70b-instant');
   
 
   // Load user from localStorage on mount
@@ -727,7 +715,7 @@ export default function ChatPage() {
     setThinkingText(thinking);
 
     let chatId = currentChat?.id;
-    if (!chatId) { const newChat = createChat("llama-3.3-70b"); chatId = newChat.id; }
+    if (!chatId) { const newChat = createChat("llama-3.3-70b-instant"); chatId = newChat.id; }
 
     const userMessage: Message = { id: `msg_${Date.now()}`, role: "user", content: input.trim(), timestamp: new Date() };
     const assistantMessage: Message = { id: `msg_${Date.now()}_ai`, role: "assistant", content: "", timestamp: new Date(), isLoading: true };
@@ -809,7 +797,7 @@ export default function ChatPage() {
                 </button>
               </div>
               <div className="p-4">
-                <button onClick={() => { createChat("llama-3.3-70b"); setShowSidebar(false); }}
+                <button onClick={() => { createChat("llama-3.3-70b-instant"); setShowSidebar(false); }}
                   className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-semibold">
                   <Plus className="w-5 h-5" /> New Chat
                 </button>

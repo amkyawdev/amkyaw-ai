@@ -1,50 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
+import { callGroq } from "@/lib/groq";
 
-// Using LibreTranslate with open API instance
-// Try multiple instances for better reliability
-const LIBRE_TRANSLATE_URLS = [
-  "https://libretranslate.com/translate",
-  "https://translate.argosdeepl.com/translate", 
-  "https://translate.terraprint.co/translate"
-];
+// Groq translation function - uses AI to translate text
+async function translateWithGroq(text: string, targetLang: string): Promise<string> {
+  const systemPrompt = `You are a translator. Translate the given text accurately to the target language.
+- Preserve the meaning and tone of the original text
+- If target is Burmese (my), write in Myanmar script (Unicode)
+- Provide only the translation, no explanations`;
 
-async function translateWithLibreTranslate(text: string, targetLang: string): Promise<string> {
-  let lastError: Error | null = null;
+  const userPrompt = targetLang === "my" 
+    ? `Translate the following English text to Myanmar (Burmese):\n\n${text}`
+    : `Translate the following text to ${targetLang}:\n\n${text}`;
+
+  const messages = [
+    { role: "system", content: systemPrompt },
+    { role: "user", content: userPrompt }
+  ];
+
+  const result = await callGroq(messages, "llama-3.3-70b-instant", 0.3, 0.9);
   
-  for (const url of LIBRE_TRANSLATE_URLS) {
-    try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          q: text,
-          source: "en",
-          target: targetLang === "my" ? "my" : targetLang,
-          format: "text"
-        })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.translatedText) {
-          return data.translatedText;
-        }
-      }
-    } catch (error) {
-      lastError = error as Error;
-      continue;
-    }
+  if (result.choices?.[0]?.message?.content) {
+    return result.choices[0].message.content;
   }
   
-  throw lastError || new Error("All translation services failed");
+  throw new Error("Translation failed");
 }
 
-// Main translation function
+// Main translation function - uses Groq
 async function translateText(text: string, targetLang: string): Promise<string> {
   try {
-    return await translateWithLibreTranslate(text, targetLang === "my" ? "my" : targetLang);
+    return await translateWithGroq(text, targetLang === "my" ? "my" : targetLang);
   } catch (error) {
     console.error("Translation error:", error);
     return text;

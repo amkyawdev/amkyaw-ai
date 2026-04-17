@@ -36,7 +36,7 @@ export default function SrtTranscriptPage() {
   const [editMode, setEditMode] = useState<number | null>(null);
   const [editText, setEditText] = useState("");
   const [fileName, setFileName] = useState<string>("");
-  const [selectedModel, setSelectedModel] = useState<'llama-3.3-70b' | 'mixtral-8x7b-32768' | 'auto'>('auto');
+  const [selectedModel, setSelectedModel] = useState<'llama-3.3-70b-instant' | 'mixtral-8x7b-32768' | 'auto'>('auto');
   const [searchQuery, setSearchQuery] = useState<string>("");
   
   // Filtered segments based on search
@@ -54,7 +54,7 @@ export default function SrtTranscriptPage() {
 
   // Auto translation - alternates between Llama 70B and Mixtral 8x7B
   const autoTranslate = async (segmentId: number, text: string, index: number) => {
-    const model = index % 2 === 0 ? 'llama-3.3-70b' : 'mixtral-8x7b-32768';
+    const model = index % 2 === 0 ? 'llama-3.3-70b-instant' : 'mixtral-8x7b-32768';
     
     const prompt = `Translate ONLY to Burmese (Myanmar) language. Output must be in Myanmar Unicode script. Do not output English: ${text}`;
     
@@ -231,7 +231,7 @@ export default function SrtTranscriptPage() {
     try {
       // Use auto translation if selected, otherwise use selected model
       const modelToUse = selectedModel === 'auto' 
-        ? (index || 0) % 2 === 0 ? 'llama-3.3-70b' : 'mixtral-8x7b-32768'
+        ? (index || 0) % 2 === 0 ? 'llama-3.3-70b-instant' : 'mixtral-8x7b-32768'
         : selectedModel;
       
       const prompt = `Translate ONLY to Burmese (Myanmar) language. Output must be in Myanmar Unicode script. Do not output English: ${text}`;

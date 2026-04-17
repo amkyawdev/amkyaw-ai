@@ -26,10 +26,10 @@ export const BURMESE_SYSTEM_PROMPT = `You are Amkyaw AI, a professional AI assis
 - Keep responses concise but complete`;
 
 export const GROQ_MODELS = {
-  'llama-3.3-70b': {
-    name: 'llama-3.3-70b-versatile',
-    displayName: 'Llama 3.3 70B',
-    description: 'Most capable - Best for all tasks',
+  'llama-3.3-70b-instant': {
+    name: 'llama-3.3-70b-instant',
+    displayName: 'Llama 3.3 70B Instant',
+    description: 'Fast & capable - Best for all tasks',
     maxTokens: 32768,
   },
   'mixtral-8x7b-32768': {
@@ -37,12 +37,6 @@ export const GROQ_MODELS = {
     displayName: 'Mixtral 8x7B',
     description: 'Fast & excellent for coding',
     maxTokens: 32768,
-  },
-  'llama-3.1-8b-instant': {
-    name: 'llama-3.1-8b-instant',
-    displayName: 'Llama 3.1 8B',
-    description: 'Fast - Quick responses',
-    maxTokens: 8192,
   },
 } as const;
 
@@ -112,7 +106,7 @@ export function isValidResponse(response: string): boolean {
 
 export async function callGroq(
   messages: { role: string; content: string }[],
-  model: string = 'llama-3.3-70b-versatile',
+  model: string = 'llama-3.3-70b-instant',
   temperature: number = 0.5,
   topP: number = 0.9
 ) {
@@ -137,7 +131,7 @@ export async function callGroq(
       messages: allMessages, 
       temperature, 
       top_p: topP, 
-      max_tokens: 2048,
+      max_tokens: 32768,
       stream: false // လိုအပ်ရင် stream true လုပ်နိုင်ပါတယ်
     }),
   });
@@ -148,7 +142,7 @@ export async function callGroq(
 
 export async function getGroqResponse(
   messages: { role: string; content: string }[],
-  model: GroqModelType = 'llama-3.3-70b'
+  model: GroqModelType = 'llama-3.3-70b-instant'
 ): Promise<string> {
   const modelConfig = GROQ_MODELS[model];
   const result = await callGroq(messages, modelConfig.name);
@@ -162,7 +156,7 @@ export async function getGroqResponse(
 // Streaming version of callGroq
 export async function callGroqStream(
   messages: { role: string; content: string }[],
-  model: string = 'llama-3.3-70b-versatile',
+  model: string = 'llama-3.3-70b-instant',
   temperature: number = 0.5,
   topP: number = 0.9
 ): Promise<ReadableStream> {
@@ -184,7 +178,7 @@ export async function callGroqStream(
       messages: allMessages,
       temperature,
       top_p: topP,
-      max_tokens: 2048,
+      max_tokens: 32768,
       stream: true
     }),
   });

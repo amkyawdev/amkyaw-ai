@@ -66,7 +66,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         const chats: Chat[] = (data.chats || []).map((chat: any) => ({
           id: String(chat.id),
           title: chat.title,
-          model: chat.model || 'llama-3.3-70b',
+          model: chat.model || 'llama-3.3-70b-instant',
           messages: [],
           createdAt: new Date(chat.created_at),
           updatedAt: new Date(chat.updated_at),
@@ -159,7 +159,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set({ userId });
   },
 
-  createChat: (model = 'llama-3.3-70b') => {
+  createChat: (model = 'llama-3.3-70b-instant') => {
     const newChat: Chat = {
       id: `chat_${Date.now()}`,
       title: 'New Chat',

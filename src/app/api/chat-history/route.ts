@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
         `INSERT INTO chat_history (user_id, title, model) 
          VALUES ($1, $2, $3) 
          RETURNING id`,
-        [user_id, title || 'New Chat', model || 'llama-3.3-70b']
+        [user_id, title || 'New Chat', model || 'llama-3.3-70b-instant']
       );
       savedChatId = newChat[0].id;
     }
